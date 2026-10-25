@@ -5,13 +5,15 @@ import "./App.css";
 import "./partner.css";
 import TempleTours from "./temples/TempleTours.jsx";
 import DriverRegistration from "./drivers/DriverRegistration.jsx";
-import DriverAdmin from "./drivers/DriverAdmin.jsx";
+import DriverAdmin from "./pages/admin/AdminDashboard.jsx";
 import CabAttachment from "./drivers/CabAttachment.jsx";
-import { createSubmissionId } from "./lib/supabase.js";
-import { submitCustomerRequest } from "./lib/customerRequests.js";
+import { createSubmissionId } from "./lib/supabase";
+import { submitCustomerRequest } from "./services/customerRequestService";
+import { isCabAttachmentPath, isDriverAdminPath, isDriverRegisterPath, isTourPath } from "./app/routes";
+import { environment } from "./config/environment";
 import { temples } from "./temples/templeData.js";
-import { calculateLocalPackage, calculateOutstationFare, OUTSTATION_TARIFF } from "./fareRules.js";
-import { isIndianCoordinate, photonSearchParams, rankIndianPlaceFeatures } from "./locationSearch.js";
+import { calculateLocalPackage, calculateOutstationFare, OUTSTATION_TARIFF } from "./utils/fareRules.js";
+import { isIndianCoordinate, photonSearchParams, rankIndianPlaceFeatures } from "./utils/locationSearch.js";
 const TourPackages = lazy(() => import("./tours/TourPackages.jsx"));
 const KodaikanalTour = lazy(() => import("./pages/tours/KodaikanalTour.jsx"));
 
@@ -437,18 +439,18 @@ function AddressAutocomplete({ label, value, onChange, placeholder, required = f
 export default function App() {
   const [pathname, setPathname] = useState(() => window.location.pathname);
   const [templePage, setTemplePage] = useState(() => window.location.hash === "#temple-tours");
-  const [driverPage, setDriverPage] = useState(() => window.location.pathname === "/driver-register");
-  const [driverAdminPage, setDriverAdminPage] = useState(() => window.location.pathname === "/driver-admin");
-  const [attachmentPage, setAttachmentPage] = useState(() => window.location.pathname === "/cab-attachment");
+  const [driverPage, setDriverPage] = useState(() => isDriverRegisterPath(window.location.pathname));
+  const [driverAdminPage, setDriverAdminPage] = useState(() => isDriverAdminPath(window.location.pathname));
+  const [attachmentPage, setAttachmentPage] = useState(() => isCabAttachmentPath(window.location.pathname));
   const [menuOpen, setMenuOpen] = useState(false);
 
   useEffect(() => {
     const syncPage = () => {
       const hash = window.location.hash;
       setPathname(window.location.pathname);
-      setDriverPage(window.location.pathname === "/driver-register");
-      setDriverAdminPage(window.location.pathname === "/driver-admin");
-      setAttachmentPage(window.location.pathname === "/cab-attachment");
+      setDriverPage(isDriverRegisterPath(window.location.pathname));
+      setDriverAdminPage(isDriverAdminPath(window.location.pathname));
+      setAttachmentPage(isCabAttachmentPath(window.location.pathname));
       setTemplePage(hash === "#temple-tours");
       if (hash && hash !== "#temple-tours") {
         requestAnimationFrame(() => document.getElementById(hash.slice(1))?.scrollIntoView());
@@ -473,7 +475,7 @@ export default function App() {
   const [submissionId, setSubmissionId] = useState(createSubmissionId);
 
   const today = useMemo(() => new Date().toISOString().slice(0, 10), []);
-  const tourRoute = pathname.startsWith("/tour-packages") || pathname.startsWith("/chennai-to-kodaikanal-cab") || pathname.startsWith("/chennai-to-ooty-cab");
+  const tourRoute = isTourPath(pathname);
   const homeHref = (section) => `${driverPage || driverAdminPage || attachmentPage || tourRoute ? "/" : ""}#${section}`;
 
   function update(field, value, coordinates = undefined) {
@@ -606,7 +608,7 @@ export default function App() {
     setBookingSaving(true);
     setNotice("");
     setWhatsappLink("");
-    const number = (import.meta.env.VITE_WHATSAPP_NUMBER || DEFAULT_WHATSAPP_NUMBER).replace(/\D/g, "");
+    const number = (environment.whatsappNumber || DEFAULT_WHATSAPP_NUMBER).replace(/\D/g, "");
     const serviceName = services.find((item) => item.id === service)?.title || service;
     const groupVehicles = {
       tempo: { label: "Tempo Traveller", passengers: 12, luggage: null },
@@ -705,7 +707,7 @@ export default function App() {
       </header>
 
       <main>
-        {driverAdminPage ? <DriverAdmin /> : driverPage ? <DriverRegistration whatsappNumber={import.meta.env.VITE_WHATSAPP_NUMBER || DEFAULT_WHATSAPP_NUMBER} /> : attachmentPage ? <CabAttachment whatsappNumber={import.meta.env.VITE_WHATSAPP_NUMBER || DEFAULT_WHATSAPP_NUMBER} /> : templePage ? <TempleTours AddressAutocomplete={AddressAutocomplete} vehicles={vehicles} whatsappNumber={import.meta.env.VITE_WHATSAPP_NUMBER || DEFAULT_WHATSAPP_NUMBER} /> : tourRoute ? <Suspense fallback={<div className="tour-loading" role="status">Loading tour details…</div>}>{pathname === "/tour-packages/kodaikanal" ? <KodaikanalTour AddressAutocomplete={AddressAutocomplete} vehicles={vehicles} whatsappNumber={import.meta.env.VITE_WHATSAPP_NUMBER || ""} /> : <TourPackages pathname={pathname} AddressAutocomplete={AddressAutocomplete} vehicles={vehicles} whatsappNumber={import.meta.env.VITE_WHATSAPP_NUMBER || ""} />}</Suspense> : <>
+        {driverAdminPage ? <DriverAdmin /> : driverPage ? <DriverRegistration whatsappNumber={environment.whatsappNumber || DEFAULT_WHATSAPP_NUMBER} /> : attachmentPage ? <CabAttachment whatsappNumber={environment.whatsappNumber || DEFAULT_WHATSAPP_NUMBER} /> : templePage ? <TempleTours AddressAutocomplete={AddressAutocomplete} vehicles={vehicles} whatsappNumber={environment.whatsappNumber || DEFAULT_WHATSAPP_NUMBER} /> : tourRoute ? <Suspense fallback={<div className="tour-loading" role="status">Loading tour details…</div>}>{pathname === "/tour-packages/kodaikanal" ? <KodaikanalTour AddressAutocomplete={AddressAutocomplete} vehicles={vehicles} whatsappNumber={environment.whatsappNumber || ""} /> : <TourPackages pathname={pathname} AddressAutocomplete={AddressAutocomplete} vehicles={vehicles} whatsappNumber={environment.whatsappNumber || ""} />}</Suspense> : <>
         <section className="hero" id="home" style={{ "--hero-ride-image": `url(${serviceVisuals[service].image})` }}>
           <div className="hero-glow hero-glow-one" />
           <div className="hero-glow hero-glow-two" />

@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import { buildCabAttachmentMessage, documentFields, emptyAttachedVehicle, initialCabAttachment, validateCabAttachment } from "./cabAttachmentUtils.js";
-import { createSubmissionId } from "../lib/supabase.js";
-import { normalizeRequestMobile, submitCustomerRequest } from "../lib/customerRequests.js";
+import { createSubmissionId } from "../lib/supabase";
+import { normalizeRequestMobile, submitCustomerRequest } from "../services/customerRequestService";
 import "./driverRegistration.css";
 
 const statusOptions = ["Yes", "No", "In progress"];

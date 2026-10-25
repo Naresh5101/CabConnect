@@ -10,8 +10,8 @@ import {
   toggleTempleSelection,
 } from "./templeUtils.js";
 import "./templeTours.css";
-import { createSubmissionId } from "../lib/supabase.js";
-import { submitCustomerRequest } from "../lib/customerRequests.js";
+import { createSubmissionId } from "../lib/supabase";
+import { submitCustomerRequest } from "../services/customerRequestService";
 
 const arupadaiIds = temples.filter((temple) => temple.categories.includes("arupadai")).map(({ id }) => id);
 const money = (amount) => new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR", maximumFractionDigits: 0 }).format(Math.round(amount));

@@ -2,47 +2,14 @@ import { useEffect, useMemo, useState } from "react";
 import { findTourByPath, tourCategories } from "./tourData.js";
 import { geocodeTravelStop } from "../temples/templeUtils.js";
 import { calculateTourEstimate, getTourRoadDistance } from "./tourFare.js";
-import { createSubmissionId, supabase, supabaseConfigured } from "../lib/supabase.js";
-import { submitCustomerRequest } from "../lib/customerRequests.js";
+import { createSubmissionId, supabaseConfigured } from "../lib/supabase";
+import { submitCustomerRequest } from "../services/customerRequestService";
+import { fetchPublishedTourPackages } from "../services/tourPackageService";
+import ArrowLink from "../components/ArrowLink.jsx";
+import PageMeta from "../components/PageMeta.jsx";
 import "./tourPackages.css";
 
-function setMeta(name, content, property = false) {
-  const selector = property ? `meta[property="${name}"]` : `meta[name="${name}"]`;
-  let element = document.head.querySelector(selector);
-  if (!element) {
-    element = document.createElement("meta");
-    element.setAttribute(property ? "property" : "name", name);
-    document.head.appendChild(element);
-  }
-  element.content = content;
-}
-
 const formatMoney = (value) => new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR", maximumFractionDigits: 0 }).format(Math.round(value));
-
-function PageMeta({ title, description, path }) {
-  useEffect(() => {
-    document.title = title;
-    setMeta("description", description);
-    setMeta("og:title", title, true);
-    setMeta("og:description", description, true);
-    setMeta("og:type", "website", true);
-    const siteUrl = import.meta.env.VITE_SITE_URL?.replace(/\/$/, "");
-    let canonical = document.head.querySelector('link[rel="canonical"]');
-    if (siteUrl) {
-      if (!canonical) {
-        canonical = document.createElement("link");
-        canonical.rel = "canonical";
-        document.head.appendChild(canonical);
-      }
-      canonical.href = `${siteUrl}${path}`;
-    } else if (canonical) canonical.remove();
-  }, [description, path, title]);
-  return null;
-}
-
-function ArrowLink({ href, children, className = "" }) {
-  return <a className={`tour-arrow-link ${className}`} href={href}>{children}<span aria-hidden="true">↗</span></a>;
-}
 
 function DestinationCard({ destination }) {
   const image = destination.hero;
@@ -62,12 +29,11 @@ function TourIndex() {
   useEffect(() => {
     let active = true;
     if (!supabaseConfigured) { Promise.resolve().then(() => { if (active) { setLoadError("Tour packages are not connected to the database yet."); setLoading(false); } }); return () => { active = false; }; }
-    supabase.from("tour_packages").select("package_data").eq("is_published", true).order("sort_order").then(({ data, error }) => {
-      if (!active) return;
-      if (error) setLoadError("We could not load tour packages from the database. Please try again later.");
-      else setDestinations((data || []).map((row) => row.package_data));
-      setLoading(false);
-    });
+    fetchPublishedTourPackages().then((rows) => {
+      if (active) setDestinations(rows.map((row) => ({ ...row.package_data, slug: row.slug })));
+    }).catch(() => {
+      if (active) setLoadError("We could not load tour packages from the database. Please try again later.");
+    }).finally(() => { if (active) setLoading(false); });
     return () => { active = false; };
   }, []);
   const states = ["All states", ...new Set(destinations.map((destination) => destination.state))];
@@ -188,7 +154,7 @@ function QuoteForm({ destination, AddressAutocomplete, vehicles, whatsappNumber 
   </form>;
 }
 
-function TourDetails({ packageId, routeLanding, AddressAutocomplete, vehicles, whatsappNumber, pathname }) {
+function TourDetails({ packageId, packageSlug, routeLanding, AddressAutocomplete, vehicles, whatsappNumber, pathname }) {
   const [destination, setDestination] = useState(null);
   const [relatedDestinations, setRelatedDestinations] = useState([]);
   const [packageLoading, setPackageLoading] = useState(true);
@@ -197,19 +163,19 @@ function TourDetails({ packageId, routeLanding, AddressAutocomplete, vehicles, w
   useEffect(() => {
     let active = true;
     if (!supabaseConfigured) { Promise.resolve().then(() => { if (active) { setPackageError("Tour packages are not connected to the database yet."); setPackageLoading(false); } }); return () => { active = false; }; }
-    supabase.from("tour_packages").select("package_data").eq("is_published", true).order("sort_order").then(({ data, error }) => {
+    fetchPublishedTourPackages().then((rows) => {
       if (!active) return;
-      const packages = (data || []).map((row) => row.package_data);
-      if (error) setPackageError("We could not load this tour package. Please try again later.");
-      else {
-        setDestination(packages.find((item) => item.id === packageId) || null);
-        setRelatedDestinations(packages);
-        if (!packages.some((item) => item.id === packageId)) setPackageError("This tour package is not currently available.");
-      }
-      setPackageLoading(false);
-    });
+      const packages = rows.map((row) => ({ ...row.package_data, slug: row.slug }));
+      const row = rows.find((item) => packageSlug ? item.slug === packageSlug : (item.package_data && typeof item.package_data === "object" && !Array.isArray(item.package_data) && item.package_data.id === packageId));
+      const selectedPackage = row ? { ...row.package_data, slug: row.slug } : null;
+      setDestination(selectedPackage);
+      setRelatedDestinations(packages);
+      if (!selectedPackage) setPackageError("This tour package is not currently available.");
+    }).catch(() => {
+      if (active) setPackageError("We could not load this tour package. Please try again later.");
+    }).finally(() => { if (active) setPackageLoading(false); });
     return () => { active = false; };
-  }, [packageId]);
+  }, [packageId, packageSlug]);
   if (packageLoading) return <div className="tour-loading" role="status">Loading tour package…</div>;
   if (packageError || !destination) return <div className="tour-loading" role="alert">{packageError || "This tour package is not currently available."}</div>;
   const canonicalTitle = routeLanding ? `Chennai to ${destination.shortName} Cab | Private Tour Quote | CabConnect` : `${destination.name} Tour Package from Chennai | CabConnect`;
@@ -242,6 +208,7 @@ function TourDetails({ packageId, routeLanding, AddressAutocomplete, vehicles, w
 
 export default function TourPackages({ pathname, AddressAutocomplete, vehicles, whatsappNumber }) {
   const route = findTourByPath(pathname);
-  if (!route) return <TourIndex />;
-  return <TourDetails packageId={route.destination.id} routeLanding={route.routeLanding} AddressAutocomplete={AddressAutocomplete} vehicles={vehicles} whatsappNumber={whatsappNumber} pathname={pathname} />;
+  const packagePath = pathname.replace(/\/$/, "");
+  if (!route && !/^\/tour-packages\/[^/]+$/.test(packagePath)) return <TourIndex />;
+  return <TourDetails packageId={route?.destination.id || null} packageSlug={route ? null : packagePath} routeLanding={route?.routeLanding || false} AddressAutocomplete={AddressAutocomplete} vehicles={vehicles} whatsappNumber={whatsappNumber} pathname={pathname} />;
 }

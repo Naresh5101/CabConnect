@@ -3,15 +3,16 @@ import {
   BADGE_STATUSES, initialDriverApplication, LICENCE_STATUSES, toDriverApplicationPayload,
   validateDriverApplication, WORK_TYPES, buildDriverWhatsAppMessage,
 } from "./driverRegistrationUtils.js";
-import { requireSupabase, supabaseConfigured } from "../lib/supabase.js";
+import { supabaseConfigured } from "../lib/supabase";
+import { submitDriverApplication } from "../services/driverApplicationService";
 import "./driverRegistration.css";
 
 async function submissionErrorMessage(error) {
   const response = typeof Response !== "undefined" && error?.context instanceof Response ? error.context : null;
   const body = response ? await response.clone().json().catch(() => ({})) : {};
   if (body?.error) return body.error;
-  if (response?.status === 404) return "The driver application service is not deployed to the Supabase project configured for this site. No application was saved.";
-  if (response?.status === 401 || response?.status === 403) return "Supabase rejected the driver application request. Check that the deployed function allows public submissions (verify_jwt = false) and is deployed to the configured project. No application was saved.";
+  if (response?.status === 404 || error?.status === 404) return "The driver application service is not deployed to the Supabase project configured for this site. No application was saved.";
+  if ([401, 403].includes(response?.status || error?.status)) return "Supabase rejected the driver application request. Check that the deployed function allows public submissions (verify_jwt = false) and is deployed to the configured project. No application was saved.";
   if (error?.name === "FunctionsFetchError") return "Supabase currently reports that the driver application function was not found in the configured project. Deploy submit-driver-application, then check its CORS origin if the request still fails. No application was confirmed saved.";
   if (error?.name === "FunctionsRelayError") return "Supabase could not route this request to the driver application service. Check that the function is deployed and healthy in the configured project. No application was confirmed saved.";
   return error?.message || "We could not save your application. Check your connection and try again.";
@@ -65,15 +66,11 @@ export default function DriverRegistration({ whatsappNumber }) {
     setSaving(true);
     setSaveError("");
     try {
-      const { data, error } = await requireSupabase().functions.invoke("submit-driver-application", { body: { ...toDriverApplicationPayload(form), website } });
-      if (error) {
-        throw new Error(await submissionErrorMessage(error));
-      }
-      if (!data?.application_id) throw new Error("We could not confirm that your application was saved. Please try again.");
-      setApplicationId(data.application_id);
+      const result = await submitDriverApplication(toDriverApplicationPayload(form), website);
+      setApplicationId(result.applicationId);
       window.scrollTo({ top: 0, behavior: "smooth" });
     } catch (error) {
-      setSaveError(error.message || "We could not save your application. Check your connection and try again.");
+      setSaveError(await submissionErrorMessage(error));
     } finally {
       setSaving(false);
     }

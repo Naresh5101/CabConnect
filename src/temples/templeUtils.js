@@ -1,6 +1,6 @@
 import { templeCategories } from "./templeData.js";
-import { calculateOutstationFare } from "../fareRules.js";
-import { photonSearchParams, rankIndianPlaceFeatures } from "../locationSearch.js";
+import { calculateOutstationFare } from "../utils/fareRules.js";
+import { photonSearchParams, rankIndianPlaceFeatures } from "../utils/locationSearch.js";
 
 export function filterTempleCatalogue(records, categoryId = "all", query = "") {
   const normalized = query.trim().toLocaleLowerCase();

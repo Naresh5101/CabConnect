@@ -1,4 +1,4 @@
-import { calculateOutstationFare } from "../fareRules.js";
+import { calculateOutstationFare } from "../utils/fareRules.js";
 
 export async function getTourRoadDistance(start, destination, returnTrip, fetchImpl = fetch) {
   if (!start || !destination) throw new Error("Select a pickup and a valid tour destination to estimate the price.");
