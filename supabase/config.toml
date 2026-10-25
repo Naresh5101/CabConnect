@@ -1,0 +1,9 @@
+project_id = "cabconnect-chennai"
+
+[functions.submit-driver-application]
+# Applications are submitted by public visitors without a Supabase Auth session.
+# The Edge Function performs payload validation, rate limiting and persistence.
+verify_jwt = false
+
+[functions.submit-customer-request]
+verify_jwt = false

@@ -1,0 +1,654 @@
+/* CabConnect reference-inspired visual system */
+.top-strip{display:none}
+.site-header{height:62px;background:#fbfcf7;border-bottom-color:#e8ecdf}
+.brand-mark{width:34px;height:34px;border-radius:10px;font-size:20px}
+.brand-copy strong{font-size:15px}
+.nav-inner{gap:20px}
+.main-nav{gap:clamp(12px,2vw,26px);align-items:center;color:#243b30;font-size:10px;font-weight:650;white-space:nowrap}
+.main-nav a:hover,.main-nav a[aria-current=page]{color:#77920d}
+.nav-cta{padding:11px 14px;border-radius:7px;font-size:10px;white-space:nowrap}
+.mobile-menu-toggle{display:none}
+.hero{min-height:420px;padding:60px 0 70px;color:#fff;background-image:linear-gradient(90deg,rgba(7,42,31,.91) 0%,rgba(12,53,39,.78) 37%,rgba(11,45,34,.12) 100%),var(--hero-ride-image);background-size:cover;background-position:center 48%}
+.hero:before{background:linear-gradient(0deg,rgba(8,36,27,.3),transparent 44%);mask-image:none}
+.hero-glow{display:none}
+.hero-grid{grid-template-columns:1fr;gap:0}
+.hero-copy{max-width:590px;padding:7px 0 0}
+.hero-copy .eyebrow,.hero-copy .eyebrow-line{color:#f6cd21}
+.hero h1{max-width:600px;margin:20px 0 13px;font-size:clamp(48px,6vw,74px);line-height:.98}
+.hero h1 em{color:#ffd229}
+.hero-lede{max-width:460px;color:#f0f3ea;font-size:13px;line-height:1.7}
+.hero-actions{margin-top:21px}
+.hero-actions .button-primary{background:#ffd229;color:#17372a;padding:13px 18px;font-size:10px}
+.hero-actions .button-primary span{color:#17372a}
+.hero-actions .text-link{color:#fff;font-size:10px}
+.trust-row{margin-top:26px}
+.trust-row strong,.trust-row small{color:#fff}
+.trust-row small{color:#d4dfd6}
+.hero-visual{display:none}
+.hero-foot{color:#e4eee5;font-size:8px}
+.foot-rule{background:#f2ce2e}
+.booking-section{position:relative;z-index:2;margin-top:-48px;padding:0 0 54px;background:transparent}
+.booking-layout{display:block}
+.section-intro{display:none}
+.booking-card{max-width:none;padding:22px 25px;border:1px solid #e5e9df;border-radius:13px;background:#fffefa;box-shadow:0 16px 40px #20392e16}
+.booking-card-head{margin-bottom:13px}
+.booking-card-head h3{font-size:17px}
+.card-decoration{color:#a3bd3b}
+.service-options{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:7px;margin-bottom:17px;padding-bottom:14px;border-bottom:1px solid #e8ecdf}
+.service-option{min-height:46px;grid-template-columns:27px minmax(0,1fr) 12px;gap:7px;padding:7px 8px;border-radius:7px}
+.service-option.selected{background:#eff5e5;border-color:#a9c46e}
+.service-icon{height:26px;width:26px;font-size:13px}
+.service-text strong{font-size:9px}
+.service-text small{font-size:7px}
+.radio-mark{width:11px;height:11px}
+.form-grid{gap:12px}
+.field input,.field select,.field textarea{min-height:39px;padding:10px;font-size:10px}
+.address-label{font-size:9px}
+.vehicle-picker{margin-top:16px}
+.vehicle-grid{gap:12px}
+.vehicle-option{min-height:180px}
+.vehicle-option img{aspect-ratio:2.7/1}
+.vehicle-option-copy{padding:9px 28px 9px 10px}
+.vehicle-rate-note{font-size:8px}
+.form-divider{margin:23px 0 17px}
+.fare-calculator{margin-top:17px}
+.button-submit{background:#ffd229;color:#17372a;border-radius:7px}
+.button-submit span{color:#17372a}
+.form-legal{font-size:9px;line-height:1.6}
+.services-section{padding:45px 0 62px;background:#f6f7ef}
+.section-heading-row h2{font-size:39px}
+.section-heading-row>p{max-width:370px;color:#65746a;font-size:10px;line-height:1.7}
+.service-cards{gap:11px}
+.service-card{min-height:170px;padding:16px;border-radius:10px;background:#fff;box-shadow:0 7px 18px #233d2b09}
+.service-card-icon{background:#edf3e7;color:#254c3b}
+.service-card h3{font-size:13px}
+.service-card p{font-size:9px}
+.partner-section{padding:56px 0 62px;background:#fffdf3}
+.partner-section .section-heading-row{margin-bottom:22px}
+.partner-card-grid{gap:14px}
+.partner-card{position:relative;min-height:365px;overflow:hidden;padding:175px 18px 18px;border:1px solid #e0e7dc;border-radius:11px;background:#fff;box-shadow:0 8px 22px #17282012}
+.partner-card:before{content:"";position:absolute;inset:0 0 auto;height:160px;background-size:cover;background-position:center}
+.partner-card:nth-child(1):before{background-image:linear-gradient(0deg,#17382e55,transparent 45%),url('/daily-ride-chennai.png')}
+.partner-card:nth-child(2):before{background-image:linear-gradient(0deg,#17382e44,transparent 45%),url('/hourly-rental-chennai.png')}
+.partner-card:nth-child(3):before{background-image:linear-gradient(0deg,#17382e22,transparent 45%),url('/temple-tour-background.png')}
+.partner-card-no{position:relative;z-index:1;padding-top:2px;color:#607667}
+.partner-card h3{margin:10px 0 6px;font-size:18px}
+.partner-card p{font-size:10px;line-height:1.65}
+.partner-card>a{display:flex;justify-content:center;width:100%;margin-top:auto;padding:12px;border-radius:7px;background:#ffcf24;color:#163529;text-align:center;font-size:10px}
+.partner-card>a b{color:#163529}
+.partner-temple-card{background:#17382e;color:#fff}
+.partner-temple-card .partner-card-no{color:#496d57}
+.partner-temple-card p{color:#c1cdc2}
+.partner-temple-card>a{background:#ffcf24;color:#163529}
+.why-section{padding:50px 0;background:#17382e}
+.why-reference-heading h2{margin:9px 0 21px;font-family:Manrope,sans-serif;font-size:26px;letter-spacing:-.045em;color:#fff}
+.why-reference-heading .eyebrow{color:#d8e7d8}
+.benefit-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
+.benefit-grid article{display:flex;align-items:center;gap:10px;min-height:65px;padding:11px;border:1px solid #ffffff22;border-radius:8px;background:#ffffff0b}
+.benefit-grid article>span{width:30px;height:30px;flex:0 0 30px;display:grid;place-items:center;border-radius:50%;background:#edf4e6;color:#1c4c35;font-size:13px;font-weight:800}
+.benefit-grid p{margin:0}
+.benefit-grid strong,.benefit-grid small{display:block}
+.benefit-grid strong{color:#fff;font-size:9px}
+.benefit-grid small{margin-top:4px;color:#bdcdbf;font-size:8px;line-height:1.4}
+.homepage-temples{padding:54px 0 68px;background:#f5f7ef}
+.home-temples-heading{display:flex;justify-content:space-between;align-items:end;gap:20px;margin-bottom:20px}
+.home-temples-heading h2{margin:9px 0 5px;font-family:Manrope,sans-serif;font-size:27px;letter-spacing:-.05em}
+.home-temples-heading p{margin:0;color:#738075;font-size:10px}
+.home-temples-heading>a{color:#2c5740;font-size:10px;font-weight:750;white-space:nowrap}
+.home-temples-heading>a span{padding-left:6px;color:#9dba35}
+.home-temple-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:11px}
+.home-temple-card{min-width:0;overflow:hidden;border:1px solid #e0e7dc;border-radius:9px;background:#fff;box-shadow:0 6px 18px #20392e0b}
+.home-temple-card img{width:100%;height:112px;object-fit:cover}
+.home-temple-card>span{display:block;padding:10px}
+.home-temple-card strong,.home-temple-card small{display:block;overflow:hidden;text-overflow:ellipsis}
+.home-temple-card strong{font-size:10px;white-space:nowrap}
+.home-temple-card small{margin-top:4px;color:#7e897e;font-size:8px}
+.site-footer{scroll-margin-top:70px}
+
+/* Driver and fleet pages use the same forest-green photographic masthead. */
+.driver-page{background:#f5f6ef}
+.driver-hero{position:relative;overflow:hidden;padding:43px 0 38px;border:0;background-color:#103b2b;background-image:linear-gradient(90deg,#0c3829f5 0%,#0d3b2bcf 49%,#0d35258c 100%),url('/daily-ride-chennai.png');background-size:cover;background-position:center 46%;color:#fff}
+.attachment-page .driver-hero{background-image:linear-gradient(90deg,#0c3829f5 0%,#0d3b2bcf 49%,#0d35258c 100%),url('/hourly-rental-chennai.png')}
+.driver-hero-inner{grid-template-columns:1fr;gap:0}
+.driver-hero .eyebrow{color:#f5d12b}
+.driver-hero h1{margin:13px 0 10px;font-size:clamp(37px,4vw,52px);letter-spacing:-.06em;line-height:.98}
+.driver-hero h1 em{color:#ffcf24}
+.driver-hero-inner>div:first-child>p{max-width:530px;color:#edf3ed;font-size:11px;line-height:1.6}
+.driver-hero-card{display:none}
+.driver-form-section{padding:24px 0 56px}
+.driver-form-layout{display:block;width:min(850px,calc(100% - 36px))}
+.driver-aside{display:none}
+.driver-form-card{padding:25px 27px;border:1px solid #e4e9df;border-radius:12px;background:#fffefa;box-shadow:0 12px 34px #20392e12}
+.driver-step{color:#244e39}
+.driver-step-heading{display:flex;align-items:center;gap:10px;margin:11px 0 12px}
+.driver-step-heading>span,.attachment-mini-step{width:22px;height:22px;flex:0 0 22px;display:grid;place-items:center;border-radius:50%;background:#164a34;color:#fff;font-size:9px;font-weight:800}
+.driver-step-heading strong,.driver-step-heading small{display:block}
+.driver-step-heading strong{color:#254133;font-size:10px;line-height:1.25}
+.driver-step-heading small{margin-top:3px;color:#859087;font-size:8px}
+.driver-application h2,.driver-review h2{font-size:21px}
+.driver-form-intro,.driver-review-intro{font-size:9px}
+.driver-partner-callout{border-left-color:#e9c325;background:#f8f6e9;color:#5f6858}
+.driver-partner-callout strong{color:#294332}
+.driver-subsection{margin-top:20px;padding-top:17px}
+.driver-subsection h3{font-size:13px}
+.driver-fieldset legend,.driver-field>label:not(.driver-check){font-size:9px}
+.driver-choice-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+.driver-choice{min-height:0}
+.driver-check-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+.driver-submit,.driver-secondary{border-color:#efc819;background:#ffcf24;color:#163529}
+.driver-submit:hover,.driver-secondary:hover{background:#f2c31a}
+.driver-submit span{color:#163529}
+.driver-secondary{border-color:#dfe6dc;background:#fff;color:#35463a}
+.attachment-add-button{border-color:#c8d9bd;background:#eff5e9;color:#274d37}
+.attachment-vehicle-card{background:#fff}
+.attachment-docs{background:#f7f8f1}
+.attachment-instruction{margin:-1px 0 13px;color:#7f8a7f;font-size:8px;line-height:1.55}
+.attachment-mini-step{display:inline-grid;width:18px;height:18px;margin-right:7px;vertical-align:middle;font-size:8px}
+.driver-consents{background:#f5f7ee}
+.driver-footer{display:none}
+
+@media(max-width:900px){.nav-inner{gap:10px}.main-nav{gap:12px;font-size:9px}.service-options{grid-template-columns:repeat(3,minmax(0,1fr))}.home-temple-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:700px){
+  .site-header{height:59px}
+  .nav-inner{position:relative}
+  .mobile-menu-toggle{display:flex;width:36px;height:36px;flex-direction:column;align-items:center;justify-content:center;gap:5px;margin-left:auto;border:0;border-radius:7px;background:transparent;cursor:pointer}
+  .mobile-menu-toggle span{width:19px;height:2px;border-radius:2px;background:#1c382a}
+  .main-nav{position:absolute;top:calc(100% + 8px);left:0;right:0;display:none;flex-direction:column;align-items:stretch;gap:0;padding:7px;border:1px solid #e3e9df;border-radius:10px;background:#fffefa;box-shadow:0 14px 32px #17382e20;font-size:11px;white-space:normal}
+  .main-nav.menu-open{display:flex}
+  .main-nav a{padding:11px;border-bottom:1px solid #edf0e9}
+  .main-nav a:last-child{border-bottom:0}
+  .nav-cta{padding:10px 11px;font-size:9px}
+  .hero{min-height:375px;padding:46px 0 58px;background-position:59% center}
+  .hero h1{font-size:clamp(42px,12vw,59px)}
+  .hero-lede{max-width:340px;font-size:11px}
+  .hero-foot{font-size:7px}
+  .booking-section{margin-top:-34px;padding-bottom:36px}
+  .booking-card{padding:17px 13px;border-radius:10px}
+  .service-options{grid-template-columns:repeat(2,minmax(0,1fr));gap:6px}
+  .service-option{min-height:47px;padding:7px}
+  .service-text strong{font-size:8px}
+  .service-text small{font-size:7px}
+  .form-grid{grid-template-columns:1fr 1fr;gap:11px 8px}
+  .vehicle-option img{aspect-ratio:2.2/1}
+  .services-section,.partner-section,.homepage-temples{padding:40px 0}
+  .section-heading-row h2{font-size:31px}
+  .service-cards{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .service-card{min-height:150px;padding:12px}
+  .partner-card-grid{grid-template-columns:1fr}
+  .partner-temple-card{grid-column:auto}
+  .partner-card{min-height:310px;padding-top:155px}
+  .partner-card:before{height:142px}
+  .partner-card h3{margin-top:8px}
+  .home-temples-heading{align-items:flex-start;flex-direction:column;gap:12px}
+  .benefit-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .home-temple-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+  .home-temple-card img{height:95px}
+  .driver-hero{padding:34px 0 28px;background-position:60% center}
+  .driver-hero h1{font-size:41px}
+  .driver-form-section{padding:16px 0 37px}
+  .driver-form-layout{width:calc(100% - 24px)}
+  .driver-form-card{padding:18px 13px}
+  .driver-form-grid{grid-template-columns:1fr 1fr;gap:12px 8px}
+  .driver-choice-grid{grid-template-columns:1fr}
+  .driver-choice{padding:10px}
+  .attachment-section-title{align-items:center}
+}
+@media(max-width:390px){.nav-cta{padding:9px;font-size:8px}.form-grid,.driver-form-grid{grid-template-columns:1fr}.driver-field-full{grid-column:auto}.service-options{grid-template-columns:1fr 1fr}.home-temple-card strong{font-size:9px}}
+
+/* Driver registration: restore readable type and a helpful two-column application layout. */
+.driver-page:not(.attachment-page) .driver-hero{display:flex;min-height:480px;align-items:center;padding:64px 0 58px;background-image:linear-gradient(90deg,#0c3829f0 0%,#0d3b2bcf 39%,#0d35255e 67%,#0d352514 100%),url('/driver-recruitment-hero.jpg');background-size:cover;background-position:center 52%}
+.driver-page:not(.attachment-page) .driver-hero-inner{grid-template-columns:1fr;gap:0}
+.driver-page:not(.attachment-page) .driver-hero-card{display:none}
+.driver-page:not(.attachment-page) .driver-hero-copy{max-width:700px}
+.driver-page:not(.attachment-page) .driver-hero h1{margin:17px 0 13px;font-size:clamp(48px,6vw,76px);line-height:.99;letter-spacing:-.07em}
+.driver-page:not(.attachment-page) .driver-hero-inner>div:first-child>p{max-width:590px;margin:0;color:#edf3ed;font-size:16px;line-height:1.75}
+.driver-hero-cta{display:inline-flex;min-height:50px;align-items:center;gap:28px;margin-top:24px;padding:0 19px;border-radius:8px;background:#d9ef72;color:#20392e;font-size:14px;font-weight:800;text-decoration:none;box-shadow:0 8px 24px #091d1640;transition:transform .18s,background .18s}
+.driver-hero-cta:hover{transform:translateY(-2px);background:#e5f795}
+.driver-hero-cta span{font-size:18px}
+.driver-hero-trust{display:flex;flex-wrap:wrap;gap:10px 20px;margin-top:24px}
+.driver-hero-trust span{display:flex;align-items:center;gap:8px;color:#edf3ed;font-size:12px;font-weight:650}
+.driver-hero-trust i{display:grid;width:18px;height:18px;place-items:center;border:1px solid #d7ed89;border-radius:50%;color:#d7ed89;font-size:11px;font-style:normal}
+.driver-registration-page#driver-application{scroll-margin-top:100px}
+.driver-registration-page{padding:50px 0 72px}
+.driver-registration-page .driver-form-layout{display:grid;width:min(1240px,calc(100% - 48px));grid-template-columns:minmax(290px,.82fr) minmax(0,1.8fr);gap:30px}
+.driver-registration-page .driver-aside{display:flex;min-height:490px;position:sticky;top:105px;flex-direction:column;justify-content:flex-end;overflow:hidden;padding:30px;border:1px solid #52715e;border-radius:16px;background-color:#173a2c;background-image:linear-gradient(180deg,#153a2c35 0%,#123526a8 56%,#102d24f5 100%),url('/driver-recruitment-card.jpg');background-size:cover;background-position:50% center;color:#fff;box-shadow:0 18px 42px #2038291a}
+.driver-registration-page .driver-aside .eyebrow{color:#d6ed81}
+.driver-registration-page .driver-aside h2{color:#fff;font-size:clamp(30px,3vw,40px)}
+.driver-registration-page .driver-aside>p,.driver-registration-page .driver-aside-note p{color:#eef4ec;font-size:14px;line-height:1.75}
+.driver-registration-page .driver-aside-note{border-color:#ffffff48}
+.driver-registration-page .driver-aside-note>span{border-color:#ffffffa0;color:#e1f492}
+.driver-registration-page .driver-form-card{padding:clamp(24px,3vw,36px);border-radius:16px}
+.driver-registration-page .driver-step{font-size:11px}
+.driver-registration-page .driver-application h2,.driver-registration-page .driver-review h2{font-size:clamp(25px,2.6vw,31px)}
+.driver-registration-page .driver-form-intro,.driver-registration-page .driver-review-intro{font-size:14px;line-height:1.7}
+.driver-registration-page .driver-application-columns{gap:18px}
+.driver-registration-page .driver-application-panel{padding:19px;border-radius:12px}
+.driver-registration-page .driver-step-heading strong{font-size:14px}
+.driver-registration-page .driver-step-heading small{font-size:12px}
+.driver-registration-page .driver-field>label:not(.driver-check){font-size:13px;line-height:1.45}
+.driver-registration-page .driver-field input:not([type=checkbox]):not([type=radio]),.driver-registration-page .driver-field select,.driver-registration-page .driver-field textarea{min-height:46px;padding:11px 12px;border-radius:8px;font-size:14px}
+.driver-registration-page .driver-check,.driver-registration-page .driver-consents .driver-check{font-size:13px;line-height:1.65}
+.driver-registration-page .driver-consents{padding:15px}
+.driver-registration-page .driver-privacy-note{font-size:12px;line-height:1.7}
+.driver-registration-page .driver-submit,.driver-registration-page .driver-secondary{min-height:48px;padding:0 19px;border-radius:8px;font-size:14px}
+.driver-registration-page .driver-summary dt,.driver-registration-page .driver-summary dd{font-size:13px}
+.driver-registration-page .driver-consent-note{font-size:13px}
+.driver-registration-page .driver-error{font-size:12px}
+.driver-registration-page .driver-honeypot{position:absolute!important;left:-10000px!important;width:1px!important;height:1px!important;overflow:hidden!important}
+.driver-registration-page .driver-save-error{margin:16px 0}
+.driver-registration-page .driver-submit:disabled,.driver-admin-page .driver-submit:disabled{opacity:.65;cursor:wait;transform:none}
+.driver-application-reference{display:grid;gap:7px;margin:20px 0;padding:16px;border:1px solid #dce8d3;border-radius:10px;background:#f7faf3}
+.driver-application-reference span{color:#7d8a7e;font-size:12px}
+.driver-application-reference strong{color:#294735;font-size:15px;overflow-wrap:anywhere}
+.driver-registration-page :is(input,select,textarea,button,a):focus-visible{outline:3px solid #aacb8f;outline-offset:3px}
+@media(max-width:900px){
+ .driver-page:not(.attachment-page) .driver-hero{min-height:430px;background-position:60% center}
+ .driver-page:not(.attachment-page) .driver-hero-inner{grid-template-columns:1fr;gap:0}
+ .driver-registration-page .driver-form-layout{grid-template-columns:minmax(230px,.72fr) minmax(0,1.45fr);gap:20px}
+ .driver-registration-page .driver-application-columns{grid-template-columns:1fr}
+}
+@media(max-width:700px){
+ .driver-page:not(.attachment-page) .driver-hero{min-height:500px;align-items:flex-start;padding:52px 0 38px;background-position:38% center}
+ .driver-page:not(.attachment-page) .driver-hero-inner{grid-template-columns:1fr;gap:0}
+ .driver-page:not(.attachment-page) .driver-hero h1{font-size:clamp(42px,10vw,58px)}
+ .driver-page:not(.attachment-page) .driver-hero-inner>div:first-child>p{font-size:14px}
+ .driver-hero-trust{display:grid;gap:9px;margin-top:18px}
+ .driver-page:not(.attachment-page) .driver-hero-card{display:none}
+ .driver-registration-page{padding:30px 0 48px}
+ .driver-registration-page .driver-form-layout{display:grid;width:calc(100% - 28px);grid-template-columns:1fr;gap:18px}
+ .driver-registration-page .driver-aside{min-height:300px;position:relative;top:auto;padding:22px;background-position:50% center}
+ .driver-registration-page .driver-aside h2{margin:10px 0 7px;font-size:29px}
+ .driver-registration-page .driver-aside>p{font-size:13px}
+ .driver-registration-page .driver-aside-note{display:flex;margin-top:15px;padding:12px}
+ .driver-registration-page .driver-aside-note p{font-size:12px}
+ .driver-registration-page .driver-form-card{padding:22px 16px}
+ .driver-registration-page .driver-review-actions{flex-direction:column-reverse}
+ .driver-registration-page .driver-review-actions>*{width:100%}
+}
+@media(max-width:390px){.driver-registration-page .driver-form-layout{width:calc(100% - 22px)}.driver-registration-page .driver-form-card{padding:19px 13px}.driver-registration-page .driver-application-panel{padding:14px}}
+
+/* Show the ride selected by the customer as a continuous homepage backdrop. */
+.site-header{background:rgba(251,252,247,.86)}
+.quick-ride-picker{background:rgba(248,251,245,.9)}
+.hero{background-image:linear-gradient(90deg,rgba(7,42,31,.88) 0%,rgba(12,53,39,.66) 37%,rgba(11,45,34,.08) 100%),var(--hero-ride-image)}
+.booking-section{background:rgba(251,252,248,.87)}
+.services-section{background:rgba(246,247,239,.86)}
+.partner-section{background:rgba(255,253,243,.88)}
+.homepage-temples{background:rgba(245,247,239,.86)}
+.how-section{background:rgba(251,252,248,.87)}
+.why-section{background:rgba(23,56,46,.94)}
+
+/* Driver careers: a distinct editorial recruitment page with a photo-led split hero. */
+.driver-page:not(.attachment-page){background:#f4f2e9}
+.driver-page:not(.attachment-page) .driver-hero{min-height:0;display:block;padding:34px 0 40px;border:0;background:#f4f2e9;color:#20372d}
+.driver-page:not(.attachment-page) .driver-hero-inner{width:min(1280px,calc(100% - 56px));grid-template-columns:minmax(0,.9fr) minmax(0,1.1fr);gap:clamp(34px,6vw,86px)}
+.driver-page:not(.attachment-page) .driver-hero-copy{padding:35px 0 20px}
+.driver-page:not(.attachment-page) .driver-hero .eyebrow{color:#71855a;font-size:11px;letter-spacing:.17em}
+.driver-page:not(.attachment-page) .driver-hero h1{max-width:630px;margin:22px 0 18px;color:#20372d;font-size:clamp(48px,5.2vw,76px);line-height:.99;letter-spacing:-.075em}
+.driver-page:not(.attachment-page) .driver-hero h1 em{color:#81956d}
+.driver-page:not(.attachment-page) .driver-hero-inner>div:first-child>p{max-width:480px;color:#637169;font-size:16px;line-height:1.75}
+.driver-page:not(.attachment-page) .driver-hero-cta{min-height:54px;gap:30px;margin-top:24px;padding:0 21px;background:#233f31;color:#fff;font-size:14px;box-shadow:0 10px 24px #20392e20}
+.driver-page:not(.attachment-page) .driver-hero-cta:hover{background:#345943}
+.driver-page:not(.attachment-page) .driver-hero-cta span{color:#d9ef72}
+.driver-page:not(.attachment-page) .driver-hero-trust{gap:9px 16px;margin-top:25px}
+.driver-page:not(.attachment-page) .driver-hero-trust span{color:#596a5e;font-size:11px}
+.driver-page:not(.attachment-page) .driver-hero-trust i{border-color:#b8ca9e;color:#5d7d45}
+.driver-page:not(.attachment-page) .driver-hero-card{position:relative;display:block;min-height:420px;overflow:hidden;padding:0;border:0;border-radius:18px;background:#d6dfd0;box-shadow:0 24px 60px #263d2920;transform:rotate(1deg)}
+.driver-page:not(.attachment-page) .driver-hero-card img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:54% 42%}
+.driver-page:not(.attachment-page) .driver-hero-card:after{position:absolute;inset:40% 0 0;content:"";background:linear-gradient(0deg,#10291dd9,transparent)}
+.driver-hero-photo-caption{position:absolute;z-index:1;right:25px;bottom:25px;left:25px;color:#fff}
+.driver-hero-photo-caption span,.driver-hero-photo-caption strong{display:block}
+.driver-hero-photo-caption span{margin-bottom:8px;color:#d9ef72;font-size:10px;font-weight:800;letter-spacing:.18em}
+.driver-hero-photo-caption strong{font-family:Manrope,sans-serif;font-size:clamp(23px,3vw,36px);letter-spacing:-.05em}
+.driver-hero-stamp{position:absolute;z-index:2;top:20px;right:20px;width:54px;height:54px;display:grid;place-items:center;border:1px solid #ffffff80;border-radius:50%;background:#173a2ddd;color:#d9ef72;font-size:23px;font-weight:850}
+.driver-hero-stamp span{position:absolute;top:8px;right:10px;font-size:10px}
+.driver-journey{padding:34px 0 38px;background:#203b2e;color:#fff}
+.driver-journey-inner{display:grid;grid-template-columns:.72fr 1.28fr;align-items:center;gap:42px}
+.driver-journey-heading .eyebrow{color:#d9ef72;font-size:10px;letter-spacing:.17em}
+.driver-journey-heading h2{max-width:300px;margin:10px 0 0;font-family:Manrope,sans-serif;font-size:clamp(24px,3vw,34px);line-height:1.12;letter-spacing:-.055em}
+.driver-journey-steps{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.driver-journey-steps article{display:flex;gap:12px;min-height:90px;padding:15px 13px;border:1px solid #ffffff2b;border-radius:10px;background:#ffffff09}
+.driver-journey-steps article>span{flex:0 0 auto;color:#d9ef72;font-size:10px;font-weight:850;letter-spacing:.1em}
+.driver-journey-steps strong,.driver-journey-steps small{display:block}
+.driver-journey-steps strong{font-size:12px;line-height:1.4}
+.driver-journey-steps small{margin-top:6px;color:#c1d0c3;font-size:10px;line-height:1.5}
+.driver-registration-page{padding:58px 0 78px}
+.driver-registration-page .driver-form-layout{grid-template-columns:minmax(280px,.72fr) minmax(0,1.55fr);gap:34px}
+.driver-registration-page .driver-aside{min-height:530px;top:94px;border-radius:18px;background-position:52% center}
+.driver-registration-page .driver-form-card{border:1px solid #e2e4d9;border-radius:18px;box-shadow:0 20px 55px #273b2d12}
+.driver-registration-page .driver-application-panel{border-color:#e5e8de;background:#fdfdfa}
+@media(max-width:900px){
+ .driver-page:not(.attachment-page) .driver-hero-inner{grid-template-columns:minmax(0,.9fr) minmax(0,1.1fr);gap:26px}
+ .driver-page:not(.attachment-page) .driver-hero-card{min-height:380px}
+ .driver-journey-inner{grid-template-columns:1fr;gap:20px}
+ .driver-journey-heading h2{max-width:none}
+ .driver-registration-page .driver-form-layout{grid-template-columns:minmax(230px,.72fr) minmax(0,1.3fr);gap:20px}
+}
+@media(max-width:700px){
+ .driver-page:not(.attachment-page) .driver-hero{padding:19px 0 29px}
+ .driver-page:not(.attachment-page) .driver-hero-inner{width:calc(100% - 28px);grid-template-columns:1fr;gap:22px}
+ .driver-page:not(.attachment-page) .driver-hero-copy{padding:20px 3px 0}
+ .driver-page:not(.attachment-page) .driver-hero h1{margin:17px 0 13px;font-size:clamp(42px,11vw,60px)}
+ .driver-page:not(.attachment-page) .driver-hero-inner>div:first-child>p{font-size:14px}
+ .driver-page:not(.attachment-page) .driver-hero-trust{display:flex;gap:9px 14px;margin-top:19px}
+ .driver-page:not(.attachment-page) .driver-hero-trust span{font-size:10px}
+ .driver-page:not(.attachment-page) .driver-hero-card{min-height:300px;border-radius:14px;transform:none}
+ .driver-page:not(.attachment-page) .driver-hero-card img{object-position:56% 42%}
+ .driver-hero-photo-caption{right:18px;bottom:18px;left:18px}
+ .driver-journey{padding:27px 0}
+ .driver-journey-inner{width:calc(100% - 28px);gap:17px}
+ .driver-journey-steps{grid-template-columns:1fr;gap:8px}
+ .driver-journey-steps article{min-height:0;padding:12px}
+ .driver-journey-steps small{font-size:11px}
+ .driver-registration-page{padding:30px 0 48px}
+ .driver-registration-page .driver-form-layout{grid-template-columns:1fr}
+ .driver-registration-page .driver-aside{min-height:300px}
+}
+
+/* Simplified driver layout: balanced hero and one full-width application section. */
+.driver-page:not(.attachment-page) .driver-hero-inner{grid-template-columns:repeat(2,minmax(0,1fr));gap:clamp(28px,5vw,72px)}
+.driver-page:not(.attachment-page) .driver-hero-copy{max-width:none}
+.driver-page:not(.attachment-page) .driver-hero-card{min-height:440px}
+.driver-registration-page .driver-form-layout{display:block;width:min(1160px,calc(100% - 48px))}
+.driver-registration-page .driver-aside{display:none}
+.driver-registration-page .driver-form-card{width:100%;padding:clamp(24px,4vw,42px)}
+.driver-registration-page .driver-application-columns{grid-template-columns:repeat(2,minmax(0,1fr));gap:20px}
+.driver-page:not(.attachment-page){min-height:100vh;overflow:visible}
+.driver-page:not(.attachment-page) .driver-hero-card{height:clamp(290px,29vw,380px);min-height:0;max-height:380px}
+.driver-page:not(.attachment-page) .driver-hero-card img{height:100%}
+.driver-page:not(.attachment-page) .driver-registration-page{overflow:visible}
+html:has(.driver-page:not(.attachment-page)),body:has(.driver-page:not(.attachment-page)),body:has(.driver-page:not(.attachment-page)) #root{height:auto;min-height:100%;overflow-y:auto}
+.driver-page:not(.attachment-page) .driver-hero{padding-top:18px;padding-bottom:20px}
+.driver-page:not(.attachment-page) .driver-hero-copy{padding-top:12px;padding-bottom:10px}
+.driver-page:not(.attachment-page) .driver-hero-card{height:clamp(260px,25vw,330px);max-height:330px}
+.driver-registration-page{padding-top:30px;padding-bottom:44px}
+.driver-registration-page .driver-form-card{max-width:1000px;margin:0 auto;padding:clamp(20px,3vw,32px)}
+.driver-registration-page .driver-form-intro{margin-bottom:14px}
+.driver-registration-page .driver-form-progress{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px;margin:0 0 17px}
+.driver-registration-page .driver-form-progress span{height:4px;border-radius:10px;background:#e4e9e1}
+.driver-registration-page .driver-form-progress span.active{background:#91ad5b}
+.driver-registration-page .driver-personal-grid,.driver-registration-page .driver-work-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:13px 16px}
+.driver-registration-page .driver-work-extra{grid-template-columns:repeat(2,minmax(0,1fr));gap:13px;margin-top:15px}
+.driver-registration-page .driver-consents{margin-top:15px;padding:12px}
+.driver-registration-page .driver-privacy-note{margin:10px 0}
+.driver-form-step-actions{display:flex;gap:12px;margin-top:10px}
+.driver-form-step-actions .driver-review-button{width:100%;margin:0}
+.driver-page:not(.attachment-page) .driver-hero{padding-top:10px;padding-bottom:12px}
+.driver-page:not(.attachment-page) .driver-hero-card{height:clamp(190px,19vw,260px);max-height:260px;border-radius:14px}
+.driver-registration-page{padding-top:20px;padding-bottom:28px}
+.driver-registration-page .driver-form-card{padding:22px 25px}
+.driver-registration-page .driver-application-columns{align-items:stretch;gap:14px}
+.driver-registration-page .driver-application-panel{padding:14px}
+.driver-registration-page .driver-step-heading{margin-bottom:11px;padding-bottom:9px}
+.driver-registration-page .driver-personal-grid,.driver-registration-page .driver-work-grid{gap:10px 12px}
+.driver-registration-page .driver-field>label:not(.driver-check){margin-bottom:5px}
+.driver-registration-page .driver-field input:not([type=checkbox]):not([type=radio]),.driver-registration-page .driver-field select{min-height:40px;padding:8px 10px}
+.driver-registration-page .driver-work-extra{margin-top:11px}
+.driver-registration-page .driver-work-extra textarea{min-height:70px}
+.driver-registration-page .driver-consents{margin-top:11px;padding:10px}
+.driver-registration-page .driver-privacy-note{margin:8px 0}
+.driver-registration-page .driver-form-progress,.driver-form-step-actions{display:none}
+@media(max-width:700px){
+ .driver-page:not(.attachment-page) .driver-hero-card{height:160px;min-height:160px;max-height:160px}
+ .driver-page:not(.attachment-page) .driver-hero-copy{padding-top:10px;padding-bottom:0}
+ .driver-page:not(.attachment-page) .driver-hero-trust{display:none}
+ .driver-registration-page .driver-form-card{padding:17px 12px}
+ .driver-registration-page .driver-application-panel{padding:12px}
+ .driver-registration-page .driver-work-extra{grid-template-columns:1fr}
+}
+
+/* Compact the highlighted driver hero so the application begins sooner. */
+.driver-page:not(.attachment-page) .driver-hero{padding:12px 0}
+.driver-page:not(.attachment-page) .driver-hero-inner{gap:clamp(24px,4vw,56px)}
+.driver-page:not(.attachment-page) .driver-hero-copy{padding:0}
+.driver-page:not(.attachment-page) .driver-hero h1{max-width:570px;margin:12px 0 10px;font-size:clamp(38px,4vw,56px);line-height:1.02}
+.driver-page:not(.attachment-page) .driver-hero-inner>div:first-child>p{max-width:490px;font-size:14px;line-height:1.6}
+.driver-page:not(.attachment-page) .driver-hero-cta{min-height:44px;margin-top:14px}
+.driver-page:not(.attachment-page) .driver-hero-trust{gap:8px 12px;margin-top:14px}
+.driver-page:not(.attachment-page) .driver-hero-trust span{font-size:10px}
+.driver-page:not(.attachment-page) .driver-hero-card{height:210px;max-height:210px;border-radius:13px;transform:none}
+@media(max-width:700px){
+ .driver-page:not(.attachment-page) .driver-hero{padding:12px 0 16px}
+ .driver-page:not(.attachment-page) .driver-hero h1{font-size:clamp(36px,9vw,48px)}
+ .driver-page:not(.attachment-page) .driver-hero-card{height:145px;min-height:145px;max-height:145px}
+}
+
+/* Full-width recruitment photo across the complete driver hero header. */
+.driver-page:not(.attachment-page) .driver-hero{position:relative;min-height:300px;display:flex;align-items:center;overflow:hidden;padding:30px 0;background-color:#17382e;background-image:linear-gradient(90deg,#102b20ed 0%,#102b20c9 44%,#102b2080 72%,#102b204d 100%),url('/driver-recruitment-hero.jpg');background-size:cover;background-position:center 45%;color:#fff}
+.driver-page:not(.attachment-page) .driver-hero-inner{position:relative;z-index:1;display:block;width:min(1280px,calc(100% - 56px))}
+.driver-page:not(.attachment-page) .driver-hero-copy{max-width:680px;padding:0}
+.driver-page:not(.attachment-page) .driver-hero .eyebrow{color:#d9ef72}
+.driver-page:not(.attachment-page) .driver-hero h1{max-width:680px;color:#fff;font-size:clamp(40px,4.5vw,62px)}
+.driver-page:not(.attachment-page) .driver-hero h1 em{color:#d9ef72}
+.driver-page:not(.attachment-page) .driver-hero-inner>div:first-child>p{color:#f0f4ef}
+.driver-page:not(.attachment-page) .driver-hero-cta{background:#d9ef72;color:#20392e}
+.driver-page:not(.attachment-page) .driver-hero-cta span{color:#20392e}
+.driver-page:not(.attachment-page) .driver-hero-trust span{color:#fff}
+.driver-page:not(.attachment-page) .driver-hero-trust i{border-color:#d9ef72;color:#d9ef72}
+.driver-page:not(.attachment-page) .driver-hero-card{display:none}
+@media(max-width:700px){
+ .driver-page:not(.attachment-page) .driver-hero{min-height:320px;padding:26px 0;background-image:linear-gradient(90deg,#102b20e8 0%,#102b20c8 58%,#102b2080 100%),url('/driver-recruitment-hero.jpg');background-position:59% center}
+ .driver-page:not(.attachment-page) .driver-hero-inner{width:calc(100% - 32px)}
+ .driver-page:not(.attachment-page) .driver-hero h1{font-size:clamp(38px,9.5vw,50px)}
+ .driver-page:not(.attachment-page) .driver-hero-inner>div:first-child>p{max-width:420px}
+}
+@media(max-width:900px){
+ .driver-page:not(.attachment-page) .driver-hero-inner{grid-template-columns:repeat(2,minmax(0,1fr));gap:24px}
+ .driver-page:not(.attachment-page) .driver-hero-card{min-height:380px}
+ .driver-registration-page .driver-application-columns{grid-template-columns:1fr}
+}
+@media(max-width:700px){
+ .driver-page:not(.attachment-page) .driver-hero-inner{grid-template-columns:1fr;gap:22px}
+ .driver-page:not(.attachment-page) .driver-hero-card{height:260px;min-height:260px;max-height:none}
+ .driver-registration-page .driver-form-layout{width:calc(100% - 28px)}
+ .driver-registration-page .driver-form-card{padding:22px 16px}
+ .driver-registration-page .driver-personal-grid,.driver-registration-page .driver-work-grid,.driver-registration-page .driver-work-extra{grid-template-columns:1fr}
+}
+
+/* Compact homepage rhythm: keep the main booking and supporting choices in one tighter flow. */
+.hero{min-height:340px;padding:34px 0 38px}
+.hero-grid{min-height:258px}
+.hero-copy{padding:0}
+.hero h1{margin:14px 0 9px;font-size:clamp(42px,5vw,62px)}
+.hero-lede{font-size:11px}
+.hero-actions{margin-top:14px}
+.trust-row{margin-top:16px}
+.hero-foot{display:none}
+.quick-ride-picker{padding:10px 0}
+.quick-ride-option{min-height:44px}
+.booking-section{margin-top:-28px;padding-bottom:30px}
+.booking-card{padding:16px 20px}
+.booking-card-head{margin-bottom:9px}
+.service-options{margin-bottom:11px;padding-bottom:10px}
+.form-grid{gap:9px 10px}
+.field{gap:5px}
+.field input,.field select,.field textarea{min-height:35px;padding:8px 9px}
+.vehicle-picker{margin-top:10px}
+.vehicle-option{min-height:135px}
+.vehicle-option img{aspect-ratio:3.8/1}
+.vehicle-option-copy{gap:3px;padding:7px 26px 7px 9px}
+.vehicle-rate-note{margin-top:6px}
+.form-divider{margin:14px 0 11px;padding-top:12px}
+.fare-calculator{margin-top:12px;padding:13px}
+.fare-help{margin:7px 0}
+.button-submit{margin-top:13px;padding:12px}
+.services-section{padding:28px 0 34px}
+.section-heading-row{margin-bottom:18px}
+.section-heading-row h2{font-size:32px}
+.service-card{min-height:125px;padding:12px}
+.service-card h3{margin:12px 0 5px}
+.service-card p{margin-bottom:10px}
+.how-section{padding:20px 0}
+.how-grid{grid-template-columns:.55fr 1.45fr;gap:20px;align-items:center}
+.how-grid h2{margin:8px 0;font-size:26px}
+.how-intro{display:none}
+.steps{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));border-top:0;gap:10px}
+.step{grid-template-columns:26px 1fr;gap:8px;padding:10px;border:1px solid #e1e8de;border-radius:8px;background:#ffffffc9}
+.step-symbol{display:none}
+.step h3{font-size:10px;margin-bottom:4px}
+.step p{font-size:8px;line-height:1.45}
+.partner-section{padding:32px 0 36px}
+.partner-section .section-heading-row{margin-bottom:15px}
+.partner-card-grid{gap:10px}
+.partner-card{min-height:245px;padding:122px 13px 13px}
+.partner-card:before{height:108px}
+.partner-card h3{font-size:15px;margin:6px 0 4px}
+.partner-card p{font-size:9px;line-height:1.45;margin-bottom:10px}
+.partner-card>a{padding:9px}
+.why-section{padding:26px 0}
+.why-reference-heading h2{margin:6px 0 13px;font-size:22px}
+.benefit-grid{gap:7px}
+.benefit-grid article{min-height:52px;padding:8px}
+.homepage-temples{padding:30px 0 34px}
+.home-temples-heading{margin-bottom:13px}
+.home-temple-grid{gap:8px}
+.home-temple-card img{height:82px}
+.home-temple-card>span{padding:7px}
+.site-footer .footer-main{padding:20px 0}
+@media(max-width:700px){
+  .hero{min-height:310px;padding:32px 0 42px}
+  .hero-grid{min-height:225px}
+  .hero h1{font-size:clamp(39px,11vw,54px)}
+  .hero-selected-service{margin-top:2px;padding:6px 9px}
+  .booking-section{margin-top:-28px;padding-bottom:22px}
+  .booking-card{padding:14px 11px}
+  .vehicle-option{min-height:0}
+  .vehicle-option img{aspect-ratio:2.6/1}
+  .services-section,.partner-section,.homepage-temples{padding:25px 0}
+  .service-card{min-height:112px;padding:10px}
+  .how-section{padding:16px 0}
+  .how-grid{grid-template-columns:1fr;gap:10px}
+  .how-grid h2{font-size:22px;margin:5px 0}
+  .steps{gap:6px}
+  .step{grid-template-columns:20px 1fr;gap:5px;padding:7px}
+  .step-no{font-size:8px}
+  .step h3{font-size:8px}
+  .step p{font-size:7px}
+  .partner-card{min-height:215px;padding:115px 11px 11px}
+  .partner-card:before{height:102px}
+  .why-section{padding:22px 0}
+  .home-temple-card img{height:72px}
+}
+
+/* Keep pickup and destination compact on one line. */
+.booking-trip-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+.booking-trip-grid .booking-location-field{grid-column:auto;gap:4px}
+.booking-location-field .address-label{margin-bottom:0;font-size:8px}
+.booking-location-field .address-input-row{gap:5px}
+.booking-location-field .address-input-row .address-input-wrap>input{min-height:34px;padding:7px 8px;font-size:9px}
+.booking-location-field .map-pick-button{flex-basis:48px;gap:3px;font-size:8px}
+.booking-location-field .map-pick-button>span:first-child{font-size:14px}
+@media(max-width:700px){.booking-location-field .map-pick-button{flex-basis:40px}}
+
+/* Preview option 3: guided booking wizard beside the selected ride image. */
+.booking-layout{display:grid;grid-template-columns:minmax(0,.85fr) minmax(0,1.15fr);align-items:start;gap:22px}
+.section-intro{display:block;min-width:0;padding:4px 0 0}
+.section-intro h2{font-size:clamp(36px,4vw,50px);margin:14px 0 10px}
+.section-intro>p{font-size:11px;line-height:1.65;max-width:420px}
+.service-ride-panel{width:100%;aspect-ratio:1.02;margin:14px 0;border-radius:11px}
+.service-ride-caption{left:14px;right:14px;bottom:13px}
+.booking-note{margin-top:15px;padding-top:13px}
+.booking-card{min-width:0;padding:16px}
+.booking-form-columns{grid-template-columns:1fr;gap:0}
+.booking-main-column,.booking-side-column{padding:0;border:0;border-radius:0;background:transparent}
+.booking-side-column{margin-top:15px;padding-top:13px;border-top:1px solid #e5e9df}
+.booking-side-column .form-divider{margin:0 0 11px;padding:0;border:0}
+.booking-side-column .fare-calculator{margin-top:12px}
+.booking-side-column .button-submit{margin-top:11px}
+@media(max-width:900px){.booking-layout{grid-template-columns:minmax(0,.75fr) minmax(0,1.25fr);gap:15px}.booking-card{padding:13px}.section-intro h2{font-size:36px}}
+@media(max-width:700px){.booking-layout{grid-template-columns:1fr;gap:13px}.section-intro{padding:0}.section-intro .eyebrow,.section-intro h2,.section-intro>p,.booking-note{display:none}.service-ride-panel{aspect-ratio:2.2/1;margin:0 0 12px}.booking-card{padding:14px 11px}.booking-form-columns{grid-template-columns:1fr}.booking-side-column{margin-top:13px;padding-top:11px}}
+
+.booking-wizard-progress{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px;margin:0 0 13px}
+.booking-wizard-progress button{display:flex;align-items:center;gap:7px;min-width:0;padding:8px 9px;border:1px solid #e4e9df;border-radius:7px;background:#f8f9f4;color:#778176;text-align:left;font:inherit;font-size:8px;font-weight:700;cursor:pointer}
+.booking-wizard-progress button span{display:grid;width:19px;height:19px;flex:0 0 19px;place-items:center;border-radius:50%;background:#edf1e9;color:#657466;font-size:8px}
+.booking-wizard-progress button.current{border-color:#9dbd77;background:#eff5e8;color:#234732;box-shadow:inset 0 0 0 1px #9dbd77}
+.booking-wizard-progress button.current span,.booking-wizard-progress button.complete span{background:#1c4b35;color:#fff}
+.booking-wizard-progress button.complete{border-color:#d6e2cc;color:#385743}
+.booking-wizard-progress button:disabled{cursor:default;opacity:.72}
+.booking-wizard-progress button:focus-visible,.booking-next-button:focus-visible,.booking-back-button:focus-visible{outline:3px solid #d9be37;outline-offset:2px}
+.booking-wizard-stage{padding:14px;border:1px solid #e7ebe2;border-radius:9px;background:#fff}
+.booking-wizard-stage>h4{margin:0 0 12px;color:#24392d;font-size:11px;font-weight:750}
+.booking-step-actions{display:flex;justify-content:space-between;gap:9px;margin-top:13px}
+.booking-next-button,.booking-back-button{min-height:38px;padding:9px 13px;border:1px solid #dfe6da;border-radius:7px;background:#f6f8f2;color:#294635;font:inherit;font-size:9px;font-weight:750;cursor:pointer}
+.booking-next-button{margin-top:12px;border-color:#183c2d;background:#183c2d;color:#fff}
+.booking-next-button span{padding-left:7px;color:#f4d135}
+.booking-step-actions .booking-next-button{margin:0}
+.booking-back-button:hover,.booking-next-button:hover{filter:brightness(.97)}
+.booking-review-summary{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px;margin:0 0 12px}
+.booking-review-summary>div{min-width:0;padding:8px;border:1px solid #e7ebe2;border-radius:6px;background:#fafbf7}
+.booking-review-summary dt{margin-bottom:4px;color:#7c877d;font-size:7px;font-weight:700;text-transform:uppercase;letter-spacing:.06em}
+.booking-review-summary dd{margin:0;overflow-wrap:anywhere;color:#2b3d31;font-size:9px;font-weight:650}
+.booking-wizard-stage .fare-calculator{margin-top:0}
+.booking-wizard-stage>.button-submit{width:100%}
+@media(max-width:700px){
+  .booking-wizard-progress{gap:4px;margin-bottom:9px}
+  .booking-wizard-progress button{justify-content:center;gap:5px;padding:7px 4px;font-size:7px}
+  .booking-wizard-progress button span{width:17px;height:17px;flex-basis:17px}
+  .booking-wizard-stage{padding:11px 9px}
+  .booking-trip-grid{grid-template-columns:1fr 1fr}
+  .booking-review-summary{gap:5px}
+  .booking-review-summary>div{padding:7px}
+}
+@media(max-width:390px){.booking-wizard-progress button{font-size:6px}.booking-step-actions{flex-direction:column}.booking-step-actions button{width:100%}}
+
+/* Preview option 1: full-width booking card below the ride hero. */
+.booking-layout{display:block;width:min(1160px,calc(100% - 48px))}
+.section-intro{display:none}
+.booking-card{width:100%;max-width:none;padding:22px 25px}
+.booking-section{background:#fff}
+.service-select-field{max-width:520px;margin:0 0 16px}
+.booking-location-field .address-input-row{display:block}
+.booking-location-field .address-input-wrap{width:100%}
+.current-location-button{display:inline-flex;align-items:center;gap:6px;margin-top:6px;padding:5px 0;border:0;background:transparent;color:#315a40;font-size:8px;font-weight:750;cursor:pointer}
+.current-location-button span{font-size:13px}
+.current-location-button:disabled{opacity:.65;cursor:wait}
+.current-location-message{display:block;margin-top:3px;color:#65776a;font-size:8px;line-height:1.4}
+@media(max-width:700px){.booking-layout{width:calc(100% - 24px)}.booking-card{padding:14px 11px}}
+
+/* Compact booking view inspired by the user's split-panel reference. */
+.hero{display:none}
+.booking-section{margin:0;padding:0;background:#fff}
+.booking-layout{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));align-items:stretch;gap:0;width:100%;min-height:calc(100vh - 62px);margin:0}
+.booking-card{grid-column:1;grid-row:1;position:sticky;top:62px;width:100%;height:calc(100vh - 62px);max-height:calc(100vh - 62px);overflow-y:auto;padding:16px 18px;border:0;border-right:1px solid #e5e9df;border-radius:0;background:#fff;box-shadow:none}
+.booking-card-head{margin-bottom:9px}
+.booking-card-head h3{font-size:16px}
+.booking-wizard-stage{margin-bottom:9px;padding:10px;border-radius:7px}
+.booking-wizard-stage>h4{margin-bottom:8px;font-size:10px}
+.service-select-field{max-width:none;margin:0 0 10px}
+.service-select-field .field select,.service-select-field select{min-height:36px;padding:8px;font-size:9px}
+.booking-trip-grid{gap:8px}
+.booking-trip-grid .booking-location-field .address-input-row .address-input-wrap>input{min-height:34px;font-size:9px}
+.booking-service-tabs{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));align-items:center;gap:4px;margin:-3px -5px 10px;padding:0 0 8px;border-bottom:1px solid #e6e9e2}
+.booking-service-tabs button{justify-self:center;padding:6px 7px;border:0;border-radius:18px;background:transparent;color:#303632;font-size:8px;font-weight:800;text-align:center;text-transform:uppercase;white-space:nowrap;cursor:pointer}
+.booking-service-tabs button.selected{background:#dce54e;color:#20281e}
+.booking-service-tabs button:focus-visible,.outstation-trip-tabs button:focus-visible,.booking-extra-service button:focus-visible{outline:2px solid #406a48;outline-offset:2px}
+.outstation-trip-tabs{display:flex;gap:7px;margin:0 0 10px}
+.outstation-trip-tabs button{flex:1;min-height:29px;border:1px solid #dfe5da;border-radius:6px;background:#fff;color:#536256;font-size:8px;font-weight:700;cursor:pointer}
+.outstation-trip-tabs button.selected{border-color:#7ea261;background:#eff5e8;color:#244b32}
+.booking-extra-service{display:flex;align-items:center;gap:5px;margin:-4px 0 9px;color:#798279;font-size:7px}
+.booking-extra-service button{padding:2px 0;border:0;background:transparent;color:#315a40;font-size:7px;font-weight:750;text-decoration:underline;text-underline-offset:2px;cursor:pointer}
+.booking-extra-service button.selected{color:#a74737}
+.vehicle-picker{margin-top:9px}
+.vehicle-option{min-height:105px}
+.vehicle-option img{aspect-ratio:3/1}
+.vehicle-option-copy{padding:6px 24px 6px 8px}
+.vehicle-rate-note{margin-top:5px;font-size:7px}
+.section-intro{grid-column:2;grid-row:1;position:sticky;top:62px;display:block;height:calc(100vh - 62px);min-height:440px;padding:0;overflow:hidden;background:#153b2b}
+.section-intro>.eyebrow,.section-intro>h2,.section-intro>p,.section-intro>.booking-note{display:none}
+.service-ride-panel{position:absolute;inset:0;width:100%;height:100%;aspect-ratio:auto;margin:0;border-radius:0;box-shadow:none;isolation:isolate;background:#17382e}
+.service-ride-panel::before{display:none}
+.service-ride-panel::after{display:none}
+.service-ride-image{position:relative;z-index:1;width:100%;height:100%;object-fit:cover;object-position:center}
+.service-ride-caption{left:clamp(24px,6vw,80px);right:30px;bottom:clamp(30px,10vh,100px);z-index:3;text-shadow:0 1px 8px #10271d99}
+.service-ride-caption>span{font-size:9px}
+.service-ride-caption h3{max-width:440px;font-size:clamp(25px,3vw,42px)}
+.service-ride-caption p{max-width:400px;font-size:12px}
+@media(max-width:760px){
+  .booking-layout{grid-template-columns:1fr;min-height:0}
+  .booking-card{grid-column:1;grid-row:1;position:relative;top:auto;height:auto;max-height:none;overflow:visible;padding:15px 12px;border-right:0}
+  .section-intro{grid-column:1;grid-row:2;position:relative;top:auto;height:34vh;min-height:210px}
+  .service-ride-caption{left:20px;bottom:20px}
+  .booking-trip-grid{grid-template-columns:1fr 1fr}
+  .booking-service-tabs{gap:1px}
+  .booking-service-tabs button{padding:6px 3px;font-size:7px;white-space:normal;line-height:1.2}
+}
