@@ -3,6 +3,24 @@ export const documentFields = [
   ["fitness", "Fitness certificate"], ["puc", "Pollution certificate (PUC)"],
 ];
 
+export const attachedVehicleModels = [
+  "Maruti Suzuki Swift Dzire",
+  "Hyundai Aura",
+  "Honda Amaze",
+  "Tata Tigor",
+  "Toyota Etios",
+  "Maruti Suzuki Ciaz",
+  "Maruti Suzuki Ertiga",
+  "Maruti Suzuki XL6",
+  "Toyota Innova Crysta",
+  "Toyota Innova Hycross",
+  "Toyota Rumion",
+  "Kia Carens",
+  "Maruti Suzuki Eeco",
+  "Force Traveller",
+  "Force Urbania",
+];
+
 export function emptyAttachedVehicle() {
   return {
     category: "", model: "", registration: "", commercial: "",
@@ -33,6 +51,7 @@ export function validateCabAttachment(form) {
     for (const [key, label] of [["category", "Choose the vehicle model."], ["registration", "Enter the registration number."], ["commercial", "Select the commercial registration status."]]) {
       if (!String(vehicle[key] || "").trim()) errors[`${prefix}-${key}`] = label;
     }
+    if (vehicle.category === "Other" && !String(vehicle.model || "").trim()) errors[`${prefix}-model`] = "Enter the vehicle make and model.";
     if (vehicle.driverAssigned === "yes") {
       for (const [key, label] of [["driverName", "Enter this vehicle's assigned driver name."], ["licence", "Select this driver's licence status."], ["badge", "Select this driver's badge status."], ["experience", "Enter this driver's experience."]]) {
         if (!String(vehicle[key] || "").trim()) errors[`${prefix}-${key}`] = label;

@@ -1,4 +1,4 @@
-import { lazy, Suspense, useEffect, useMemo, useRef, useState } from "react";
+import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { CircleMarker, MapContainer, TileLayer, useMap, useMapEvents } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import "./App.css";
@@ -7,13 +7,19 @@ import TempleTours from "./temples/TempleTours.jsx";
 import DriverRegistration from "./drivers/DriverRegistration.jsx";
 import DriverAdmin from "./pages/admin/AdminDashboard.jsx";
 import CabAttachment from "./drivers/CabAttachment.jsx";
+import WhatsAppWidget from "./components/WhatsAppWidget.jsx";
 import { createSubmissionId } from "./lib/supabase";
 import { submitCustomerRequest } from "./services/customerRequestService";
 import { isCabAttachmentPath, isDriverAdminPath, isDriverRegisterPath, isTourPath } from "./app/routes";
 import { environment } from "./config/environment";
 import { temples } from "./temples/templeData.js";
 import { calculateLocalPackage, calculateOutstationFare, OUTSTATION_TARIFF } from "./utils/fareRules.js";
+import { applyPricingRules } from "./admin/pricingRules.js";
+import { fetchPublicFarePricingRules } from "./services/farePricingService";
 import { isIndianCoordinate, photonSearchParams, rankIndianPlaceFeatures } from "./utils/locationSearch.js";
+import { limitPhoneDigits } from "./utils/phoneInput.js";
+import TempleToursIntro from "./temples/TempleToursIntro.jsx";
+import TourPackagesIntro from "./tours/TourPackagesIntro.jsx";
 const TourPackages = lazy(() => import("./tours/TourPackages.jsx"));
 const KodaikanalTour = lazy(() => import("./pages/tours/KodaikanalTour.jsx"));
 
@@ -211,8 +217,9 @@ function LocationPicker({ title, initialCoords, onClose, onConfirm }) {
   );
 }
 
-function AddressAutocomplete({ label, value, onChange, placeholder, required = false, coords, onMapPick, minChars = 3, id, error, showMap = true, showCurrentLocation = false, className = "", searchContext = "", stateOnly = "" }) {
+function AddressAutocomplete({ label, value, onChange, placeholder, required = false, coords, onMapPick, minChars = 3, id, error, showMap = true, showCurrentLocation = false, className = "", searchContext = "", stateOnly = "", deferSuggestionsUntilFocus = true }) {
   const selectedAddressRef = useRef("");
+  const [autocompleteActive, setAutocompleteActive] = useState(!deferSuggestionsUntilFocus);
   const [suggestions, setSuggestions] = useState([]);
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -264,6 +271,7 @@ function AddressAutocomplete({ label, value, onChange, placeholder, required = f
   }
 
   useEffect(() => {
+    if (!autocompleteActive) return undefined;
     const query = value.trim();
     if (query.length < minChars || query === selectedAddressRef.current) return;
 
@@ -313,7 +321,7 @@ function AddressAutocomplete({ label, value, onChange, placeholder, required = f
       clearTimeout(timer);
       controller.abort();
     };
-  }, [value, minChars, searchContext, stateOnly]);
+  }, [value, minChars, searchContext, stateOnly, autocompleteActive]);
 
   function choose(item) {
     selectedAddressRef.current = item.label;
@@ -357,6 +365,7 @@ function AddressAutocomplete({ label, value, onChange, placeholder, required = f
             selectedAddressRef.current = "";
             onChange(nextValue, null);
             setLocationMessage("");
+            setAutocompleteActive(true);
             setActiveIndex(-1);
             setSuggestions([]);
             setOpen(false);
@@ -365,7 +374,7 @@ function AddressAutocomplete({ label, value, onChange, placeholder, required = f
               setLoading(false);
             }
           }}
-          onFocus={() => suggestions.length && setOpen(true)}
+          onFocus={() => { setAutocompleteActive(true); if (suggestions.length) setOpen(true); }}
           onBlur={() => setTimeout(() => setOpen(false), 140)}
           onKeyDown={handleKeyDown}
           placeholder={placeholder}
@@ -439,19 +448,40 @@ function AddressAutocomplete({ label, value, onChange, placeholder, required = f
 export default function App() {
   const [pathname, setPathname] = useState(() => window.location.pathname);
   const [templePage, setTemplePage] = useState(() => window.location.hash === "#temple-tours");
+  const [showTempleIntro, setShowTempleIntro] = useState(() => window.location.hash === "#temple-tours");
+  const [showTourIntro, setShowTourIntro] = useState(() => isTourPath(window.location.pathname));
   const [driverPage, setDriverPage] = useState(() => isDriverRegisterPath(window.location.pathname));
   const [driverAdminPage, setDriverAdminPage] = useState(() => isDriverAdminPath(window.location.pathname));
   const [attachmentPage, setAttachmentPage] = useState(() => isCabAttachmentPath(window.location.pathname));
   const [menuOpen, setMenuOpen] = useState(false);
+  const [pricingRules, setPricingRules] = useState(null);
+  const lastPathRef = useRef(window.location.pathname);
+  const handleTempleIntroComplete = useCallback(() => setShowTempleIntro(false), []);
+  const handleTourIntroComplete = useCallback(() => setShowTourIntro(false), []);
+  useEffect(() => {
+    let active = true;
+    fetchPublicFarePricingRules().then((rules) => { if (active) setPricingRules(rules); }).catch(() => {
+      // Until the pricing migration is configured, retain the established fare defaults.
+    });
+    return () => { active = false; };
+  }, []);
+  const activeVehicles = useMemo(() => applyPricingRules(vehicles, pricingRules), [pricingRules]);
+  const activeTariff = pricingRules?.tariff || OUTSTATION_TARIFF;
 
   useEffect(() => {
     const syncPage = () => {
       const hash = window.location.hash;
-      setPathname(window.location.pathname);
-      setDriverPage(isDriverRegisterPath(window.location.pathname));
-      setDriverAdminPage(isDriverAdminPath(window.location.pathname));
-      setAttachmentPage(isCabAttachmentPath(window.location.pathname));
+      const nextPath = window.location.pathname;
+      const pathChanged = nextPath !== lastPathRef.current;
+      lastPathRef.current = nextPath;
+      setPathname(nextPath);
+      setDriverPage(isDriverRegisterPath(nextPath));
+      setDriverAdminPage(isDriverAdminPath(nextPath));
+      setAttachmentPage(isCabAttachmentPath(nextPath));
       setTemplePage(hash === "#temple-tours");
+      setShowTempleIntro(hash === "#temple-tours");
+      if (!isTourPath(nextPath)) setShowTourIntro(false);
+      else if (pathChanged) setShowTourIntro(true);
       if (hash && hash !== "#temple-tours") {
         requestAnimationFrame(() => document.getElementById(hash.slice(1))?.scrollIntoView());
       }
@@ -479,9 +509,10 @@ export default function App() {
   const homeHref = (section) => `${driverPage || driverAdminPage || attachmentPage || tourRoute ? "/" : ""}#${section}`;
 
   function update(field, value, coordinates = undefined) {
+    const nextValue = field === "phone" ? limitPhoneDigits(value) : value;
     setForm((current) => ({
       ...current,
-      [field]: value,
+      [field]: nextValue,
       ...(field === "pickup" ? { pickupCoords: coordinates } : {}),
       ...(field === "destination" ? { destinationCoords: coordinates } : {}),
     }));
@@ -517,7 +548,7 @@ export default function App() {
     if (!form.pickup.trim()) { setFareError("Enter a pickup location first."); return; }
     if (service !== "rentals" && !form.destination.trim()) { setFareError("Enter a destination first."); return; }
     if (form.vehicle === "tempo") { setFareError("Tempo Traveller rates depend on vehicle availability and trip details. Request a manual quotation."); return; }
-    const vehicle = vehicles.find((item) => item.id === form.vehicle);
+    const vehicle = activeVehicles.find((item) => item.id === form.vehicle);
     if (!vehicle) { setFareError("Choose a vehicle to calculate your estimate."); return; }
     if (Number(form.passengers) > vehicle.passengers) {
       setFareError(`${vehicle.label} seats up to ${vehicle.passengers} passengers. Select a larger vehicle for this group.`);
@@ -533,7 +564,7 @@ export default function App() {
         setFareError("Choose a pickup location within India to calculate this estimate.");
         return;
       }
-      const rental = calculateLocalPackage(form.hours, vehicle);
+      const rental = calculateLocalPackage(form.hours, vehicle, activeTariff);
       setFare({
         distanceKm: null,
         billedDistanceKm: null,
@@ -581,18 +612,18 @@ export default function App() {
           ? `One-way road distance ${distanceKm.toFixed(1)} km at ${money(ratePerKm)}/km; airport minimum applies when higher. Tolls, parking and waiting are excluded.`
           : `One-way city road distance ${distanceKm.toFixed(1)} km at ${money(ratePerKm)}/km. Tolls, parking and waiting are excluded.`;
       } else if (service === "oneway") {
-        const outstationFare = calculateOutstationFare(distanceKm, vehicle, form.tripDays, false);
+        const outstationFare = calculateOutstationFare(distanceKm, vehicle, form.tripDays, false, activeTariff);
         billedDistanceKm = outstationFare.billedDistanceKm;
         distanceCharge = outstationFare.distanceCharge;
         driverAllowance = outstationFare.driverAllowance;
-        notes = `One-way drop uses ${money(ratePerKm)}/km with a ${OUTSTATION_TARIFF.oneWayMinimumKm} km minimum, plus driver allowance. Tolls, parking, permits and taxes are excluded.`;
+        notes = `One-way drop uses ${money(ratePerKm)}/km with a ${activeTariff.oneWayMinimumKm} km minimum, plus driver allowance. Tolls, parking, permits and taxes are excluded.`;
       } else if (service === "roundtrip") {
         const days = Math.max(1, Number(form.tripDays) || 1);
-        const outstationFare = calculateOutstationFare(distanceKm * 2 * days, vehicle, days, true);
+        const outstationFare = calculateOutstationFare(distanceKm * 2 * days, vehicle, days, true, activeTariff);
         billedDistanceKm = outstationFare.billedDistanceKm;
         distanceCharge = outstationFare.distanceCharge;
         driverAllowance = outstationFare.driverAllowance;
-        notes = `Round-trip estimate uses ${money(ratePerKm)}/km and a ${OUTSTATION_TARIFF.roundTripMinimumKmPerDay} km/day minimum (${days} day(s)), plus driver allowance. Tolls, parking, permits and overnight accommodation are excluded.`;
+        notes = `Round-trip estimate uses ${money(ratePerKm)}/km and a ${activeTariff.roundTripMinimumKmPerDay} km/day minimum (${days} day(s)), plus driver allowance. Tolls, parking, permits and overnight accommodation are excluded.`;
       }
       const total = distanceCharge + hourlyCharge + driverAllowance + minimumAdjustment;
       setFare({ distanceKm, billedDistanceKm, distanceCharge, hourlyCharge, driverAllowance, minimumAdjustment, tolls: null, parking: null, additionalFees: null, total, notes });
@@ -613,7 +644,7 @@ export default function App() {
     const groupVehicles = {
       tempo: { label: "Tempo Traveller", passengers: 12, luggage: null },
     };
-    const selectedVehicle = vehicles.find((item) => item.id === form.vehicle) || groupVehicles[form.vehicle];
+    const selectedVehicle = activeVehicles.find((item) => item.id === form.vehicle) || groupVehicles[form.vehicle];
     if (!selectedVehicle) { setNotice("Choose a vehicle before requesting your quotation."); setBookingSaving(false); return; }
     if (Number(form.passengers) > selectedVehicle.passengers) {
       setNotice(`${selectedVehicle.label} seats up to ${selectedVehicle.passengers} passengers. Choose a suitable vehicle or reduce the passenger count.`);
@@ -676,6 +707,8 @@ export default function App() {
     }
   }
 
+  if (driverAdminPage) return <DriverAdmin />;
+
   return (
     <div className="site-shell">
       {!driverPage && !attachmentPage && !templePage && !tourRoute && <div className="page-ride-backdrop" aria-hidden="true"><img src={serviceVisuals[service].image} alt="" /></div>}
@@ -694,20 +727,18 @@ export default function App() {
           </a>
           <button className="mobile-menu-toggle" type="button" aria-label={menuOpen ? "Close navigation" : "Open navigation"} aria-expanded={menuOpen} onClick={() => setMenuOpen((open) => !open)}><span /><span /><span /></button>
           <nav className={`main-nav ${menuOpen ? "menu-open" : ""}`} aria-label="Main navigation">
-            <a href={homeHref("home")} onClick={() => setMenuOpen(false)}>Home</a>
             <a href={homeHref("book")} onClick={() => setMenuOpen(false)}>Book a Cab</a>
             <a href={homeHref("temple-tours")} aria-current={templePage ? "page" : undefined} onClick={() => setMenuOpen(false)}>Temple Tours</a>
             <a href="/tour-packages" aria-current={tourRoute ? "page" : undefined} onClick={() => setMenuOpen(false)}>Tour Packages</a>
             <a href="/driver-register" aria-current={driverPage ? "page" : undefined} onClick={() => setMenuOpen(false)}>For Drivers</a>
             <a href="/cab-attachment" aria-current={attachmentPage ? "page" : undefined} onClick={() => setMenuOpen(false)}>Attach Your Cab</a>
-            <a href={homeHref("contact")} onClick={() => setMenuOpen(false)}>Contact</a>
           </nav>
           <a className="nav-cta" href={homeHref("book")}>Book a Cab <span>↗</span></a>
         </div>
       </header>
 
       <main>
-        {driverAdminPage ? <DriverAdmin /> : driverPage ? <DriverRegistration whatsappNumber={environment.whatsappNumber || DEFAULT_WHATSAPP_NUMBER} /> : attachmentPage ? <CabAttachment whatsappNumber={environment.whatsappNumber || DEFAULT_WHATSAPP_NUMBER} /> : templePage ? <TempleTours AddressAutocomplete={AddressAutocomplete} vehicles={vehicles} whatsappNumber={environment.whatsappNumber || DEFAULT_WHATSAPP_NUMBER} /> : tourRoute ? <Suspense fallback={<div className="tour-loading" role="status">Loading tour details…</div>}>{pathname === "/tour-packages/kodaikanal" ? <KodaikanalTour AddressAutocomplete={AddressAutocomplete} vehicles={vehicles} whatsappNumber={environment.whatsappNumber || ""} /> : <TourPackages pathname={pathname} AddressAutocomplete={AddressAutocomplete} vehicles={vehicles} whatsappNumber={environment.whatsappNumber || ""} />}</Suspense> : <>
+        {driverPage ? <DriverRegistration whatsappNumber={environment.whatsappNumber || DEFAULT_WHATSAPP_NUMBER} /> : attachmentPage ? <CabAttachment whatsappNumber={environment.whatsappNumber || DEFAULT_WHATSAPP_NUMBER} /> : templePage ? <>{showTempleIntro && <TempleToursIntro onComplete={handleTempleIntroComplete} />}<TempleTours AddressAutocomplete={AddressAutocomplete} vehicles={activeVehicles} tariff={activeTariff} whatsappNumber={environment.whatsappNumber || DEFAULT_WHATSAPP_NUMBER} /></> : tourRoute ? <>{showTourIntro && <TourPackagesIntro onComplete={handleTourIntroComplete} />}<Suspense fallback={<div className="tour-loading" role="status">Loading tour details…</div>}>{pathname === "/tour-packages/kodaikanal" ? <KodaikanalTour AddressAutocomplete={AddressAutocomplete} vehicles={activeVehicles} tariff={activeTariff} whatsappNumber={environment.whatsappNumber || ""} /> : <TourPackages pathname={pathname} AddressAutocomplete={AddressAutocomplete} vehicles={activeVehicles} tariff={activeTariff} whatsappNumber={environment.whatsappNumber || ""} />}</Suspense></> : <>
         <section className="hero" id="home" style={{ "--hero-ride-image": `url(${serviceVisuals[service].image})` }}>
           <div className="hero-glow hero-glow-one" />
           <div className="hero-glow hero-glow-two" />
@@ -786,13 +817,13 @@ export default function App() {
                       <span>Vehicle type</span>
                       <select required value={form.vehicle} onChange={(event) => update("vehicle", event.target.value)}>
                         <option value="" disabled>Select a vehicle type</option>
-                        {vehicles.map((vehicle) => <option key={vehicle.id} value={vehicle.id}>{vehicle.id === "dzire" ? "Sedan" : "SUV"}</option>)}
+                        {activeVehicles.map((vehicle) => <option key={vehicle.id} value={vehicle.id}>{vehicle.id === "dzire" ? "Sedan" : "SUV"}</option>)}
                         <option value="tempo">Tempo Traveller</option>
                       </select>
                     </label>
                     {!form.vehicle && <div className="vehicle-empty-state" aria-live="polite">Choose a category to see its vehicle and capacity.</div>}
                     {form.vehicle === "tempo" && <article className="vehicle-detail-card vehicle-manual-card" aria-live="polite"><img src="/vehicles/tempo-traveller-generated.png" alt="White Tempo Traveller passenger minibus" /><div className="vehicle-detail-copy"><strong>Tempo Traveller</strong><span>Custom seating · passenger capacity confirmed with the partner</span></div></article>}
-                    {vehicles.filter((vehicle) => vehicle.id === form.vehicle).map((vehicle) => <article className="vehicle-detail-card" key={vehicle.id} aria-live="polite">
+                    {activeVehicles.filter((vehicle) => vehicle.id === form.vehicle).map((vehicle) => <article className="vehicle-detail-card" key={vehicle.id} aria-live="polite">
                       <img src={vehicle.image} alt={vehicle.label} />
                       <div className="vehicle-detail-copy"><strong>{vehicle.label}</strong><span>Up to {vehicle.passengers} passengers · {vehicle.luggage} medium bags</span></div>
                     </article>)}
@@ -805,7 +836,7 @@ export default function App() {
                 <h4 id="booking-contact-heading">How can we reach you?</h4>
                 <div className="form-grid">
                   <label className="field"><span>Your name <b>*</b></span><input id="booking-name" required autoComplete="name" value={form.name} onChange={(e) => update("name", e.target.value)} placeholder="Full name" /></label>
-                  <label className="field"><span>Mobile number <b>*</b></span><input id="booking-phone" required type="tel" inputMode="tel" pattern="(?:[0-9+ ]|\x2d){8,18}" autoComplete="tel" value={form.phone} onChange={(e) => update("phone", e.target.value)} placeholder="+91 98765 43210" /></label>
+                  <label className="field"><span>Mobile number <b>*</b></span><input id="booking-phone" required type="tel" inputMode="numeric" pattern="[6-9][0-9]{9}" autoComplete="tel-national" value={form.phone} onChange={(e) => update("phone", e.target.value)} placeholder="10-digit mobile number" title="Enter a valid 10-digit Indian mobile number" /></label>
                   <label className="field field-full"><span>Anything else? <small>(optional)</small></span><textarea rows="2" value={form.notes} onChange={(e) => update("notes", e.target.value)} placeholder="Luggage, flight number, preferred vehicle, return details…" /></label>
                   <label className="field field-full driver-check"><input type="checkbox" required checked={form.contactConsent} onChange={(e) => update("contactConsent", e.target.checked)} /><span>I agree that CabConnect may store these trip details and contact me about this request. <b>*</b></span></label>
                 </div>
@@ -888,7 +919,8 @@ export default function App() {
         </>}
       </main>
 
-      <footer className="site-footer" id="contact"><div className="container footer-main"><a className="brand brand-footer" href={homeHref("home")}><span className="brand-mark">C<span>+</span></span><span className="brand-copy"><strong>CabConnect</strong><small>CHENNAI</small></span></a><p>Good journeys begin with a better connection.</p><a href={homeHref("book")} className="footer-cta">Contact our team <span>↗</span></a></div><div className="container footer-bottom"><span>© {new Date().getFullYear()} CabConnect Chennai</span><span>Bookings are subject to availability and manual confirmation.</span></div></footer>
+      <footer className="site-footer"><div className="container footer-main"><a className="brand brand-footer" href={homeHref("home")}><span className="brand-mark">C<span>+</span></span><span className="brand-copy"><strong>CabConnect</strong><small>CHENNAI</small></span></a><p>Good journeys begin with a better connection.</p></div><div className="container footer-bottom"><span>© {new Date().getFullYear()} CabConnect Chennai</span><span>Bookings are subject to availability and manual confirmation.</span></div></footer>
+      <WhatsAppWidget phone={environment.whatsappNumber || DEFAULT_WHATSAPP_NUMBER} />
     </div>
   );
 }

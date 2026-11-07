@@ -64,12 +64,48 @@ export type TourPackageRow = {
   updated_at: string;
 }
 
+export type FarePricingRules = {
+  tariff: {
+    oneWayMinimumKm: number;
+    roundTripMinimumKmPerDay: number;
+    localKmPerHour: number;
+  };
+  vehicles: Record<"dzire" | "ertiga", {
+    perKm: number;
+    shortTripPerKm: number;
+    outstationOneWayPerKm: number;
+    outstationRoundTripPerKm: number;
+    localPackages: { 4: number; 8: number; 12: number };
+    extraHourRate: number;
+    airportMinimum: number;
+    driverAllowancePerDay: number;
+  }>;
+}
+
+export type AdminPricingRuleRow = {
+  id: "default";
+  rules: FarePricingRules;
+  updated_at: string;
+  updated_by: string | null;
+}
+
+export type QuoteAuditRow = {
+  audit_id: number;
+  request_id: string;
+  previous_amount: number | null;
+  revised_amount: number | null;
+  admin_user_id: string | null;
+  created_at: string;
+}
+
 export interface Database {
   public: {
     Tables: {
       customer_requests: Table<CustomerRequestRow, Omit<CustomerRequestRow, "request_id" | "status" | "quoted_amount" | "quote_notes" | "admin_notes" | "created_at" | "updated_at"> & Partial<Pick<CustomerRequestRow, "request_id" | "status" | "quoted_amount" | "quote_notes" | "admin_notes" | "created_at" | "updated_at">>, Partial<CustomerRequestRow>>;
       driver_applications: Table<DriverApplicationRow, Omit<DriverApplicationRow, "application_id" | "status" | "admin_notes" | "created_at" | "updated_at"> & Partial<Pick<DriverApplicationRow, "application_id" | "status" | "admin_notes" | "created_at" | "updated_at">>, Partial<DriverApplicationRow>>;
       tour_packages: Table<TourPackageRow, Omit<TourPackageRow, "created_at" | "updated_at"> & Partial<Pick<TourPackageRow, "created_at" | "updated_at">>, Partial<TourPackageRow>>;
+      admin_pricing_rules: Table<AdminPricingRuleRow, Pick<AdminPricingRuleRow, "id" | "rules"> & Partial<Pick<AdminPricingRuleRow, "updated_at" | "updated_by">>, Partial<Pick<AdminPricingRuleRow, "rules" | "updated_at" | "updated_by">>>;
+      customer_request_quote_audit: Table<QuoteAuditRow, Omit<QuoteAuditRow, "audit_id" | "created_at"> & Partial<Pick<QuoteAuditRow, "audit_id" | "created_at">>, never>;
       driver_application_rate_limits: Table<{ ip_hash: string; window_started_at: string; request_count: number }, { ip_hash: string; window_started_at?: string; request_count?: number }, Partial<{ ip_hash: string; window_started_at: string; request_count: number }>>;
     };
     Views: Record<string, never>;

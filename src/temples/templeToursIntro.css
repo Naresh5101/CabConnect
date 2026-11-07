@@ -1,0 +1,77 @@
+.temple-intro-active,
+.temple-intro-active body { overflow: hidden; }
+
+.temple-intro {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  overflow: hidden;
+  background: #17120d;
+  color: #fff9e8;
+  isolation: isolate;
+  opacity: 1;
+  transition: opacity .42s ease, visibility .42s ease;
+}
+
+.temple-intro.is-exiting { opacity: 0; visibility: hidden; }
+.temple-intro-backdrop { position: absolute; inset: 0; background: radial-gradient(circle at 50% 40%, #5b3c1d 0, #22170d 58%, #100c08 100%); z-index: -1; }
+.temple-intro-skip { position: absolute; top: 24px; right: 28px; z-index: 4; border: 1px solid #fff4c866; border-radius: 999px; padding: 9px 13px; background: #2b2118a6; color: #f8ebc9; font-size: 10px; letter-spacing: .08em; cursor: pointer; backdrop-filter: blur(10px); }
+.temple-intro-skip span { margin-left: 7px; color: #f2c872; }
+.temple-intro-screen { position: absolute; inset: 0; display: grid; place-items: center; opacity: 0; visibility: hidden; transition: opacity .55s ease, visibility .55s ease; }
+.temple-intro-screen.is-active { opacity: 1; visibility: visible; }
+
+.temple-intro-loading { align-content: center; gap: 22px; text-align: center; isolation: isolate; }
+.temple-intro-loading::before, .temple-intro-loading::after { content: ''; position: absolute; inset: 0; pointer-events: none; }
+.temple-intro-loading::before { z-index: 0; background-image: url('/murugan-temple-intro.png'), url('/murugan-temple-intro.png'); background-position: center, center; background-size: auto 100%, cover; background-repeat: no-repeat; background-color: #21160d; opacity: .52; filter: saturate(.86) brightness(.78) blur(1px); transform: scale(1.02); }
+.temple-intro-loading::after { z-index: 1; background: radial-gradient(circle at center, #23170b9c 0, #1a110db8 45%, #100c08dc 100%); }
+.temple-intro-loading > * { position: relative; z-index: 2; }
+.temple-intro-logo { display: inline-flex; align-items: center; gap: 12px; text-align: left; }
+.temple-intro-logo-mark { position: relative; display: grid; width: 48px; height: 48px; place-items: center; border-radius: 15px; background: #274336; color: #d7ed66; font-size: 27px; font-weight: 800; box-shadow: 0 0 0 1px #e2bd6744, 0 12px 35px #0006; }
+.temple-intro-logo-mark span { position: absolute; top: 5px; right: 7px; color: #fff8d8; font-size: 10px; }
+.temple-intro-logo strong, .temple-intro-logo small { display: block; }
+.temple-intro-logo strong { font: 700 22px/1 Manrope, Inter, sans-serif; letter-spacing: -.06em; }
+.temple-intro-logo small { margin-top: 6px; color: #d6c7a5; font-size: 8px; font-weight: 700; letter-spacing: .22em; text-transform: uppercase; }
+.temple-intro-loader { width: 76px; height: 76px; padding: 4px; border-radius: 50%; background: conic-gradient(#f0a34b, #c96d26, #f8d07b, #f0a34b); animation: temple-intro-spin 1.35s linear infinite; box-shadow: 0 0 45px #e7973d4a; }
+.temple-intro-loader span { display: block; width: 100%; height: 100%; border-radius: inherit; background: #1b130b; }
+.temple-intro-kicker { color: #f2bc69; font-size: 9px; font-weight: 800; letter-spacing: .3em; }
+.temple-intro-loading p { margin: -7px 0 4px; color: #eee2c7; font: 500 14px/1.5 Manrope, Inter, sans-serif; letter-spacing: -.02em; }
+.temple-intro-dots { display: inline-block; width: 18px; text-align: left; animation: temple-intro-dots 1.1s steps(3, end) infinite; }
+.temple-intro-progress { width: 150px; height: 2px; overflow: hidden; background: #fff3d52b; }
+.temple-intro-progress span { display: block; height: 100%; background: #f0a34b; transition: width .45s ease; }
+
+.temple-intro-devotional { background: #21160d; }
+.temple-intro-devotional-image, .temple-intro-devotional-shade { position: absolute; inset: 0; }
+.temple-intro-devotional-image { z-index: 0; overflow: hidden; background: #21160d; animation: temple-intro-image-in 1.2s ease both; }
+.temple-intro-devotional-image::before, .temple-intro-devotional-image::after { content: ''; position: absolute; inset: 0; pointer-events: none; background-image: url('/murugan-temple-intro.png'); background-position: center; background-repeat: no-repeat; }
+.temple-intro-devotional-image::before { background-size: cover; filter: blur(8px) saturate(.9) brightness(.64); transform: scale(1.06); opacity: .95; }
+.temple-intro-devotional-image::after { background-size: auto 100%; }
+.temple-intro-devotional-shade { background: linear-gradient(90deg, #100c08a8, transparent 48%, #160d05b8), linear-gradient(0deg, #100b07dc, transparent 50%, #160e0755); }
+.temple-intro-devotional-copy { position: relative; z-index: 1; display: grid; place-items: center; gap: 25px; margin-top: min(45vh, 330px); text-align: center; }
+.temple-intro-tamil { color: #fff1c8; font-family: serif; font-size: clamp(27px, 4vw, 48px); text-shadow: 0 4px 28px #000; }
+.temple-intro-vel { position: relative; width: 2px; height: 110px; background: linear-gradient(#ffd684, #b86c24); box-shadow: 0 0 14px #f5b04f; }
+.temple-intro-vel i { position: absolute; top: -16px; left: -9px; width: 20px; height: 28px; border: 2px solid #f2c267; border-radius: 65% 35% 65% 35%; transform: rotate(45deg); box-shadow: 0 0 10px #f5b04f; }
+.temple-intro-vel i::after { content: ''; position: absolute; inset: 4px; border: 1px solid #ffe4a0; border-radius: inherit; }
+
+.temple-intro-blessing { align-content: center; gap: 24px; background: radial-gradient(circle at center, #5a3b1c, #1b120c 68%); text-align: center; }
+.temple-intro-blessing-rule { width: 70px; height: 1px; background: #efb55d; box-shadow: 0 0 18px #efb55d; }
+.temple-intro-blessing p { margin: 0; color: #fff4d3; font: 500 clamp(28px, 5vw, 58px)/1.12 Manrope, Inter, sans-serif; letter-spacing: -.06em; }
+.temple-intro-blessing p em { color: #f3be68; font-style: normal; }
+.temple-intro-blessing-tamil { color: #dfcba4; font-family: serif; font-size: 16px; }
+
+@keyframes temple-intro-spin { to { transform: rotate(360deg); } }
+@keyframes temple-intro-dots { 0%, 20% { opacity: 0; } 50% { opacity: .45; } 100% { opacity: 1; } }
+@keyframes temple-intro-image-in { from { opacity: 0; transform: scale(1.1); } to { opacity: 1; transform: scale(1.04); } }
+
+@media (max-width: 600px) {
+  .temple-intro-skip { top: 16px; right: 16px; }
+  .temple-intro-logo strong { font-size: 19px; }
+  .temple-intro-loading::before { background-size: auto 100%, cover; background-position: center, center; }
+  .temple-intro-devotional-image::before { background-size: cover; }
+  .temple-intro-devotional-image::after { background-size: auto 100%; background-position: center center; }
+  .temple-intro-devotional-copy { margin-top: 45vh; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .temple-intro, .temple-intro-screen { transition-duration: .01ms; }
+  .temple-intro-loader, .temple-intro-dots, .temple-intro-devotional-image { animation: none; }
+}

@@ -1,4 +1,4 @@
-import { calculateOutstationFare } from "../utils/fareRules.js";
+import { calculateOutstationFare, OUTSTATION_TARIFF } from "../utils/fareRules.js";
 
 export async function getTourRoadDistance(start, destination, returnTrip, fetchImpl = fetch) {
   if (!start || !destination) throw new Error("Select a pickup and a valid tour destination to estimate the price.");
@@ -12,9 +12,9 @@ export async function getTourRoadDistance(start, destination, returnTrip, fetchI
   return distance / 1000;
 }
 
-export function calculateTourEstimate(distanceKm, vehicle, days, returnTrip) {
+export function calculateTourEstimate(distanceKm, vehicle, days, returnTrip, tariff = OUTSTATION_TARIFF) {
   if (!Number.isFinite(distanceKm) || distanceKm <= 0) throw new Error("A valid driving distance is required for a fare estimate.");
-  const estimate = calculateOutstationFare(distanceKm, vehicle, days, returnTrip);
+  const estimate = calculateOutstationFare(distanceKm, vehicle, days, returnTrip, tariff);
   return {
     roadDistanceKm: distanceKm,
     billedDistanceKm: estimate.billedDistanceKm,
@@ -24,7 +24,7 @@ export function calculateTourEstimate(distanceKm, vehicle, days, returnTrip) {
     tripDays: estimate.tripDays,
     total: estimate.total,
     note: returnTrip
-      ? `Estimate uses ₹${estimate.perKm}/km and a 250 km/day minimum, plus driver allowance. Local sightseeing distance, tolls, parking, interstate charges, waiting, taxes and other partner fees are excluded.`
-      : `One-way estimate uses ₹${estimate.perKm}/km with a 130 km minimum, plus driver allowance. Tolls, parking, interstate charges, waiting, taxes and other partner fees are excluded.`,
+      ? `Estimate uses ₹${estimate.perKm}/km and a ${tariff.roundTripMinimumKmPerDay} km/day minimum, plus driver allowance. Local sightseeing distance, tolls, parking, interstate charges, waiting, taxes and other partner fees are excluded.`
+      : `One-way estimate uses ₹${estimate.perKm}/km with a ${tariff.oneWayMinimumKm} km minimum, plus driver allowance. Tolls, parking, interstate charges, waiting, taxes and other partner fees are excluded.`,
   };
 }

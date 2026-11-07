@@ -13,7 +13,7 @@ export const tourCategories = [
 const coreDestinations = [
   {
     id: "kodaikanal", name: "Kodaikanal", shortName: "Kodaikanal", region: "Palani Hills · Tamil Nadu",
-    slug: "/tour-packages/kodaikanal", routeSlug: "/chennai-to-kodaikanal-cab", hero: "/tours/generated/hd/kodaikanal.jpg", alt: "High-definition scenic view of Kodaikanal Lake and Palani Hills",
+    slug: "/tour-packages/kodaikanal", routeSlug: "/chennai-to-kodaikanal-cab", hero: "/tours/generated/hd/kodaikanal-hero-enhanced.png", alt: "Enhanced panoramic view of Kodaikanal Lake, boats, forested shores and Palani Hills",
     duration: "Suggested 2–3 days", durationDays: "2–3", category: ["Hill Station Getaways", "Family Holidays", "Weekend Trips", "Outstation Road Trips"],
     summary: "A relaxed hill escape with lakeside time, forested viewpoints and cool-weather walks.",
     overview: "Kodaikanal brings together wooded hills, a star-shaped lake, walking paths and waterfalls in the Palani Hills. Choose a gentle sightseeing loop or leave more time for lake-side breaks and viewpoints. The suggested plan can be adjusted around weather and access on your travel dates.",

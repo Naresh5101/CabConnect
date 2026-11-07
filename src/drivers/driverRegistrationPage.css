@@ -1,0 +1,437 @@
+#driver-career-page .driver-registration-page .driver-form-layout {
+  display: block;
+  width: min(1120px, calc(100% - 48px));
+}
+
+#driver-career-page .driver-registration-page {
+  padding: 34px 0 52px;
+}
+
+#driver-career-page .driver-registration-page .driver-aside {
+  display: none;
+}
+
+#driver-career-page .driver-registration-page .driver-form-card {
+  max-width: none;
+  padding: clamp(22px, 3vw, 34px);
+}
+
+#driver-career-page .driver-registration-page .driver-application-columns {
+  grid-template-columns: 1fr;
+  gap: 12px;
+}
+
+#driver-career-page .driver-registration-page .driver-application-panel {
+  padding: 16px;
+  border-radius: 12px;
+  background: #fff;
+}
+
+#driver-career-page .driver-registration-page .driver-step-heading {
+  margin: 0 0 12px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid #e7ede4;
+}
+
+#driver-career-page .driver-registration-page .driver-step-heading > span {
+  width: 30px;
+  height: 30px;
+  flex-basis: 30px;
+  background: #eaf2e5;
+  color: #315b3e;
+  font-size: 12px;
+}
+
+#driver-career-page .driver-registration-page .driver-step-heading strong {
+  font-size: 16px;
+}
+
+#driver-career-page .driver-registration-page .driver-step-heading small {
+  font-size: 13px;
+}
+
+#driver-career-page .driver-registration-page .driver-personal-grid,
+#driver-career-page .driver-registration-page .driver-work-grid,
+#driver-career-page .driver-registration-page .driver-optional-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+#driver-career-page .driver-registration-page .driver-field > label:not(.driver-check) {
+  font-size: 14px;
+}
+
+#driver-career-page .driver-registration-page .driver-field input:not([type="checkbox"]):not([type="radio"]),
+#driver-career-page .driver-registration-page .driver-field select,
+#driver-career-page .driver-registration-page .driver-field textarea {
+  min-height: 48px;
+  font-size: 15px;
+}
+
+#driver-career-page .driver-registration-page .driver-phone-field {
+  display: grid;
+  gap: 10px;
+}
+
+#driver-career-page .driver-registration-page .driver-phone-field input[readonly] {
+  color: #788579;
+  background: #f2f5ef;
+}
+
+#driver-career-page .driver-registration-page .driver-phone-field .driver-check {
+  font-size: 13px;
+}
+
+#driver-career-page .driver-registration-page .driver-optional-details {
+  margin-top: 14px;
+  padding: 17px 20px;
+  border: 1px solid #e3eae0;
+  border-radius: 12px;
+  background: #f9fbf7;
+}
+
+#driver-career-page .driver-registration-page .driver-optional-details summary {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 14px;
+  color: #2d4936;
+  font-size: 15px;
+  font-weight: 750;
+  cursor: pointer;
+  list-style: none;
+}
+
+#driver-career-page .driver-registration-page .driver-optional-details summary::-webkit-details-marker {
+  display: none;
+}
+
+#driver-career-page .driver-registration-page .driver-optional-details summary::after {
+  content: "+";
+  display: grid;
+  width: 28px;
+  height: 28px;
+  flex: 0 0 28px;
+  place-items: center;
+  border: 1px solid #dce6d7;
+  border-radius: 50%;
+  color: #315b3e;
+  font-size: 19px;
+}
+
+#driver-career-page .driver-registration-page .driver-optional-details[open] summary::after {
+  content: "−";
+}
+
+#driver-career-page .driver-registration-page .driver-optional-details summary span {
+  margin-left: auto;
+  color: #7b897c;
+  font-size: 12px;
+  font-weight: 450;
+  text-align: right;
+}
+
+#driver-career-page .driver-registration-page .driver-optional-grid {
+  margin-top: 20px;
+}
+
+#driver-career-page .driver-registration-page .driver-consents {
+  margin-top: 16px;
+  padding: 16px;
+}
+
+#driver-career-page .driver-registration-page .driver-review-button {
+  min-height: 54px;
+}
+
+@media (min-width: 1050px) {
+  #driver-career-page .driver-registration-page .driver-application-columns {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    align-items: start;
+    gap: 12px;
+  }
+
+  #driver-career-page .driver-registration-page .driver-application-columns > .driver-application-panel:first-child {
+    grid-column: 1 / -1;
+  }
+
+  #driver-career-page .driver-registration-page .driver-personal-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+
+  #driver-career-page .driver-registration-page .driver-work-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 700px) {
+  #driver-career-page .driver-registration-page .driver-form-layout {
+    width: calc(100% - 32px);
+  }
+
+  #driver-career-page .driver-registration-page {
+    padding: 24px 0 36px;
+  }
+
+  #driver-career-page .driver-registration-page .driver-form-card {
+    padding: 22px 16px;
+  }
+
+  #driver-career-page .driver-registration-page .driver-application-panel {
+    padding: 16px;
+  }
+
+  #driver-career-page .driver-registration-page .driver-personal-grid,
+  #driver-career-page .driver-registration-page .driver-work-grid,
+  #driver-career-page .driver-registration-page .driver-optional-grid {
+    grid-template-columns: 1fr;
+  }
+
+  #driver-career-page .driver-registration-page .driver-optional-details {
+    padding: 15px;
+  }
+
+  #driver-career-page .driver-registration-page .driver-optional-details summary {
+    flex-wrap: wrap;
+    font-size: 14px;
+  }
+
+  #driver-career-page .driver-registration-page .driver-optional-details summary span {
+    order: 1;
+    width: 100%;
+    margin: 0;
+    text-align: left;
+  }
+
+  #driver-career-page .driver-registration-page .driver-optional-details summary::after {
+    margin-left: auto;
+  }
+}
+
+/* Cinematic driver careers experience */
+#driver-career-page{min-height:100vh;background:#0c1012;color:#eef0ec;--driver-gold:#e6c66f;--driver-cyan:#8ed9d1;--driver-muted:#a4ada9;--driver-glass:#171d1f}
+#driver-career-page .driver-cinematic-hero{position:relative;isolation:isolate;display:flex;min-height:clamp(580px,calc(100svh - 78px),760px);padding:50px 0 42px;overflow:hidden;background:#111719 url("/driver-recruitment-hero.jpg") center 45%/cover no-repeat;border:0}
+#driver-career-page .driver-hero-video,#driver-career-page .driver-hero-overlay,#driver-career-page .driver-road-lines{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
+#driver-career-page .driver-hero-video{z-index:0;object-fit:cover;object-position:center 48%;opacity:.94;filter:saturate(.92) contrast(1.04) brightness(1.08)}
+#driver-career-page .driver-hero-overlay{z-index:1;background:linear-gradient(90deg,rgba(8,12,13,.78) 0%,rgba(8,12,13,.61) 39%,rgba(8,12,13,.24) 72%,rgba(8,12,13,.18) 100%),linear-gradient(0deg,rgba(7,10,11,.66) 0%,rgba(7,10,11,.02) 55%,rgba(7,10,11,.22) 100%)}
+#driver-career-page .driver-hero-overlay::after{content:"";position:absolute;inset:0;background:radial-gradient(420px circle at var(--hero-pointer-x,75%) var(--hero-pointer-y,42%),rgba(230,198,111,.10),transparent 70%);mix-blend-mode:screen;transition:opacity .25s ease}
+#driver-career-page .driver-road-lines{z-index:2;inset:auto 0 14%;height:130px;opacity:.45;overflow:hidden;mask-image:linear-gradient(90deg,transparent 0%,#000 35%,#000 100%)}
+#driver-career-page .driver-road-lines::before{content:"";position:absolute;left:30%;right:-15%;bottom:0;height:2px;background:linear-gradient(90deg,transparent,rgba(230,198,111,.68),transparent);transform:rotate(-3deg);filter:drop-shadow(0 0 10px #e6c66f70)}
+#driver-career-page .driver-road-lines i{position:absolute;bottom:18px;left:var(--road-left);width:70px;height:2px;background:linear-gradient(90deg,transparent,#fff5cb,transparent);transform:rotate(-3deg);animation:driver-road-dash 2.8s linear infinite;animation-delay:var(--road-delay)}
+#driver-career-page .driver-road-lines i:nth-child(1){--road-left:35%;--road-delay:0s}#driver-career-page .driver-road-lines i:nth-child(2){--road-left:58%;--road-delay:-.95s}#driver-career-page .driver-road-lines i:nth-child(3){--road-left:82%;--road-delay:-1.9s}
+#driver-career-page .driver-hero-inner{position:relative;z-index:3;width:min(1240px,calc(100% - 64px));grid-template-columns:minmax(0,1fr);align-self:center}
+#driver-career-page .driver-hero-copy{max-width:780px}
+#driver-career-page .driver-eyebrow{display:flex;align-items:center;gap:10px;color:#d8d5c8;font-size:10px;font-weight:800;letter-spacing:.2em}
+#driver-career-page .driver-eyebrow i{width:22px;height:1px;background:var(--driver-gold)}
+#driver-career-page .driver-hero h1{margin:22px 0 17px;color:#f5f4ef;font-size:clamp(52px,6.25vw,88px);line-height:.93;letter-spacing:-.075em;font-weight:650}
+#driver-career-page .driver-hero h1 em{color:var(--driver-gold);font-style:normal}
+#driver-career-page .driver-hero-inner>div:first-child>p{max-width:490px;margin:0;color:#c0c5c0;font-size:14px;line-height:1.8}
+#driver-career-page .driver-hero-actions{display:flex;align-items:center;gap:26px;margin-top:26px}
+#driver-career-page .driver-hero-cta{position:relative;min-height:52px;padding:0 19px;display:inline-flex;align-items:center;justify-content:center;gap:30px;overflow:hidden;border:1px solid #e5f27e;border-radius:8px;background:linear-gradient(135deg,#d8ed64,#c8df54);color:#20392e;font-size:12px;font-weight:800;box-shadow:0 9px 28px #8da66b2b;transform:translate(var(--mag-x,0),var(--mag-y,0));transition:transform .2s ease,box-shadow .2s ease,filter .2s ease}
+#driver-career-page .driver-hero-cta::before{content:"";position:absolute;inset:-120% auto -120% -45%;width:30%;transform:rotate(22deg);background:linear-gradient(90deg,transparent,#ffffff88,transparent);transition:left .55s ease}
+#driver-career-page .driver-hero-cta:hover{box-shadow:0 13px 34px #8da66b45;filter:brightness(1.05)}
+#driver-career-page .driver-hero-cta:hover::before{left:130%}
+#driver-career-page .driver-hero-cta span{font-size:18px;color:#20392e}
+#driver-career-page .driver-hero-secondary{display:inline-flex;align-items:center;gap:9px;color:#e6e9e3;font-size:11px;font-weight:700;transition:color .18s ease}
+#driver-career-page .driver-hero-secondary:hover{color:var(--driver-gold)}
+#driver-career-page .driver-hero-trust{display:flex;flex-wrap:wrap;gap:10px 20px;margin-top:30px;color:#d2d7d1;font-size:9px;font-weight:650;letter-spacing:.025em}
+#driver-career-page .driver-hero-trust span{display:inline-flex;align-items:center;gap:8px}
+#driver-career-page .driver-hero-trust i{font-style:normal;color:var(--driver-gold);font-size:9px}
+#driver-career-page [data-driver-reveal]{opacity:0;transform:translateY(18px);transition:opacity .65s ease,transform .65s cubic-bezier(.2,.7,.25,1)}
+#driver-career-page [data-driver-reveal].is-visible{opacity:1;transform:translateY(0)}
+#driver-career-page .driver-opportunities{position:relative;padding:64px 0 68px;background:linear-gradient(180deg,#111719,#0e1214);border-top:1px solid #ffffff0d;border-bottom:1px solid #ffffff12}
+#driver-career-page .driver-opportunities-inner{display:grid;grid-template-columns:.72fr 1.28fr;align-items:center;gap:44px}
+#driver-career-page .driver-section-kicker{color:var(--driver-gold);font-size:8px;font-weight:800;letter-spacing:.2em}
+#driver-career-page .driver-opportunities-intro h2{margin:13px 0 0;color:#eff2ed;font-family:Manrope,sans-serif;font-size:clamp(30px,3.5vw,44px);line-height:1.02;letter-spacing:-.07em}
+#driver-career-page .driver-opportunities-intro h2 em{color:#9da9a1;font-style:normal}
+#driver-career-page .driver-benefit-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+#driver-career-page .driver-benefit-card{--spot-x:50%;--spot-y:50%;position:relative;min-height:184px;padding:20px 18px;overflow:hidden;border:1px solid #ffffff17;border-radius:13px;background:linear-gradient(145deg,#ffffff0b,#ffffff03);box-shadow:0 12px 35px #0002;transform:perspective(900px) rotateX(var(--tilt-x,0deg)) rotateY(var(--tilt-y,0deg));transition:transform .32s ease,border-color .28s ease,background .28s ease;backdrop-filter:blur(14px)}
+#driver-career-page .driver-benefit-card::before{content:"";position:absolute;inset:0;background:radial-gradient(220px circle at var(--spot-x) var(--spot-y),rgba(230,198,111,.13),transparent 72%);pointer-events:none}
+#driver-career-page .driver-benefit-card:hover{border-color:#e6c66f60;background:linear-gradient(145deg,#ffffff11,#ffffff04)}
+#driver-career-page .driver-benefit-index{position:relative;color:#9da8a0;font-size:8px;font-weight:800;letter-spacing:.14em}
+#driver-career-page .driver-benefit-icon{position:relative;display:grid;place-items:center;width:33px;height:33px;margin:17px 0 12px;border:1px solid #e6c66f45;border-radius:9px;color:var(--driver-gold);font-size:16px}
+#driver-career-page .driver-benefit-card h3{position:relative;margin:0 0 7px;color:#f1f3ee;font-size:12px;font-weight:700;letter-spacing:-.02em}
+#driver-career-page .driver-benefit-card p{position:relative;margin:0;color:#a7b0aa;font-size:9px;line-height:1.65}
+#driver-career-page .driver-registration-page{padding:54px 0 78px;background:radial-gradient(ellipse at 14% 0%,#192021 0%,#0c1012 56%)}
+#driver-career-page .driver-registration-page .driver-form-layout{width:min(1120px,calc(100% - 48px))}
+#driver-career-page .driver-registration-page .driver-form-card{position:relative;padding:clamp(22px,3vw,36px);overflow:hidden;border:1px solid #ffffff20;border-radius:18px;background:linear-gradient(145deg,#1a2022eF,#111618f5);box-shadow:0 24px 80px #0007;color:#eef0ec;backdrop-filter:blur(22px)}
+#driver-career-page .driver-registration-page .driver-form-card::before{content:"";position:absolute;left:0;right:0;top:0;height:2px;background:linear-gradient(90deg,transparent,var(--driver-gold),var(--driver-cyan),transparent);opacity:.8}
+#driver-career-page .driver-form-heading{display:flex;align-items:center;justify-content:space-between;gap:24px;margin-bottom:6px}
+#driver-career-page .driver-registration-page .driver-step{color:var(--driver-gold);font-size:8px;letter-spacing:.2em}
+#driver-career-page .driver-application h2,#driver-career-page .driver-review h2{color:#f1f3ed;font-size:clamp(25px,3vw,34px);letter-spacing:-.065em}
+#driver-career-page .driver-form-intro,#driver-career-page .driver-review-intro{color:#a6b0a9;font-size:11px}
+#driver-career-page .driver-progress-ring{width:70px;height:70px;flex:0 0 70px;padding:4px;border-radius:50%;display:grid;place-items:center;background:conic-gradient(var(--driver-gold) var(--progress-angle,0deg),#ffffff17 0);box-shadow:0 0 25px #e6c66f12}
+#driver-career-page .driver-progress-ring>span{width:100%;height:100%;border-radius:50%;display:flex;flex-direction:column;align-items:center;justify-content:center;background:#171d1f}
+#driver-career-page .driver-progress-ring strong{color:#f1e3b5;font-size:14px}
+#driver-career-page .driver-progress-ring small{color:#9da8a0;font-size:7px}
+#driver-career-page .driver-progress-track{height:2px;margin:13px 0 22px;overflow:hidden;background:#ffffff14}
+#driver-career-page .driver-progress-track span{display:block;height:100%;background:linear-gradient(90deg,var(--driver-gold),var(--driver-cyan));transition:width .35s ease}
+#driver-career-page .driver-registration-page .driver-application-columns{gap:12px}
+#driver-career-page .driver-registration-page .driver-application-panel{padding:17px;border-color:#ffffff15;border-radius:12px;background:linear-gradient(145deg,#ffffff09,#ffffff03)}
+#driver-career-page .driver-registration-page .driver-step-heading{border-color:#ffffff14}
+#driver-career-page .driver-registration-page .driver-step-heading>span{background:#e6c66f1b;color:var(--driver-gold);box-shadow:inset 0 0 0 1px #e6c66f33}
+#driver-career-page .driver-registration-page .driver-step-heading strong{color:#edf0eb}
+#driver-career-page .driver-registration-page .driver-step-heading small{color:#9fa9a2}
+#driver-career-page .driver-field>label:not(.driver-check){color:#d3d9d3}
+#driver-career-page .driver-field input:not([type="checkbox"]):not([type="radio"]),#driver-career-page .driver-field select,#driver-career-page .driver-field textarea{border-color:#ffffff20;border-radius:8px;background:#0e1315;color:#f2f3ef;transition:border-color .2s,box-shadow .2s,background .2s}
+#driver-career-page .driver-field input:focus,#driver-career-page .driver-field select:focus,#driver-career-page .driver-field textarea:focus{border-color:#e6c66f99;box-shadow:0 0 0 3px #e6c66f20;background:#121819}
+#driver-career-page .driver-field input::placeholder,#driver-career-page .driver-field textarea::placeholder{color:#74817a}
+#driver-career-page .driver-field select option{background:#111719;color:#f2f3ef}
+#driver-career-page .driver-field .driver-check,#driver-career-page .driver-check{color:#c2cac3}
+#driver-career-page .driver-check input{accent-color:var(--driver-gold)}
+#driver-career-page .driver-registration-page .driver-optional-details{border-color:#ffffff18;border-radius:11px;background:#ffffff06}
+#driver-career-page .driver-registration-page .driver-optional-details summary{color:#e4e8e2}
+#driver-career-page .driver-registration-page .driver-optional-details summary span{color:#99a49c}
+#driver-career-page .driver-registration-page .driver-optional-details summary::after{border-color:#ffffff29;color:var(--driver-gold)}
+#driver-career-page .driver-registration-page .driver-consents{border-color:#ffffff18;background:#ffffff07}
+#driver-career-page .driver-registration-page .driver-privacy-note{color:#9ba69e}
+#driver-career-page .driver-registration-page .driver-submit{border-color:var(--driver-gold);background:linear-gradient(135deg,#f0d784,#d4ae4e);color:#1c1d19;box-shadow:0 7px 24px #d9b95120}
+#driver-career-page .driver-registration-page .driver-submit:hover{background:linear-gradient(135deg,#f5e19c,#e0bf65);box-shadow:0 11px 32px #d9b95138}
+#driver-career-page .driver-registration-page .driver-submit span{color:#27291f}
+#driver-career-page .driver-registration-page .driver-secondary{border-color:#ffffff28;background:#171d1f;color:#e1e5df}
+#driver-career-page .driver-registration-page .driver-secondary:hover{background:#20282a}
+#driver-career-page .driver-summary{border-color:#ffffff17}
+#driver-career-page .driver-summary>div{border-color:#ffffff14}
+#driver-career-page .driver-summary dt{color:#9da8a0}
+#driver-career-page .driver-summary dd{color:#e4e8e2}
+#driver-career-page .driver-consent-note{background:#e6c66f12;color:#d8d0b6;border:1px solid #e6c66f24}
+#driver-career-page .driver-form-card .driver-save-error{border-color:#a84439;background:#391d1b;color:#ffc7bc}
+#driver-career-page .driver-form-card .driver-sent-status{border-color:#467c5b;background:#16251d;color:#c2e4c9}
+#driver-career-page .driver-application-panel .driver-consents{background:#ffffff05}
+#driver-career-page .driver-registration-page .driver-phone-field input[readonly]{background:#151b1d;color:#a7b0aa}
+@keyframes driver-road-dash{0%{transform:translateX(50px) rotate(-3deg);opacity:0}25%{opacity:.9}100%{transform:translateX(-180px) rotate(-3deg);opacity:0}}
+@media(max-width:900px){#driver-career-page .driver-cinematic-hero{min-height:610px}#driver-career-page .driver-hero-trust{gap:9px 14px}#driver-career-page .driver-opportunities-inner{grid-template-columns:1fr;gap:24px}#driver-career-page .driver-opportunities-intro h2 br{display:none}}
+@media(max-width:700px){#driver-career-page .driver-cinematic-hero{min-height:0;padding:48px 0 36px}#driver-career-page .driver-hero-video{display:none}#driver-career-page .driver-hero-overlay{background:linear-gradient(90deg,#080c0def,#080c0dc9 72%,#080c0d9c),linear-gradient(0deg,#080c0df2,transparent 75%)}#driver-career-page .driver-hero-inner{width:calc(100% - 32px);grid-template-columns:1fr;gap:27px}#driver-career-page .driver-hero h1{font-size:clamp(48px,12vw,68px)}#driver-career-page .driver-hero-inner>div:first-child>p{font-size:13px}#driver-career-page .driver-hero-actions{gap:18px;flex-wrap:wrap}#driver-career-page .driver-hero-trust{display:grid;grid-template-columns:1fr;gap:10px;margin-top:22px;font-size:9px}#driver-career-page .driver-opportunities{padding:43px 0}#driver-career-page .driver-opportunities-inner{width:calc(100% - 32px)}#driver-career-page .driver-benefit-grid{grid-template-columns:1fr;gap:9px}#driver-career-page .driver-benefit-card{min-height:0;padding:16px;display:grid;grid-template-columns:36px 1fr;column-gap:12px;align-items:center}#driver-career-page .driver-benefit-index{grid-row:span 2}#driver-career-page .driver-benefit-icon{display:none}#driver-career-page .driver-benefit-card h3{margin:0 0 3px;font-size:12px}#driver-career-page .driver-benefit-card p{grid-column:2;font-size:9px}#driver-career-page .driver-registration-page{padding:34px 0 52px}#driver-career-page .driver-registration-page .driver-form-layout{width:calc(100% - 28px)}#driver-career-page .driver-registration-page .driver-form-card{padding:20px 14px;border-radius:14px}#driver-career-page .driver-form-heading{align-items:flex-start;gap:12px}#driver-career-page .driver-progress-ring{width:58px;height:58px;flex-basis:58px}#driver-career-page .driver-registration-page .driver-application-panel{padding:14px}#driver-career-page .driver-registration-page .driver-personal-grid,#driver-career-page .driver-registration-page .driver-work-grid,#driver-career-page .driver-registration-page .driver-optional-grid{grid-template-columns:1fr}#driver-career-page .driver-registration-page .driver-optional-details{padding:14px}#driver-career-page .driver-registration-page .driver-optional-details summary{font-size:13px}#driver-career-page .driver-review-actions{flex-direction:column-reverse}#driver-career-page .driver-review-actions>*{width:100%}#driver-career-page .driver-review h2{font-size:25px}}
+@media(prefers-reduced-motion:reduce){#driver-career-page [data-driver-reveal]{opacity:1;transform:none;transition:none}#driver-career-page .driver-road-lines i{animation:none}#driver-career-page .driver-benefit-card,#driver-career-page .driver-hero-cta{transform:none!important;transition:none!important}}
+
+/* Align the recruitment page with CabConnect's forest-green and cream palette. */
+#driver-career-page {
+  --driver-gold: #d8ed64;
+  --driver-cyan: #a7c7a8;
+  --driver-muted: #748176;
+  --driver-glass: #fffefa;
+  color: #1d2c23;
+  background: #f7f6ef;
+}
+
+#driver-career-page .driver-cinematic-hero {
+  background-color: #20392e;
+  background-image: linear-gradient(110deg, rgba(23, 40, 32, .78), rgba(32, 57, 46, .42) 58%, rgba(32, 57, 46, .18)), url("/driver-recruitment-hero.jpg");
+}
+
+#driver-career-page .driver-hero-video {
+  opacity: 1;
+  filter: saturate(.96) contrast(1.04) brightness(1.12);
+}
+
+#driver-career-page .driver-hero-overlay {
+  background: linear-gradient(90deg, rgba(23, 40, 32, .58), rgba(32, 57, 46, .36) 53%, rgba(32, 57, 46, .10)), linear-gradient(0deg, rgba(23, 40, 32, .28), transparent 55%, rgba(23, 40, 32, .12));
+}
+
+#driver-career-page .driver-opportunities {
+  border-color: #e3e7dc;
+  background: #f7f6ef;
+}
+
+#driver-career-page .driver-section-kicker { color: #667c5d; }
+#driver-career-page .driver-opportunities-intro h2 { color: #1d2c23; }
+#driver-career-page .driver-opportunities-intro h2 em { color: #768b70; }
+
+#driver-career-page .driver-benefit-card {
+  border-color: #e0e6db;
+  background: linear-gradient(145deg, #fffefa, #f3f6ee);
+  box-shadow: 0 12px 35px #20392e0b;
+  backdrop-filter: blur(14px);
+}
+
+#driver-career-page .driver-benefit-card::before { background: radial-gradient(220px circle at var(--spot-x) var(--spot-y), rgba(141, 171, 110, .14), transparent 72%); }
+#driver-career-page .driver-benefit-card:hover { border-color: #b9cba4; background: linear-gradient(145deg, #fff, #f2f6e9); }
+#driver-career-page .driver-benefit-index { color: #78877a; }
+#driver-career-page .driver-benefit-icon { border-color: #dce6cd; background: #f4f7ed; color: #476446; }
+#driver-career-page .driver-benefit-card h3 { color: #24382b; }
+#driver-career-page .driver-benefit-card p { color: #718075; }
+
+#driver-career-page .driver-registration-page {
+  background: radial-gradient(ellipse at 14% 0%, #edf1e7 0%, #f7f6ef 56%);
+}
+
+#driver-career-page .driver-registration-page .driver-form-card {
+  border-color: #e0e6dc;
+  background: #fffefa;
+  box-shadow: 0 24px 70px #20392e10;
+  color: #1d2c23;
+}
+
+#driver-career-page .driver-progress-ring { box-shadow: 0 0 25px #8da66b18; }
+#driver-career-page .driver-progress-ring > span { background: #fffefa; }
+#driver-career-page .driver-progress-ring strong { color: #304a37; }
+#driver-career-page .driver-progress-ring small { color: #748176; }
+#driver-career-page .driver-progress-track { background: #e7ebe2; }
+#driver-career-page .driver-progress-track span { background: linear-gradient(90deg, #8aa36f, #d8ed64); }
+#driver-career-page .driver-registration-page .driver-step { color: #647a62; }
+#driver-career-page .driver-application h2,
+#driver-career-page .driver-review h2 { color: #1d2c23; }
+#driver-career-page .driver-form-intro,
+#driver-career-page .driver-review-intro { color: #77847a; }
+
+#driver-career-page .driver-registration-page .driver-application-panel {
+  border-color: #e3e9df;
+  background: #fcfdfa;
+}
+
+#driver-career-page .driver-registration-page .driver-step-heading { border-color: #e7ede4; }
+#driver-career-page .driver-registration-page .driver-step-heading > span { background: #eef3e8; color: #476446; box-shadow: inset 0 0 0 1px #d9e5d0; }
+#driver-career-page .driver-registration-page .driver-step-heading strong { color: #24382b; }
+#driver-career-page .driver-registration-page .driver-step-heading small { color: #7a887d; }
+#driver-career-page .driver-field > label:not(.driver-check) { color: #405044; }
+
+#driver-career-page .driver-field input:not([type="checkbox"]):not([type="radio"]),
+#driver-career-page .driver-field select,
+#driver-career-page .driver-field textarea {
+  border-color: #dfe6dc;
+  background: #fbfcfa;
+  color: #26372b;
+}
+
+#driver-career-page .driver-field input:focus,
+#driver-career-page .driver-field select:focus,
+#driver-career-page .driver-field textarea:focus {
+  border-color: #8eae7e;
+  box-shadow: 0 0 0 3px #dcebd3;
+  background: #fff;
+}
+
+#driver-career-page .driver-field input::placeholder,
+#driver-career-page .driver-field textarea::placeholder { color: #9aa69b; }
+#driver-career-page .driver-field select option { background: #fffefa; color: #26372b; }
+#driver-career-page .driver-check { color: #4b594e; }
+#driver-career-page .driver-check input { accent-color: #477650; }
+
+#driver-career-page .driver-registration-page .driver-optional-details,
+#driver-career-page .driver-registration-page .driver-consents {
+  border-color: #e3eae0;
+  background: #f9fbf7;
+}
+
+#driver-career-page .driver-registration-page .driver-optional-details summary { color: #35463a; }
+#driver-career-page .driver-registration-page .driver-optional-details summary span { color: #7b877d; }
+#driver-career-page .driver-registration-page .driver-optional-details summary::after { border-color: #dce4d9; color: #58734f; }
+#driver-career-page .driver-registration-page .driver-consents { border-color: #e4eae1; }
+#driver-career-page .driver-registration-page .driver-privacy-note { color: #7b877d; }
+#driver-career-page .driver-registration-page .driver-submit { border-color: #d8ed64; background: #d8ed64; color: #20392e; box-shadow: 0 7px 24px #8da66b20; }
+#driver-career-page .driver-registration-page .driver-submit:hover { background: #e5f27e; box-shadow: 0 11px 32px #8da66b32; }
+#driver-career-page .driver-registration-page .driver-submit span { color: #20392e; }
+#driver-career-page .driver-registration-page .driver-secondary { border-color: #dfe6dc; background: #fff; color: #35463a; }
+#driver-career-page .driver-registration-page .driver-secondary:hover { background: #f4f8f0; }
+#driver-career-page .driver-summary { border-color: #e5ebe2; }
+#driver-career-page .driver-summary > div { border-color: #e9eee7; }
+#driver-career-page .driver-summary dt { color: #819085; }
+#driver-career-page .driver-summary dd { color: #314136; }
+#driver-career-page .driver-consent-note { border-color: #e4eadf; background: #f2f7ee; color: #627a62; }
+#driver-career-page .driver-form-card .driver-save-error { border-color: #ecd5cf; background: #fff7f5; color: #9b382c; }
+#driver-career-page .driver-form-card .driver-sent-status { border-color: #d5e6ce; background: #f2f8ed; color: #48694b; }
+#driver-career-page .driver-registration-page .driver-phone-field input[readonly] { background: #f0f3eb; color: #607060; }
+
+@media (max-width: 700px) {
+  #driver-career-page .driver-hero-overlay { background: linear-gradient(90deg, rgba(23, 40, 32, .72), rgba(32, 57, 46, .42)), linear-gradient(0deg, rgba(23, 40, 32, .38), transparent 75%); }
+}

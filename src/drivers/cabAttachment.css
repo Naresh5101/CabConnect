@@ -1,0 +1,780 @@
+.attachment-page {
+  min-height: 100vh;
+  background: #f4f5ef;
+  color: #20372d;
+}
+
+.attachment-shell {
+  width: min(1120px, calc(100% - 48px));
+  margin: 0 auto;
+}
+
+.attachment-hero {
+  position: relative;
+  overflow: hidden;
+  padding: 52px 0;
+  background:
+    linear-gradient(100deg, #102b20f2 0%, #102b20d9 48%, #102b2080 100%),
+    url("/hourly-rental-chennai.png") center 52% / cover,
+    #17382e;
+  color: #fff;
+}
+
+.attachment-hero::after {
+  position: absolute;
+  inset: 0;
+  content: "";
+  pointer-events: none;
+  background: linear-gradient(0deg, #10281d35, transparent 45%);
+}
+
+.attachment-hero-layout {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  grid-template-columns: minmax(0, 1.2fr) minmax(300px, .8fr);
+  align-items: center;
+  gap: clamp(32px, 7vw, 88px);
+}
+
+.attachment-hero-copy {
+  max-width: 660px;
+}
+
+.attachment-eyebrow,
+.attachment-kicker {
+  color: #d9ed76;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: .17em;
+}
+
+.attachment-hero h1 {
+  margin: 16px 0 12px;
+  color: #fff;
+  font-family: Manrope, sans-serif;
+  font-size: clamp(44px, 5.5vw, 70px);
+  line-height: .98;
+  letter-spacing: -.07em;
+}
+
+.attachment-hero h1 em {
+  color: #d9ed76;
+  font-style: normal;
+}
+
+.attachment-hero-copy > p {
+  max-width: 510px;
+  margin: 0;
+  color: #edf2eb;
+  font-size: 14px;
+  line-height: 1.7;
+}
+
+.attachment-hero-cta {
+  display: inline-flex;
+  min-height: 46px;
+  align-items: center;
+  gap: 24px;
+  margin-top: 20px;
+  padding: 0 17px;
+  border-radius: 7px;
+  background: #d9ed76;
+  color: #20372d;
+  font-size: 12px;
+  font-weight: 800;
+  text-decoration: none;
+  transition: transform .18s, background .18s;
+}
+
+.attachment-hero-cta:hover {
+  transform: translateY(-2px);
+  background: #e8f69a;
+}
+
+.attachment-hero-cta span {
+  font-size: 17px;
+}
+
+.attachment-hero-card {
+  display: grid;
+  gap: 14px;
+  padding: 22px 24px;
+  border: 1px solid #ffffff45;
+  border-radius: 16px;
+  background: #f8faf0ed;
+  box-shadow: 0 22px 54px #10251c42;
+  color: #26392d;
+  backdrop-filter: blur(12px);
+}
+
+.attachment-hero-kicker {
+  color: #768467;
+  font-size: 9px;
+  font-weight: 850;
+  letter-spacing: .15em;
+}
+
+.attachment-hero-card > div {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding-top: 12px;
+  border-top: 1px solid #e2e8da;
+}
+
+.attachment-hero-card > div > b {
+  display: grid;
+  width: 32px;
+  height: 32px;
+  flex: 0 0 32px;
+  place-items: center;
+  border-radius: 10px;
+  background: #20392e;
+  color: #e3ed73;
+  font-size: 10px;
+}
+
+.attachment-hero-card strong,
+.attachment-hero-card small {
+  display: block;
+}
+
+.attachment-hero-card strong {
+  font-size: 12px;
+}
+
+.attachment-hero-card small {
+  margin-top: 3px;
+  color: #7c887c;
+  font-size: 10px;
+}
+
+.attachment-main {
+  padding: 34px 0 64px;
+  scroll-margin-top: 24px;
+}
+
+.attachment-form-card {
+  width: min(900px, 100%);
+  margin: 0 auto;
+  padding: clamp(22px, 4vw, 42px);
+  border: 1px solid #e0e7dc;
+  border-radius: 18px;
+  background: #fffefa;
+  box-shadow: 0 20px 55px #2138290c;
+}
+
+.attachment-form-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+}
+
+.attachment-kicker {
+  color: #71855a;
+  font-size: 9px;
+}
+
+.attachment-form h2,
+.attachment-review h2 {
+  margin: 9px 0 0;
+  font-family: Manrope, sans-serif;
+  font-size: clamp(25px, 3vw, 34px);
+  line-height: 1.1;
+  letter-spacing: -.055em;
+}
+
+.attachment-required-note {
+  flex: 0 0 auto;
+  color: #788579;
+  font-size: 11px;
+}
+
+.attachment-required-note b,
+.attachment-field label b,
+.attachment-consent b {
+  color: #bd5948;
+}
+
+.attachment-intro {
+  margin: 9px 0 0;
+  color: #788579;
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.attachment-form-section {
+  margin-top: 28px;
+  padding-top: 26px;
+  border-top: 1px solid #e8ede5;
+}
+
+.attachment-section-heading {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+  margin-bottom: 17px;
+}
+
+.attachment-section-heading > span {
+  display: grid;
+  width: 34px;
+  height: 34px;
+  flex: 0 0 34px;
+  place-items: center;
+  border-radius: 11px;
+  background: #eaf1e3;
+  color: #47704b;
+  font-size: 10px;
+  font-weight: 850;
+}
+
+.attachment-section-heading h3 {
+  margin: 0;
+  color: #26392d;
+  font-family: Manrope, sans-serif;
+  font-size: 16px;
+  letter-spacing: -.035em;
+}
+
+.attachment-section-heading p {
+  margin: 3px 0 0;
+  color: #849086;
+  font-size: 11px;
+  line-height: 1.5;
+}
+
+.attachment-contact-grid,
+.attachment-vehicle-grid,
+.attachment-document-grid,
+.attachment-driver-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 15px;
+}
+
+.attachment-field {
+  min-width: 0;
+}
+
+.attachment-field > label {
+  display: block;
+  margin-bottom: 7px;
+  color: #405044;
+  font-size: 11px;
+  font-weight: 750;
+}
+
+.attachment-field input:not([type="checkbox"]):not([type="radio"]),
+.attachment-field select {
+  display: block;
+  width: 100%;
+  min-height: 44px;
+  padding: 10px 12px;
+  border: 1px solid #dfe6dc;
+  border-radius: 7px;
+  outline: none;
+  background: #fbfcfa;
+  color: #26372b;
+  font: inherit;
+  font-size: 12px;
+}
+
+.attachment-field input:focus,
+.attachment-field select:focus {
+  border-color: #8eae7e;
+  box-shadow: 0 0 0 3px #dcebd3;
+}
+
+.attachment-field input[aria-invalid="true"],
+.attachment-field select[aria-invalid="true"] {
+  border-color: #bd5948;
+}
+
+.attachment-field input::placeholder {
+  color: #a2ada3;
+}
+
+.attachment-field-error {
+  display: block;
+  margin-top: 5px;
+  color: #a13c31;
+  font-size: 10px;
+  line-height: 1.5;
+}
+
+.attachment-optional {
+  margin-top: 16px;
+  border-top: 1px solid #edf0ea;
+}
+
+.attachment-optional summary {
+  width: fit-content;
+  padding: 14px 0 2px;
+  color: #547256;
+  font-size: 11px;
+  font-weight: 750;
+  cursor: pointer;
+}
+
+.attachment-optional summary::marker {
+  color: #83a56e;
+}
+
+.attachment-optional-grid {
+  margin-top: 16px;
+}
+
+.attachment-field-check {
+  display: flex;
+  align-items: flex-end;
+  min-height: 44px;
+  padding-bottom: 10px;
+}
+
+.attachment-field-check label,
+.attachment-driver-options label,
+.attachment-consent {
+  display: flex;
+  align-items: flex-start;
+  gap: 9px;
+  color: #526154;
+  font-size: 11px;
+  line-height: 1.55;
+  cursor: pointer;
+}
+
+.attachment-field-check input,
+.attachment-driver-options input,
+.attachment-consent input {
+  width: 15px;
+  height: 15px;
+  flex: 0 0 15px;
+  margin: 1px 0 0;
+  accent-color: #477650;
+}
+
+.attachment-vehicles-section {
+  margin-top: 32px;
+}
+
+.attachment-vehicles-heading {
+  align-items: center;
+}
+
+.attachment-vehicles-heading > div {
+  flex: 1;
+}
+
+.attachment-add-button,
+.attachment-remove-button {
+  border: 1px solid #dbe6d5;
+  border-radius: 7px;
+  background: #f5f9f2;
+  color: #31513d;
+  font-size: 11px;
+  font-weight: 750;
+  cursor: pointer;
+}
+
+.attachment-add-button {
+  min-height: 39px;
+  padding: 0 13px;
+  white-space: nowrap;
+}
+
+.attachment-add-button:disabled {
+  opacity: .5;
+  cursor: not-allowed;
+}
+
+.attachment-remove-button {
+  padding: 7px 10px;
+  border-color: #ecd5cf;
+  background: #fff7f5;
+  color: #8a493a;
+}
+
+.attachment-vehicles {
+  display: grid;
+  gap: 14px;
+}
+
+.attachment-vehicle-card {
+  min-width: 0;
+  padding: 19px;
+  border: 1px solid #e1e8de;
+  border-radius: 12px;
+  background: #fcfdfa;
+}
+
+.attachment-vehicle-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 17px;
+}
+
+.attachment-vehicle-head > div > span,
+.attachment-vehicle-head > div > strong {
+  display: block;
+}
+
+.attachment-vehicle-head > div > span {
+  margin-bottom: 4px;
+  color: #829285;
+  font-size: 8px;
+  font-weight: 850;
+  letter-spacing: .15em;
+}
+
+.attachment-vehicle-head > div > strong {
+  color: #34473a;
+  font-size: 13px;
+}
+
+.attachment-vehicle-optional {
+  margin-top: 19px;
+}
+
+.attachment-vehicle-optional summary {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding-bottom: 0;
+}
+
+.attachment-vehicle-optional summary span {
+  color: #8a968b;
+  font-size: 10px;
+  font-weight: 500;
+}
+
+.attachment-documents,
+.attachment-driver {
+  min-width: 0;
+  margin: 16px 0 0;
+  padding: 0;
+  border: 0;
+}
+
+.attachment-documents legend,
+.attachment-driver legend {
+  margin-bottom: 10px;
+  color: #526154;
+  font-size: 11px;
+  font-weight: 750;
+}
+
+.attachment-document-grid,
+.attachment-driver-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.attachment-driver-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px 22px;
+}
+
+.attachment-driver-grid {
+  margin-top: 15px;
+}
+
+.attachment-consent-section {
+  margin-top: 31px;
+  padding: 21px;
+  border-radius: 12px;
+  background: #f3f7ef;
+}
+
+.attachment-consent-section .attachment-section-heading {
+  margin-bottom: 15px;
+}
+
+.attachment-consent {
+  padding: 14px;
+  border: 1px solid #e2e9dd;
+  border-radius: 8px;
+  background: #fff;
+}
+
+.attachment-primary,
+.attachment-secondary {
+  display: inline-flex;
+  min-height: 46px;
+  align-items: center;
+  justify-content: center;
+  gap: 17px;
+  padding: 0 18px;
+  border: 1px solid #20392e;
+  border-radius: 7px;
+  background: #20392e;
+  color: #fff;
+  font-size: 12px;
+  font-weight: 750;
+  text-decoration: none;
+  cursor: pointer;
+  transition: transform .18s, background .18s;
+}
+
+.attachment-primary:hover,
+.attachment-secondary:hover {
+  transform: translateY(-1px);
+  background: #31513f;
+}
+
+.attachment-primary:disabled {
+  opacity: .65;
+  cursor: wait;
+}
+
+.attachment-primary span {
+  color: #d9ed76;
+  font-size: 16px;
+}
+
+.attachment-review-button {
+  width: 100%;
+  margin-top: 14px;
+}
+
+.attachment-privacy-note {
+  margin: 12px 0 0;
+  color: #849086;
+  font-size: 10px;
+  line-height: 1.6;
+  text-align: center;
+}
+
+.attachment-summary {
+  margin: 25px 0;
+  border-top: 1px solid #e5ebe2;
+}
+
+.attachment-summary > div {
+  display: grid;
+  grid-template-columns: minmax(130px, .65fr) 1.35fr;
+  gap: 16px;
+  padding: 13px 0;
+  border-bottom: 1px solid #e9eee7;
+}
+
+.attachment-summary dt {
+  color: #819085;
+  font-size: 11px;
+}
+
+.attachment-summary dd {
+  margin: 0;
+  color: #314136;
+  font-size: 12px;
+  font-weight: 650;
+  line-height: 1.6;
+  overflow-wrap: anywhere;
+}
+
+.attachment-review-actions {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.attachment-secondary {
+  border-color: #dfe6dc;
+  background: #fff;
+  color: #35463a;
+}
+
+.attachment-secondary:hover {
+  background: #f4f8f0;
+}
+
+.attachment-alert,
+.attachment-success {
+  padding: 12px;
+  border-radius: 7px;
+  font-size: 12px;
+  line-height: 1.55;
+}
+
+.attachment-alert {
+  border: 1px solid #efc9c2;
+  background: #fff5f2;
+  color: #9c3e32;
+}
+
+.attachment-success {
+  border: 1px solid #d5e6ce;
+  background: #f2f8ed;
+  color: #48694b;
+}
+
+@media (max-width: 760px) {
+  .attachment-shell {
+    width: min(100% - 32px, 600px);
+  }
+
+  .attachment-hero {
+    padding: 38px 0 30px;
+    background-position: 58% center;
+  }
+
+  .attachment-hero-layout {
+    grid-template-columns: 1fr;
+    gap: 22px;
+  }
+
+  .attachment-hero h1 {
+    font-size: clamp(42px, 10vw, 58px);
+  }
+
+  .attachment-hero-copy > p {
+    max-width: 500px;
+    font-size: 13px;
+  }
+
+  .attachment-hero-card {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 10px 14px;
+    padding: 15px;
+  }
+
+  .attachment-hero-kicker {
+    grid-column: 1 / -1;
+  }
+
+  .attachment-hero-card > div {
+    align-items: flex-start;
+    gap: 8px;
+    padding-top: 10px;
+  }
+
+  .attachment-hero-card > div > b {
+    width: 26px;
+    height: 26px;
+    flex-basis: 26px;
+    border-radius: 8px;
+    font-size: 8px;
+  }
+
+  .attachment-hero-card strong {
+    font-size: 10px;
+    line-height: 1.4;
+  }
+
+  .attachment-hero-card small {
+    font-size: 9px;
+    line-height: 1.4;
+  }
+
+  .attachment-main {
+    padding: 22px 0 38px;
+  }
+
+  .attachment-form-card {
+    padding: 23px 18px;
+  }
+
+  .attachment-contact-grid,
+  .attachment-vehicle-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 520px) {
+  .attachment-shell {
+    width: calc(100% - 24px);
+  }
+
+  .attachment-hero {
+    padding: 30px 0 23px;
+  }
+
+  .attachment-hero-layout {
+    gap: 17px;
+  }
+
+  .attachment-hero-card {
+    grid-template-columns: 1fr;
+    gap: 8px;
+    padding: 13px 15px;
+  }
+
+  .attachment-hero-card > div {
+    align-items: center;
+    padding-top: 8px;
+  }
+
+  .attachment-hero-card strong {
+    font-size: 11px;
+  }
+
+  .attachment-form-card {
+    padding: 20px 14px;
+    border-radius: 13px;
+  }
+
+  .attachment-form-heading {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .attachment-intro {
+    font-size: 12px;
+  }
+
+  .attachment-form-section {
+    margin-top: 23px;
+    padding-top: 21px;
+  }
+
+  .attachment-contact-grid,
+  .attachment-vehicle-grid,
+  .attachment-document-grid,
+  .attachment-driver-grid {
+    grid-template-columns: 1fr;
+    gap: 13px;
+  }
+
+  .attachment-vehicles-heading {
+    align-items: flex-start;
+  }
+
+  .attachment-vehicles-heading > div {
+    padding-top: 1px;
+  }
+
+  .attachment-add-button {
+    min-height: 35px;
+    padding: 0 9px;
+    font-size: 10px;
+  }
+
+  .attachment-vehicle-card {
+    padding: 14px;
+  }
+
+  .attachment-consent-section {
+    padding: 15px;
+  }
+
+  .attachment-review-actions {
+    flex-direction: column-reverse;
+  }
+
+  .attachment-review-actions > * {
+    width: 100%;
+  }
+
+  .attachment-summary > div {
+    grid-template-columns: 1fr;
+    gap: 4px;
+  }
+}

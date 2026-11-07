@@ -3,7 +3,7 @@
 .tour-eyebrow{display:block;color:#d9ed91;font-size:10px;line-height:1.4;font-weight:800;letter-spacing:.2em;text-transform:uppercase}
 .tour-eyebrow-dark{color:#65786a}
 .tour-index-hero,.tour-detail-hero{position:relative;min-height:420px;display:flex;align-items:center;overflow:hidden;background:radial-gradient(ellipse at 83% 15%,#52734f 0,transparent 36%),linear-gradient(120deg,#172820,#294635 60%,#20392e);color:#fff}
-.tour-index-hero{background:linear-gradient(90deg,rgba(17,37,27,.78) 0%,rgba(23,48,35,.48) 52%,rgba(23,48,35,.14) 100%),url("/tours/generated/hd/kodaikanal.jpg") center 48%/cover no-repeat}
+.tour-index-hero{background:linear-gradient(90deg,rgba(17,37,27,.48) 0%,rgba(23,48,35,.20) 52%,rgba(23,48,35,.02) 100%),url("/tours/generated/hd/kodaikanal-hero-enhanced.png") center 48%/cover no-repeat}
 .tour-index-hero-copy,.tour-detail-hero-copy{position:relative;padding:72px 0 86px}
 .tour-index-hero h1,.tour-detail-hero h1{font-family:Manrope,Inter,sans-serif;font-size:clamp(47px,7vw,83px);line-height:.99;letter-spacing:-.075em;max-width:850px;margin:23px 0 20px;color:#fff}
 .tour-index-hero h1 em{font-style:normal;color:var(--tour-yellow)}

@@ -10,12 +10,12 @@ export const OUTSTATION_TARIFF = {
  * `distanceKm` is the complete routed distance to bill: one-way for a drop,
  * or the routed return distance for a round trip.
  */
-export function calculateOutstationFare(distanceKm, vehicle, days = 1, returnTrip = false) {
+export function calculateOutstationFare(distanceKm, vehicle, days = 1, returnTrip = false, tariff = OUTSTATION_TARIFF) {
   if (!Number.isFinite(distanceKm) || distanceKm <= 0) throw new Error("A valid road distance is required for an outstation estimate.");
   const tripDays = Math.max(1, Number(days) || 1);
   const minimumKm = returnTrip
-    ? OUTSTATION_TARIFF.roundTripMinimumKmPerDay * tripDays
-    : OUTSTATION_TARIFF.oneWayMinimumKm;
+    ? tariff.roundTripMinimumKmPerDay * tripDays
+    : tariff.oneWayMinimumKm;
   const billedDistanceKm = Math.max(distanceKm, minimumKm);
   const perKm = returnTrip ? vehicle.outstationRoundTripPerKm : vehicle.outstationOneWayPerKm;
   const distanceCharge = billedDistanceKm * perKm;
@@ -34,7 +34,7 @@ export function calculateOutstationFare(distanceKm, vehicle, days = 1, returnTri
 }
 
 /** Chennai local packages: 4/40, 8/80, and 12/120, then extra-hour billing. */
-export function calculateLocalPackage(hours, vehicle) {
+export function calculateLocalPackage(hours, vehicle, tariff = OUTSTATION_TARIFF) {
   const requestedHours = Math.max(1, Number(hours) || 4);
   const packageHours = Math.max(4, requestedHours);
   let packageCharge;
@@ -50,7 +50,7 @@ export function calculateLocalPackage(hours, vehicle) {
   return {
     requestedHours,
     packageHours,
-    includedKm: packageHours * OUTSTATION_TARIFF.localKmPerHour,
+    includedKm: packageHours * tariff.localKmPerHour,
     packageCharge,
   };
 }

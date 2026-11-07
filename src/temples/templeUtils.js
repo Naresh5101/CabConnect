@@ -1,5 +1,5 @@
 import { templeCategories } from "./templeData.js";
-import { calculateOutstationFare } from "../utils/fareRules.js";
+import { calculateOutstationFare, OUTSTATION_TARIFF } from "../utils/fareRules.js";
 import { photonSearchParams, rankIndianPlaceFeatures } from "../utils/locationSearch.js";
 
 export function filterTempleCatalogue(records, categoryId = "all", query = "") {
@@ -98,9 +98,9 @@ export async function requestRoadDistance(startCoordinate, orderedTempleCoordina
   return route.distance / 1000;
 }
 
-export function calculateTempleFare(distanceKm, vehicle, days) {
+export function calculateTempleFare(distanceKm, vehicle, days, tariff = OUTSTATION_TARIFF) {
   if (!Number.isFinite(distanceKm) || distanceKm <= 0) throw new Error("A verified road distance is required for an estimate.");
-  const estimate = calculateOutstationFare(distanceKm, vehicle, days, true);
+  const estimate = calculateOutstationFare(distanceKm, vehicle, days, true, tariff);
   return {
     distanceKm,
     tripDays: estimate.tripDays,
@@ -110,7 +110,7 @@ export function calculateTempleFare(distanceKm, vehicle, days) {
     distanceCharge: estimate.distanceCharge,
     driverAllowance: estimate.driverAllowance,
     total: estimate.total,
-    note: "Road route includes the return to your pickup. A 250 km/day minimum and driver allowance apply. Tolls, parking, waiting, taxes and other partner charges are excluded.",
+    note: `Road route includes the return to your pickup. A ${tariff.roundTripMinimumKmPerDay} km/day minimum and driver allowance apply. Tolls, parking, waiting, taxes and other partner charges are excluded.`,
   };
 }
 

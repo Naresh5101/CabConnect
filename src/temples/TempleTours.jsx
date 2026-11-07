@@ -12,6 +12,7 @@ import {
 import "./templeTours.css";
 import { createSubmissionId } from "../lib/supabase";
 import { submitCustomerRequest } from "../services/customerRequestService";
+import { limitPhoneDigits } from "../utils/phoneInput.js";
 
 const arupadaiIds = temples.filter((temple) => temple.categories.includes("arupadai")).map(({ id }) => id);
 const money = (amount) => new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR", maximumFractionDigits: 0 }).format(Math.round(amount));
@@ -33,7 +34,7 @@ function directionsUrl(temple) {
   return `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(destination)}`;
 }
 
-export default function TempleTours({ AddressAutocomplete, vehicles, whatsappNumber }) {
+export default function TempleTours({ AddressAutocomplete, vehicles, whatsappNumber, tariff }) {
   const [categoryId, setCategoryId] = useState("arupadai");
   const [query, setQuery] = useState("");
   const [selectedIds, setSelectedIds] = useState([]);
@@ -60,7 +61,7 @@ export default function TempleTours({ AddressAutocomplete, vehicles, whatsappNum
   const selectedTemples = useMemo(() => selectedIds.map((id) => temples.find((temple) => temple.id === id)).filter(Boolean), [selectedIds]);
   const visibleTemples = useMemo(() => filterTempleCatalogue(temples, categoryId, query), [categoryId, query]);
   const vehicle = vehicles.find((item) => item.id === vehicleId) || vehicles[0];
-  const fare = routeDistance != null && vehicle ? calculateTempleFare(routeDistance, vehicle, days) : null;
+  const fare = routeDistance != null && vehicle ? calculateTempleFare(routeDistance, vehicle, days, tariff) : null;
   const today = new Date().toISOString().slice(0, 10);
 
   function toggleTemple(templeId) {
@@ -268,13 +269,13 @@ export default function TempleTours({ AddressAutocomplete, vehicles, whatsappNum
             </div>
 
             <div className="temple-form-grid">
-              <AddressAutocomplete label="Starting location" required value={start.value} coords={start.coordinates} onChange={(value, coordinates) => { setStart({ value, coordinates }); setRouteDistance(null); setRouteError(""); }} onMapPick={(value, coordinates) => { setStart({ value, coordinates }); setRouteDistance(null); setRouteError(""); }} placeholder="Chennai, Tamil Nadu" />
+              <AddressAutocomplete label="Starting location" required value={start.value} coords={start.coordinates} onChange={(value, coordinates) => { setStart({ value, coordinates }); setRouteDistance(null); setRouteError(""); }} onMapPick={(value, coordinates) => { setStart({ value, coordinates }); setRouteDistance(null); setRouteError(""); }} placeholder="Chennai, Tamil Nadu" deferSuggestionsUntilFocus />
               <label className="field"><span>Travel date <b>*</b></span><input type="date" min={today} required value={travelDate} onChange={(event) => setTravelDate(event.target.value)} /></label>
               <label className="field"><span>Travellers</span><select value={travellers} onChange={(event) => setTravellers(event.target.value)}>{[1,2,3,4,5,6].map((count) => <option key={count} value={count}>{count} traveller{count === 1 ? "" : "s"}</option>)}</select></label>
               <label className="field"><span>Travel days</span><select value={days} onChange={(event) => setDays(event.target.value)}>{[1,2,3,4,5,6,7,8,10,12,14].map((count) => <option key={count} value={count}>{count} day{count === 1 ? "" : "s"}</option>)}</select></label>
               <label className="field"><span>Vehicle</span><select value={vehicleId} onChange={(event) => setVehicleId(event.target.value)}>{vehicles.map((item) => <option key={item.id} value={item.id}>{item.label} · up to {item.passengers}</option>)}</select></label>
               <label className="field"><span>Your name <b>*</b></span><input required autoComplete="name" value={customerName} onChange={(event) => setCustomerName(event.target.value)} placeholder="Full name" /></label>
-              <label className="field"><span>Mobile number <b>*</b></span><input required type="tel" inputMode="tel" pattern="(?:[0-9+ ]|\x2d){8,18}" autoComplete="tel" value={phone} onChange={(event) => setPhone(event.target.value)} placeholder="+91 98765 43210" /></label>
+              <label className="field"><span>Mobile number <b>*</b></span><input required type="tel" inputMode="numeric" pattern="[6-9][0-9]{9}" autoComplete="tel-national" title="Enter a valid 10-digit Indian mobile number" value={phone} onChange={(event) => setPhone(limitPhoneDigits(event.target.value))} placeholder="10-digit mobile number" /></label>
               <label className="field field-full"><span>Special requests <small>(optional)</small></span><textarea rows="2" value={notes} onChange={(event) => setNotes(event.target.value)} placeholder="Accessibility needs, luggage, preferred stops…" /></label>
             </div>
 

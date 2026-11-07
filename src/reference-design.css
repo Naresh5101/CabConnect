@@ -411,6 +411,85 @@ html:has(.driver-page:not(.attachment-page)),body:has(.driver-page:not(.attachme
  .driver-page:not(.attachment-page) .driver-hero{padding:12px 0 16px}
  .driver-page:not(.attachment-page) .driver-hero h1{font-size:clamp(36px,9vw,48px)}
  .driver-page:not(.attachment-page) .driver-hero-card{height:145px;min-height:145px;max-height:145px}
+
+/* Cab attachment: a focused fleet banner and full-width, two-column enquiry workspace. */
+.attachment-page{min-height:100vh;background:#f2f4ef}
+.attachment-page .driver-hero{position:relative;min-height:300px;display:flex;align-items:center;overflow:hidden;padding:34px 0;background-color:#17382e;background-image:linear-gradient(90deg,#102b20f2 0%,#102b20d9 43%,#102b2094 72%,#102b2060 100%),url('/hourly-rental-chennai.png');background-size:cover;background-position:center 52%;color:#fff}
+.attachment-page .driver-hero:after{position:absolute;inset:0;content:"";pointer-events:none;background:linear-gradient(0deg,#10281d35,transparent 42%)}
+.attachment-page .driver-hero-inner{position:relative;z-index:1;display:grid;width:min(1500px,calc(100% - 72px));grid-template-columns:minmax(0,1.15fr) minmax(300px,.72fr);align-items:center;gap:clamp(28px,6vw,88px)}
+.attachment-page .attachment-hero-copy{max-width:720px}
+.attachment-page .driver-hero .eyebrow{color:#e0f07d;font-size:10px;letter-spacing:.2em}
+.attachment-page .driver-hero h1{margin:15px 0 11px;color:#fff;font-size:clamp(38px,4.5vw,62px);line-height:.99;letter-spacing:-.065em}
+.attachment-page .driver-hero h1 em{color:#dded74}
+.attachment-page .driver-hero-inner>div:first-child>p{max-width:590px;margin:0;color:#f1f4ef;font-size:13px;line-height:1.7}
+.attachment-hero-cta{display:inline-flex;align-items:center;gap:24px;min-height:43px;margin-top:17px;padding:0 16px;border-radius:7px;background:#e3ed73;color:#20372d;font-size:11px;font-weight:800;text-decoration:none;box-shadow:0 8px 22px #07190f32;transition:transform .18s,background .18s}
+.attachment-hero-cta:hover{transform:translateY(-2px);background:#eff69c}
+.attachment-hero-cta span{font-size:16px}
+.attachment-page .attachment-hero-card{display:grid;gap:13px;padding:20px 22px;border:1px solid #ffffff45;border-radius:14px;background:#f8faf0ed;box-shadow:0 22px 54px #10251c42;backdrop-filter:blur(12px)}
+.attachment-hero-kicker{margin-bottom:1px;color:#768467;font-size:8px;font-weight:850;letter-spacing:.17em}
+.attachment-page .attachment-hero-card>div{display:flex;align-items:center;gap:11px;padding-top:11px;border-top:1px solid #e2e8da}
+.attachment-page .attachment-hero-card>div>b{display:grid;width:29px;height:29px;flex:0 0 29px;place-items:center;border-radius:9px;background:#20392e;color:#e3ed73;font-size:9px}
+.attachment-page .attachment-hero-card>div span,.attachment-page .attachment-hero-card strong,.attachment-page .attachment-hero-card small{display:block}
+.attachment-page .attachment-hero-card strong{color:#26392d;font-size:10px}
+.attachment-page .attachment-hero-card small{margin-top:3px;color:#7c887c;font-size:8px}
+.attachment-form-section{padding:22px 0 48px}
+.attachment-page .driver-form-layout{display:grid;width:min(1500px,calc(100% - 72px));grid-template-columns:minmax(250px,.68fr) minmax(0,1.65fr);align-items:stretch;gap:20px}
+.attachment-page .driver-aside{position:relative;top:auto;display:flex;min-height:100%;flex-direction:column;align-items:flex-start;padding:clamp(20px,2.4vw,32px);border:1px solid #e1e7dc;border-radius:14px;background:linear-gradient(155deg,#fffefa 0%,#f3f7ee 100%);box-shadow:0 14px 38px #1b35230b}
+.attachment-page .driver-aside .eyebrow{color:#71855a}
+.attachment-page .driver-aside h2{margin:13px 0 9px;color:#20372d;font-size:clamp(24px,2.3vw,32px);line-height:1.08;letter-spacing:-.055em}
+.attachment-page .driver-aside>p{margin:0;color:#748176;font-size:11px;line-height:1.7}
+.attachment-process-list{display:grid;width:100%;gap:15px;margin:24px 0 0}
+.attachment-process-list>div{display:flex;align-items:center;gap:11px}
+.attachment-process-list>div>span{display:grid;width:31px;height:31px;flex:0 0 31px;place-items:center;border:1px solid #d9e3d2;border-radius:50%;background:#fff;color:#4f7049;font-size:9px;font-weight:850}
+.attachment-process-list p,.attachment-process-list strong,.attachment-process-list small{display:block;margin:0}
+.attachment-process-list strong{color:#37483a;font-size:10px}
+.attachment-process-list small{margin-top:3px;color:#859084;font-size:8px}
+.attachment-page .driver-aside-note{margin-top:auto;padding:14px 0 0;border:0}
+.attachment-page .driver-aside-note p{color:#7b887c;font-size:9px}
+.attachment-page .driver-form-card{width:100%;padding:clamp(18px,2.2vw,30px);border:1px solid #e1e7dc;border-radius:14px;box-shadow:0 14px 38px #1b35230b}
+.attachment-page .driver-application h2,.attachment-page .driver-review h2{font-size:clamp(22px,2vw,28px)}
+.attachment-page .driver-form-intro,.attachment-page .driver-review-intro{font-size:11px}
+.attachment-two-column{grid-template-columns:minmax(0,.9fr) minmax(0,1.1fr);gap:12px;margin-top:13px}
+.attachment-two-column>.driver-subsection{padding:14px;border-color:#e6ebe2;border-radius:10px}
+.attachment-two-column .driver-form-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:11px 10px}
+.attachment-two-column .driver-field-full{grid-column:1/-1}
+.attachment-two-column .driver-field>label:not(.driver-check){font-size:9px}
+.attachment-two-column .driver-field input:not([type=checkbox]):not([type=radio]),.attachment-two-column .driver-field select{min-height:37px;font-size:10px}
+.attachment-section-title{align-items:flex-start}
+.attachment-section-title .driver-step-heading{margin:0}
+.attachment-section-title .driver-step-heading strong{font-size:11px}
+.attachment-section-title .driver-step-heading small{font-size:8px}
+.attachment-two-column .attachment-vehicle-card{padding:12px}
+.attachment-two-column .attachment-docs .driver-form-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+.attachment-page .driver-consents{margin-top:15px;padding:13px}
+.attachment-page .driver-privacy-note{font-size:9px}
+.attachment-page .driver-review-actions{flex-wrap:wrap}
+@media(max-width:900px){
+ .attachment-page .driver-hero-inner{width:calc(100% - 40px);grid-template-columns:minmax(0,1.1fr) minmax(260px,.9fr);gap:24px}
+ .attachment-page .driver-form-layout{width:calc(100% - 40px);grid-template-columns:minmax(220px,.65fr) minmax(0,1.35fr);gap:13px}
+ .attachment-page .driver-form-card{padding:16px}
+}
+@media(max-width:700px){
+ .attachment-page .driver-hero{min-height:0;padding:30px 0 24px;background-position:56% center}
+ .attachment-page .driver-hero-inner{width:calc(100% - 32px);grid-template-columns:1fr;gap:17px}
+ .attachment-page .driver-hero h1{font-size:clamp(36px,10vw,48px)}
+ .attachment-page .driver-hero-inner>div:first-child>p{max-width:500px;font-size:11px}
+ .attachment-page .attachment-hero-card{grid-template-columns:1fr;gap:8px;padding:13px 15px}
+ .attachment-page .attachment-hero-card>div{padding-top:8px}
+ .attachment-form-section{padding:14px 0 28px}
+ .attachment-page .driver-form-layout{width:calc(100% - 24px);grid-template-columns:1fr;gap:10px}
+ .attachment-page .driver-aside{min-height:0;padding:17px}
+ .attachment-page .driver-aside h2{max-width:460px;font-size:23px}
+ .attachment-page .driver-aside>p{font-size:10px}
+ .attachment-process-list{grid-template-columns:repeat(3,minmax(0,1fr));gap:7px;margin:14px 0 0}
+ .attachment-process-list>div{align-items:flex-start;gap:6px}
+ .attachment-process-list>div>span{width:23px;height:23px;flex-basis:23px;font-size:7px}
+ .attachment-process-list strong{font-size:8px;line-height:1.35}
+ .attachment-process-list small{font-size:7px;line-height:1.35}
+ .attachment-page .driver-aside-note{margin-top:12px;padding-top:10px;border-top:1px solid #e1e7dc}
+ .attachment-two-column{grid-template-columns:1fr}
+}
+@media(max-width:420px){.attachment-page .driver-hero-inner{width:calc(100% - 24px)}.attachment-page .driver-form-layout{width:calc(100% - 16px)}.attachment-process-list{grid-template-columns:1fr}.attachment-process-list>div{align-items:center}.attachment-page .driver-form-card{padding:13px}.attachment-two-column>.driver-subsection{padding:11px}.attachment-two-column .driver-form-grid{grid-template-columns:1fr}.attachment-two-column .driver-field-full{grid-column:auto}}
 }
 
 /* Full-width recruitment photo across the complete driver hero header. */
