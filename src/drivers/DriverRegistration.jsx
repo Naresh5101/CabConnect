@@ -9,8 +9,6 @@ import { limitPhoneDigits } from "../utils/phoneInput.js";
 import "./driverRegistration.css";
 import "./driverRegistrationPage.css";
 
-const DRIVER_HERO_VIDEO = "https://videos.pexels.com/video-files/9935078/9935078-uhd_3840_2160_30fps.mp4";
-
 function updatePointerPosition(event) {
   if (event.pointerType === "touch") return;
   const rect = event.currentTarget.getBoundingClientRect();
@@ -63,7 +61,6 @@ function Field({ label, name, error, required, children, className = "" }) {
 
 export default function DriverRegistration({ whatsappNumber }) {
   const pageRef = useRef(null);
-  const videoRef = useRef(null);
   const [form, setForm] = useState(initialDriverApplication);
   const [errors, setErrors] = useState({});
   const [review, setReview] = useState(false);
@@ -103,28 +100,6 @@ export default function DriverRegistration({ whatsappNumber }) {
     });
     return () => observer.disconnect();
   }, [review, applicationId]);
-
-  useEffect(() => {
-    const video = videoRef.current;
-    if (!video) return undefined;
-    const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
-    const mobile = window.matchMedia("(max-width: 700px)");
-    const syncPlayback = () => {
-      if (reduceMotion.matches || mobile.matches) {
-        video.pause();
-        return;
-      }
-      video.play().catch(() => { video.dataset.videoUnavailable = "true"; });
-    };
-    syncPlayback();
-    reduceMotion.addEventListener?.("change", syncPlayback);
-    mobile.addEventListener?.("change", syncPlayback);
-    video.addEventListener("error", () => { video.dataset.videoUnavailable = "true"; }, { once: true });
-    return () => {
-      reduceMotion.removeEventListener?.("change", syncPlayback);
-      mobile.removeEventListener?.("change", syncPlayback);
-    };
-  }, []);
 
   function update(name, value) {
     setForm((current) => ({ ...current, [name]: name === "mobile" || name === "whatsapp" ? limitPhoneDigits(value) : value }));
@@ -188,9 +163,6 @@ export default function DriverRegistration({ whatsappNumber }) {
       event.currentTarget.style.setProperty("--hero-pointer-x", `${event.clientX - rect.left}px`);
       event.currentTarget.style.setProperty("--hero-pointer-y", `${event.clientY - rect.top}px`);
     }}>
-      <video ref={videoRef} className="driver-hero-video" autoPlay muted loop playsInline preload="none" poster="/driver-recruitment-hero.jpg" aria-hidden="true" tabIndex={-1} onError={(event) => { event.currentTarget.dataset.videoUnavailable = "true"; }}>
-        <source src={DRIVER_HERO_VIDEO} type="video/mp4" />
-      </video>
       <div className="driver-hero-overlay" aria-hidden="true" />
       <div className="driver-road-lines" aria-hidden="true"><i /><i /><i /></div>
       <div className="container driver-hero-inner">

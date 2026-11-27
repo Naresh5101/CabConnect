@@ -145,6 +145,11 @@
 /* Readability and touch-target polish across the booking experience. */
 :root{--green:#c4ef73;--green-dark:#214b38;--line:#e2e8df}
 body{font-size:15px;color:#1d2b23}
+.page-disabled-state{min-height:100vh;display:grid;place-items:center;padding:32px;background:#f5f7f1;color:#1d2b23;text-align:center}
+.page-disabled-state section{max-width:520px}
+.page-disabled-state h1{margin:12px 0;font-size:clamp(28px,5vw,48px);line-height:1.05}
+.page-disabled-state p:not(.eyebrow){margin:0 auto 24px;max-width:440px;color:#657264;line-height:1.7}
+.page-disabled-icon{display:grid;place-items:center;width:62px;height:62px;margin:0 auto 18px;border:1px solid #d7dfd2;border-radius:50%;background:#fff;color:#416c49;font-size:28px}
 .top-strip{font-size:12px}
 .site-header{box-shadow:0 4px 18px #17281d0a}
 .main-nav{gap:clamp(14px,2vw,26px);font-size:13px;font-weight:600}
@@ -257,16 +262,15 @@ body{font-size:15px;color:#1d2b23}
 .vehicle-select-field>span{font-size:12px}
 .vehicle-select-field select{min-height:52px;font-size:14px}
 .vehicle-empty-state{min-height:112px;display:flex;align-items:center;justify-content:center;padding:18px;border:1px dashed #d6dfd2;border-radius:12px;background:#f8faf6;color:#738075;text-align:center;font-size:12px;line-height:1.6}
-.vehicle-detail-card{min-width:0;display:grid;grid-template-columns:minmax(130px,1.1fr) minmax(0,1fr);align-items:center;overflow:hidden;border:1px solid #dce6d8;border-radius:12px;background:#f8fbf6;animation:ride-image-in .22s ease-out}
-.vehicle-detail-card>img{display:block;width:100%;height:auto;min-height:0;aspect-ratio:3/2;object-fit:cover;object-position:center;padding:0;background:#f0f3ed}
+.vehicle-detail-card{min-width:0;display:grid;grid-template-columns:minmax(0,1fr);align-items:center;overflow:hidden;border:1px solid #dce6d8;border-radius:12px;background:#f8fbf6;animation:ride-image-in .22s ease-out}
 .vehicle-detail-copy{min-width:0;display:flex;flex-direction:column;align-items:flex-start;gap:5px;padding:12px}
 .vehicle-category-pill{display:inline-flex;padding:4px 8px;border-radius:999px;background:#e7f0df;color:#375c40;font-size:9px;font-weight:800;letter-spacing:.1em}
 .vehicle-detail-copy>strong{font-family:Manrope,sans-serif;font-size:15px;line-height:1.25;letter-spacing:-.03em}
 .vehicle-detail-copy>span{color:#59695e;font-size:11px;line-height:1.45}
 .vehicle-detail-copy p{margin:0;color:#59695e;font-size:11px;line-height:1.45}
 .vehicle-detail-copy>small{color:#405b46;font-size:11px;font-weight:700;line-height:1.45}
-@media(max-width:700px){.vehicle-picker-layout{grid-template-columns:1fr;gap:10px}.vehicle-empty-state{min-height:58px}.vehicle-detail-card{grid-template-columns:minmax(140px,1.1fr) minmax(0,1fr)}.vehicle-detail-copy{padding:10px}}
-@media(max-width:390px){.vehicle-detail-card{grid-template-columns:minmax(120px,1fr) minmax(0,1fr)}.vehicle-detail-copy>strong{font-size:13px}.vehicle-detail-copy>span{font-size:10px}}
+@media(max-width:700px){.vehicle-picker-layout{grid-template-columns:1fr;gap:10px}.vehicle-empty-state{min-height:58px}.vehicle-detail-copy{padding:10px}}
+@media(max-width:390px){.vehicle-detail-copy>strong{font-size:13px}.vehicle-detail-copy>span{font-size:10px}}
 
 /* A focused two-car fleet and five easy-to-scan ride types. */
 .vehicle-grid{grid-template-columns:repeat(2,minmax(0,1fr))}

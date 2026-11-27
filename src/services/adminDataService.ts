@@ -34,6 +34,18 @@ export async function updateCustomerRequest(requestId: string, patch: Partial<Pi
   return data;
 }
 
+export async function deleteCabBookingRequest(requestId: string): Promise<void> {
+  const { data, error } = await requireSupabase()
+    .from("customer_requests")
+    .delete()
+    .eq("request_id", requestId)
+    .eq("request_type", "cab_booking")
+    .select("request_id")
+    .single();
+  if (error) throw new Error(error.message);
+  if (!data) throw new Error("No cab booking matched that reference.");
+}
+
 export async function updateDriverApplication(applicationId: string, patch: Partial<Pick<DriverApplicationRow, "status" | "admin_notes">>): Promise<DriverApplicationRow> {
   const { data, error } = await requireSupabase().from("driver_applications").update(patch).eq("application_id", applicationId).select("*").single();
   if (error) throw new Error(error.message);

@@ -38,7 +38,7 @@ Set these server-side function secrets in the Supabase dashboard or CLI. `SUPABA
 
 - `SUPABASE_SERVICE_ROLE_KEY`: project service-role key (server only)
 - `RATE_LIMIT_HASH_SECRET`: a newly generated random secret used to hash the source IP for rate limiting
-- `APP_ORIGIN`: local dev origin while testing (`http://localhost:5174`); set the deployed website origin before production
+- `APP_ORIGIN`: comma-separated allowed website origins (for example, the deployed site and any production custom domain). The Edge Functions also allow local Vite origins on ports 5173 and 5174 for development.
 
 The endpoints validate payloads, require contact consent, enforce a server-side per-IP rate limit, and write with the server-only service role. The driver endpoint also rejects a filled honeypot and a second application for the same mobile number. Request submission IDs make client retries idempotent.
 
@@ -59,3 +59,5 @@ This assigns a server-trusted JWT claim used by RLS. Do not use user-editable `u
 Run the app at `http://localhost:5174`, open `/tour-packages`, `/driver-register`, `/cab-attachment`, the booking form, and temple tours. Confirm package data loads, submit a test request with explicit contact consent, and verify it appears under `/driver-admin` after signing in as the assigned admin. Check that a public/anonymous session cannot select from `driver_applications` or `customer_requests`.
 
 The project currently has no TypeScript compiler or Supabase CLI dependency. The application itself is JavaScript/JSX, so `npm run build` and `npm run lint` are the available source checks. Live database reads/writes require the migrations and Edge Functions above to be deployed first.
+
+Authenticated `driver_admin` users can permanently delete cab bookings from the booking detail panel. Row-level security limits this permission to `cab_booking` records; confirm the booking reference before deleting. Other customer requests and driver applications are not deletable through this action.

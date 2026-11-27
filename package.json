@@ -12,6 +12,7 @@
     "test:attachment": "node --test src/drivers/cabAttachmentUtils.test.js",
     "test:temples": "node --test src/temples/templeUtils.test.js",
     "test:tours": "node --test src/tours/tourData.test.js",
+    "test:pages": "node --test src/app/pageAvailability.test.js",
     "preview": "vite preview"
   },
   "dependencies": {

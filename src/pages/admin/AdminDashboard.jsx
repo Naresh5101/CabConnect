@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { APPLICATION_STATUSES } from "../../drivers/driverRegistrationUtils.js";
 import { supabaseConfigured } from "../../lib/supabase";
 import { useAdminAccess } from "../../hooks/useAdminAccess";
-import { createTourPackage, deleteTourPackage, fetchAdminCustomerRequests, fetchAdminDriverApplications, fetchAdminTourPackages, updateCustomerRequest, updateDriverApplication, updateTourPackage } from "../../services/adminDataService";
+import { createTourPackage, deleteCabBookingRequest, deleteTourPackage, fetchAdminCustomerRequests, fetchAdminDriverApplications, fetchAdminTourPackages, updateCustomerRequest, updateDriverApplication, updateTourPackage } from "../../services/adminDataService";
 import { signInAdmin, signOutAdmin } from "../../services/adminAuthService";
 import { environment } from "../../config/environment";
 import AdminWorkspace from "../../layouts/AdminWorkspace.jsx";
@@ -32,8 +32,15 @@ const SECTION_ITEMS = [
 const PAGE_SIZE = 25;
 const prettyDate = (value) => value ? new Intl.DateTimeFormat("en-IN", { dateStyle: "medium", timeStyle: "short" }).format(new Date(value)) : "—";
 const requestTitle = (type) => REQUEST_LABELS[type] || type?.replaceAll("_", " ") || "Customer request";
+const PAGE_TOGGLE_ITEMS = [
+  ["booking_enabled", "Cab booking", "Main ride booking form"],
+  ["temple_tours_enabled", "Temple Tours", "Temple tour route and navigation"],
+  ["tour_packages_enabled", "Tour Packages", "Tour package routes and catalogue"],
+  ["driver_registration_enabled", "Driver Registration", "Driver application page"],
+  ["cab_attachment_enabled", "Cab Attachment", "Cab and vehicle attachment page"],
+];
 
-export default function DriverAdmin() {
+export default function DriverAdmin({ pageSettings = {}, bookingSettingsReady = false, bookingSettingsMessage = "", onPageSettingEnabledChange = () => {} }) {
   const { user, setUser, authReady, dashboardAccess } = useAdminAccess(localAdminPreview);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -55,9 +62,13 @@ export default function DriverAdmin() {
   const [requestSort, setRequestSort] = useState({ field: "created_at", direction: "desc" });
   const [packageEditor, setPackageEditor] = useState(null);
   const [packageSaving, setPackageSaving] = useState(false);
+  const [bookingSaving, setBookingSaving] = useState(false);
+  const [bookingSaveError, setBookingSaveError] = useState("");
+  const [bookingSaveSuccess, setBookingSaveSuccess] = useState("");
   const [reportFrom, setReportFrom] = useState("");
   const [reportTo, setReportTo] = useState("");
   const accountLabel = user?.email || (localAdminPreview ? "Local developer" : "Administrator");
+  const localDataUnavailable = localAdminPreview && !user;
 
   async function signIn(event) {
     event.preventDefault(); setLoading(true); setLoginError("");
@@ -76,9 +87,29 @@ export default function DriverAdmin() {
     } catch (cause) { setError(cause.message || "Unable to sign out."); }
   }
 
+  async function changePageAvailability(key, enabled) {
+    setBookingSaving(true);
+    setBookingSaveError("");
+    setBookingSaveSuccess("");
+    try {
+      const scope = await onPageSettingEnabledChange(key, enabled);
+      setBookingSaveSuccess(scope === "local" ? "Saved for this local browser preview." : "Saved to the website. The change applies across the site.");
+    } catch (cause) {
+      setBookingSaveError(cause.message || "Could not save booking availability.");
+    } finally {
+      setBookingSaving(false);
+    }
+  }
+
   const loadAll = useCallback(async () => {
     if (!dashboardAccess) return;
     setLoading(true); setError("");
+    if (localAdminPreview && !user) {
+      const message = "Sign in with an authorized administrator account to view private records. The local preview does not have access to customer requests.";
+      setDataErrors({ requests: message, drivers: message, packages: message });
+      setLoading(false);
+      return;
+    }
     if (!supabaseConfigured) {
       const message = "Supabase is not configured. Add the public URL and key in .env.local to load dashboard data.";
       setDataErrors({ requests: message, drivers: message, packages: message });
@@ -100,7 +131,7 @@ export default function DriverAdmin() {
     });
     setDataErrors(nextErrors);
     setLoading(false);
-  }, [dashboardAccess]);
+  }, [dashboardAccess, user]);
 
   useEffect(() => {
     if (!dashboardAccess) return undefined;
@@ -127,6 +158,12 @@ export default function DriverAdmin() {
       setter(rows.map((row) => row[idField] === id ? { ...row, ...updated } : row));
       return updated;
     } catch (cause) { setError(cause.message || "Unable to save that change."); throw cause; }
+  }, []);
+
+  const deleteCabBooking = useCallback(async (requestId) => {
+    await deleteCabBookingRequest(requestId);
+    setRequests((rows) => rows.filter((row) => row.request_id !== requestId));
+    setSelectedId((current) => current === requestId ? "" : current);
   }, []);
 
   const filteredApplications = useMemo(() => {
@@ -188,30 +225,53 @@ export default function DriverAdmin() {
   const sectionError = isRequestSection || section === "attachments" ? dataErrors.requests : section === "drivers" ? dataErrors.drivers : section === "packages" ? dataErrors.packages : "";
   const visibleCount = isRequestSection ? sectionRequestRows.length : section === "drivers" ? filteredApplications.length : section === "attachments" ? filteredAttachments.length : section === "packages" ? filteredPackages.length : 0;
   const pageTitle = section === "overview" ? "Good morning." : SECTION_ITEMS.find(([id]) => id === section)?.[1];
-  const pageDescription = section === "overview" ? "Here’s what’s happening across your CabConnect business." : section === "attachments" ? "Review vehicle owner details, fleet information and attachment requests." : isRequestSection ? `Review ${REQUEST_LABELS[REQUEST_SECTION_TYPES[section]].toLowerCase()} with the customer, trip and quote details together.` : section === "drivers" ? "Review, contact and manage driver hiring applications." : section === "reports" ? "Explore summaries calculated from submitted customer and driver records." : section === "pricing" ? "Manage the database-backed rates used by future fare estimates." : section === "settings" ? "Review administrator access and the live data sources for this workspace." : "Create, edit and publish the tour catalogue shown on your website.";
+  const pageDescription = section === "overview" ? "Here’s what’s happening across your CabConnect business." : section === "attachments" ? "Review vehicle owner details, fleet information and attachment requests." : isRequestSection ? `Review ${REQUEST_LABELS[REQUEST_SECTION_TYPES[section]].toLowerCase()} with the customer, trip and quote details together.` : section === "drivers" ? "Review, contact and manage driver hiring applications." : section === "reports" ? "Explore summaries calculated from submitted customer and driver records." : section === "pricing" ? "Manage the database-backed rates used by future fare estimates." : section === "settings" ? "Manage local booking availability and review administrator access for this workspace." : "Create, edit and publish the tour catalogue shown on your website.";
   return <AdminWorkspace section={section} items={SECTION_ITEMS} localPreview={localAdminPreview} accountLabel={accountLabel} newRequests={newRequests} loading={loading} onNavigate={(id) => { setSection(id); setSelectedId(""); setSearch(""); setStatus(""); setPage(1); }} onRefresh={() => void loadAll()} onSignOut={() => void signOut()}>
     <div className="admin-content">
       <div className="admin-page-heading"><div><span className="admin-eyebrow">CABCONNECT CHENNAI · ADMIN</span><h1>{pageTitle}</h1><p>{pageDescription}</p></div><span className="admin-date-chip">{new Intl.DateTimeFormat("en-IN", { dateStyle: "full" }).format(new Date())}</span></div>
       {localAdminPreview && <section className="admin-notice admin-dev-access" aria-label="Local development access"><strong>Local development preview</strong><span>This bypass opens the dashboard shell only. Supabase RLS still protects private records and admin changes. Production builds require administrator authentication.</span>{user ? <><span>Connected as {user.email}. Database access is still checked by the trusted driver_admin role and RLS.</span><button type="button" className="admin-dev-connect" onClick={() => void signOut()}>Sign out of admin account</button></> : <><button type="button" className="admin-dev-connect" onClick={() => { setLocalLoginOpen((open) => !open); setLoginError(""); }}>{localLoginOpen ? "Close admin sign-in" : "Sign in to load private records"}</button>{localLoginOpen && <form className="admin-dev-signin" onSubmit={signIn}><label>Email<input type="email" autoComplete="username" required value={email} onChange={(event) => setEmail(event.target.value)} /></label><label>Password<input type="password" autoComplete="current-password" required value={password} onChange={(event) => setPassword(event.target.value)} /></label>{loginError && <p className="admin-error" role="alert">{loginError}</p>}<button className="admin-primary" disabled={loading}>{loading ? "Signing in…" : "Connect authorised account"}<span>↗</span></button><small>Only an account with trusted app_metadata role driver_admin can access private records.</small></form>}</>}</section>}
       {error && <p className="admin-error" role="alert">{error}</p>}
-      {Object.entries(dataErrors).filter(([key]) => section === "overview" || (key === "requests" && (isRequestSection || section === "attachments" || section === "reports")) || (key === "drivers" && (section === "drivers" || section === "reports")) || (key === "packages" && (section === "packages" || section === "reports"))).map(([key, message]) => <div className="admin-notice" role="status" key={key}><strong>{key === "packages" ? "Tour catalogue unavailable" : key === "drivers" ? "Driver applications unavailable" : "Customer request inbox unavailable"}</strong><span>{message || "The database may not have this feature’s migration yet."}</span></div>)}
+      {localDataUnavailable
+        ? <div className="admin-notice" role="status"><strong>Administrator sign-in required</strong><span>Sign in with an authorized admin account to check bookings and other private records. The local preview cannot read them anonymously.</span></div>
+        : Object.entries(dataErrors).filter(([key]) => section === "overview" || (key === "requests" && (isRequestSection || section === "attachments" || section === "reports")) || (key === "drivers" && (section === "drivers" || section === "reports")) || (key === "packages" && (section === "packages" || section === "reports"))).map(([key, message]) => <div className="admin-notice" role="status" key={key}><strong>{key === "packages" ? "Tour catalogue unavailable" : key === "drivers" ? "Driver applications unavailable" : "Customer request inbox unavailable"}</strong><span>{message || "The database may not have this feature’s migration yet."}</span></div>)}
 
       {section === "overview" && <>
         <div className="admin-stat-grid">
-          <button type="button" className="admin-stat-card admin-stat-dark" onClick={() => setSection("enquiries")}><span className="admin-stat-top"><small>Customer enquiries</small><i>↗</i></span><strong>{dataErrors.requests ? "—" : requests.filter((item) => item.request_type !== "cab_booking" && item.request_type !== "cab_attachment").length}</strong><span className="admin-stat-foot">{newRequests.enquiries} need attention</span><span className="admin-stat-icon">↗</span></button>
-          <button type="button" className="admin-stat-card" onClick={() => setSection("cab-bookings")}><span className="admin-stat-top"><small>Cab bookings</small><i>⌁</i></span><strong>{dataErrors.requests ? "—" : requests.filter((item) => item.request_type === "cab_booking").length}</strong><span className="admin-stat-foot">{newRequests["cab-bookings"]} awaiting review</span><span className="admin-stat-icon">⌁</span></button>
-          <button type="button" className="admin-stat-card" onClick={() => setSection("drivers")}><span className="admin-stat-top"><small>Driver registrations</small><i>♙</i></span><strong>{dataErrors.drivers ? "—" : applications.length}</strong><span className="admin-stat-foot">{newDrivers} new applications</span><span className="admin-stat-icon">♙</span></button>
+          <button type="button" className="admin-stat-card admin-stat-dark" onClick={() => setSection("enquiries")}><span className="admin-stat-top"><small>Customer enquiries</small><i>↗</i></span><strong>{dataErrors.requests ? "—" : requests.filter((item) => item.request_type !== "cab_booking" && item.request_type !== "cab_attachment").length}</strong><span className="admin-stat-foot">{dataErrors.requests ? "Sign in to view private records" : `${newRequests.enquiries} need attention`}</span><span className="admin-stat-icon">↗</span></button>
+          <button type="button" className="admin-stat-card" onClick={() => setSection("cab-bookings")}><span className="admin-stat-top"><small>Cab bookings</small><i>⌁</i></span><strong>{dataErrors.requests ? "—" : requests.filter((item) => item.request_type === "cab_booking").length}</strong><span className="admin-stat-foot">{dataErrors.requests ? "Sign in to view private records" : `${newRequests["cab-bookings"]} awaiting review`}</span><span className="admin-stat-icon">⌁</span></button>
+          <button type="button" className="admin-stat-card" onClick={() => setSection("drivers")}><span className="admin-stat-top"><small>Driver registrations</small><i>♙</i></span><strong>{dataErrors.drivers ? "—" : applications.length}</strong><span className="admin-stat-foot">{dataErrors.drivers ? "Unavailable until sign-in" : `${newDrivers} new applications`}</span><span className="admin-stat-icon">♙</span></button>
           <button type="button" className="admin-stat-card" onClick={() => setSection("attachments")}><span className="admin-stat-top"><small>Attached cabs</small><i>▣</i></span><strong>{dataErrors.requests ? "—" : attachmentRequests.length}</strong><span className="admin-stat-foot">{dataErrors.requests ? "Unavailable" : `${attachedVehicles} vehicle${attachedVehicles === 1 ? "" : "s"} submitted`}</span><span className="admin-stat-icon">▣</span></button>
-          <button type="button" className="admin-stat-card" onClick={() => setSection("packages")}><span className="admin-stat-top"><small>Tour packages</small><i>▧</i></span><strong>{dataErrors.packages ? "—" : packages.length}</strong><span className="admin-stat-foot">{packages.filter((item) => item.is_published).length} published on website</span><span className="admin-stat-icon">▧</span></button>
+          <button type="button" className="admin-stat-card" onClick={() => setSection("packages")}><span className="admin-stat-top"><small>Tour packages</small><i>▧</i></span><strong>{dataErrors.packages ? "—" : packages.length}</strong><span className="admin-stat-foot">{dataErrors.packages ? "Unavailable until sign-in" : `${packages.filter((item) => item.is_published).length} published on website`}</span><span className="admin-stat-icon">▧</span></button>
         </div>
         <div className="admin-overview-grid"><section className="admin-panel admin-activity"><div className="admin-panel-head"><div><span className="admin-eyebrow">LATEST UPDATES</span><h2>Recent activity</h2></div><button type="button" onClick={() => setSection("cab-bookings")}>Open bookings <span>↗</span></button></div>
-          {recentActivity.length ? <div className="admin-activity-list">{recentActivity.map((item) => <button type="button" className="admin-activity-row" key={item.key} onClick={() => { setSection(item.kind === "driver" ? "drivers" : item.request_type === "cab_booking" ? "cab-bookings" : item.request_type === "temple_tour" ? "temple-tours" : item.request_type === "cab_attachment" ? "attachments" : "enquiries"); setSelectedId(item.key); }}><span className={`admin-activity-symbol ${item.kind === "driver" ? "driver" : "request"}`}>{item.kind === "driver" ? "♙" : "↗"}</span><span className="admin-activity-copy"><strong>{item.person}</strong><small>{item.label}</small></span><span className="admin-activity-time">{prettyDate(item.created_at)}</span><span className="admin-activity-arrow">→</span></button>)}</div> : <EmptyState title="No recent submissions" detail={dataErrors.requests || dataErrors.drivers ? "Resolve the database setup message above to load activity." : "New bookings, enquiries and driver applications will appear here."} />}
-        </section><section className="admin-panel admin-quick-panel"><span className="admin-eyebrow">QUICK ACCESS</span><h2>Keep things moving.</h2><p>Jump to the work that needs your attention.</p><button type="button" className="admin-quick-link" onClick={() => { setSection("cab-bookings"); setStatus("New"); }}><span><b>{newRequests["cab-bookings"]}</b><small>New bookings</small></span><i>↗</i></button><button type="button" className="admin-quick-link" onClick={() => { setSection("drivers"); setStatus("New"); }}><span><b>{newDrivers}</b><small>New driver registrations</small></span><i>↗</i></button><div className="admin-quick-note"><span>i</span><p>Private customer and driver data is protected by Supabase RLS and the trusted <strong>driver_admin</strong> role.</p></div></section></div>
+          {recentActivity.length ? <div className="admin-activity-list">{recentActivity.map((item) => <button type="button" className="admin-activity-row" key={item.key} onClick={() => { setSection(item.kind === "driver" ? "drivers" : item.request_type === "cab_booking" ? "cab-bookings" : item.request_type === "temple_tour" ? "temple-tours" : item.request_type === "cab_attachment" ? "attachments" : "enquiries"); setSelectedId(item.key); }}><span className={`admin-activity-symbol ${item.kind === "driver" ? "driver" : "request"}`}>{item.kind === "driver" ? "♙" : "↗"}</span><span className="admin-activity-copy"><strong>{item.person}</strong><small>{item.label}</small></span><span className="admin-activity-time">{prettyDate(item.created_at)}</span><span className="admin-activity-arrow">→</span></button>)}</div> : <EmptyState title={dataErrors.requests || dataErrors.drivers ? "Private activity unavailable" : "No recent submissions"} detail={dataErrors.requests || dataErrors.drivers ? "Sign in with an authorized administrator account to load booking and driver activity." : "New bookings, enquiries and driver applications will appear here."} />}
+        </section><section className="admin-panel admin-quick-panel"><span className="admin-eyebrow">QUICK ACCESS</span><h2>Keep things moving.</h2><p>Jump to the work that needs your attention.</p><button type="button" className="admin-quick-link" onClick={() => { setSection("cab-bookings"); setStatus("New"); }}><span><b>{dataErrors.requests ? "—" : newRequests["cab-bookings"]}</b><small>New bookings</small></span><i>↗</i></button><button type="button" className="admin-quick-link" onClick={() => { setSection("drivers"); setStatus("New"); }}><span><b>{dataErrors.drivers ? "—" : newDrivers}</b><small>New driver registrations</small></span><i>↗</i></button><div className="admin-quick-note"><span>i</span><p>Private customer and driver data is protected by Supabase RLS and the trusted <strong>driver_admin</strong> role.</p></div></section></div>
       </>}
 
       {section === "reports" && <ReportsPanel requests={requests} applications={applications} packages={packages} errors={dataErrors} from={reportFrom} to={reportTo} setFrom={setReportFrom} setTo={setReportTo} />}
       {section === "pricing" && <AdminPricingPanel />}
-      {section === "settings" && <section className="admin-settings-page"><article className="admin-panel admin-settings-card"><span className="admin-eyebrow">ACCESS &amp; DATA</span><h2>Workspace settings</h2><p>Signed in as <strong>{user?.email || "Local development preview"}</strong>. Private tables continue to require the trusted driver_admin role and existing RLS policies.</p><div className="admin-settings-grid"><div><span>Customer requests</span><strong>public.customer_requests</strong></div><div><span>Driver registrations</span><strong>public.driver_applications</strong></div><div><span>Tour catalogue</span><strong>public.tour_packages</strong></div><div><span>Access model</span><strong>Supabase Auth + RLS</strong></div></div>{user && <button type="button" className="admin-secondary" onClick={() => void signOut()}>Sign out</button>}</article></section>}
+      {section === "settings" && <section className="admin-settings-page">
+        <article className="admin-panel admin-settings-card">
+          <span className="admin-eyebrow">WEBSITE CONTROLS</span><h2>Page availability</h2>
+          <p>Control which public pages and booking sections visitors can access. Production changes are saved centrally and apply across the site.</p>
+          <div className="admin-booking-settings-list">
+            {PAGE_TOGGLE_ITEMS.map(([key, label, description]) => (
+              <div className="admin-booking-setting" key={key}>
+                <div><strong>{label}</strong><small>{description}</small></div>
+                <label className="admin-switch">
+                  <span className="sr-only">Enable {label}</span>
+                  <input type="checkbox" checked={pageSettings[key] !== false} disabled={!bookingSettingsReady || bookingSaving} onChange={(event) => void changePageAvailability(key, event.target.checked)} />
+                  <span aria-hidden="true" />
+                </label>
+              </div>
+            ))}
+          </div>
+          {bookingSettingsMessage && <p className="admin-booking-scope" role="status">{bookingSettingsMessage}</p>}
+          {bookingSaveError && <p className="admin-error" role="alert">{bookingSaveError}</p>}
+          {bookingSaveSuccess && <p className="admin-feedback" role="status">{bookingSaveSuccess}</p>}
+        </article>
+        <article className="admin-panel admin-settings-card"><span className="admin-eyebrow">ACCESS &amp; DATA</span><h2>Workspace settings</h2><p>Signed in as <strong>{user?.email || "Local development preview"}</strong>. Private tables continue to require the trusted driver_admin role and existing RLS policies.</p><div className="admin-settings-grid"><div><span>Customer requests</span><strong>public.customer_requests</strong></div><div><span>Driver registrations</span><strong>public.driver_applications</strong></div><div><span>Tour catalogue</span><strong>public.tour_packages</strong></div><div><span>Access model</span><strong>Supabase Auth + RLS</strong></div></div>{user && <button type="button" className="admin-secondary" onClick={() => void signOut()}>Sign out</button>}</article>
+      </section>}
 
       {section !== "overview" && section !== "reports" && section !== "pricing" && section !== "settings" && <>
         <div className="admin-toolbar"><label className="admin-search"><span>⌕</span><input aria-label="Search" value={search} onChange={(event) => { setSearch(event.target.value); setPage(1); }} placeholder={section === "packages" ? "Search package or destination" : section === "attachments" ? "Search owner, mobile, vehicle or location" : "Search name, phone or trip details"} /></label>
@@ -222,11 +282,11 @@ export default function DriverAdmin() {
         {section === "packages" ? <PackagesTable packages={filteredPackages} error={dataErrors.packages} onToggle={(item) => void updateRecord("tour_packages", "id", item.id, { is_published: !item.is_published }, setPackages, packages)} onEdit={(item) => setPackageEditor(item)} onCreate={() => setPackageEditor(newPackageDraft())} onDelete={async (item) => { if (!window.confirm(`Permanently delete ${item.name}? This cannot be undone.`)) return; try { await deleteTourPackage(item.id); setPackages((rows) => rows.filter((row) => row.id !== item.id)); } catch (cause) { setError(cause.message || "Could not delete this tour package."); } }} /> : <div className={`admin-record-layout ${isRequestSection ? "is-wide" : ""}`}>
           <section className="admin-panel admin-record-list"><div className="admin-record-list-head"><strong>{isRequestSection ? REQUEST_LABELS[REQUEST_SECTION_TYPES[section]] : section === "drivers" ? "Driver applicants" : "Vehicle attachment requests"}</strong><span>Newest first · {visibleCount} records</span></div>
             {sectionError ? <EmptyState title="Records unavailable" detail={sectionError} /> : isRequestSection ? <AdminRequestTable rows={sortedRequestRows.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE)} count={visibleCount} page={page} pageSize={PAGE_SIZE} selectedId={selectedId} onSelect={setSelectedId} sort={requestSort} onSort={(field) => setRequestSort((current) => ({ field, direction: current.field === field && current.direction === "asc" ? "desc" : "asc" }))} attachmentMode={section === "attachments"} /> : (section === "drivers" ? filteredApplications : filteredAttachments).slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE).map((item) => section === "drivers" ? <button type="button" className={`admin-record-row ${selectedId === item.application_id ? "selected" : ""}`} key={item.application_id} onClick={() => setSelectedId(item.application_id)}><span className="admin-record-avatar driver">{item.full_name.slice(0, 1).toUpperCase()}</span><span className="admin-record-main"><strong>{item.full_name}</strong><small>{item.city_area} · {item.experience_years} years driving</small></span><span className={`admin-status status-${item.status.toLowerCase()}`}>{item.status}</span><time>{prettyDate(item.created_at)}</time></button> : <button type="button" className={`admin-record-row ${selectedId === item.request_id ? "selected" : ""}`} key={item.request_id} onClick={() => setSelectedId(item.request_id)}><span className="admin-record-avatar request">{item.customer_name.slice(0, 1).toUpperCase()}</span><span className="admin-record-main"><strong>{item.customer_name}</strong><small>{requestTitle(item.request_type)} · {item.mobile}</small></span><span className={`admin-status status-${item.status.toLowerCase()}`}>{item.status}</span><time>{prettyDate(item.created_at)}</time></button>)}
-            {!sectionError && !loading && visibleCount === 0 && <EmptyState title="No records match" detail="Try changing the search or filters." />}
+            {!isRequestSection && !sectionError && !loading && visibleCount === 0 && <EmptyState title="No records match" detail="Try changing the search or filters." />}
             <Pagination page={page} pageSize={PAGE_SIZE} count={visibleCount} onChange={setPage} />
           </section>
           {selectedDriver && <DriverDetail application={selectedDriver} onClose={() => setSelectedId("")} onSave={(patch) => updateRecord("driver_applications", "application_id", selectedDriver.application_id, patch, setApplications, applications)} />}
-          {selectedRequest && <AdminRequestDetail key={selectedRequest.request_id} request={selectedRequest} onClose={() => setSelectedId("")} onSave={(patch) => updateRecord("customer_requests", "request_id", selectedRequest.request_id, patch, setRequests, requests)} />}
+          {selectedRequest && <AdminRequestDetail key={selectedRequest.request_id} request={selectedRequest} onClose={() => setSelectedId("")} onSave={(patch) => updateRecord("customer_requests", "request_id", selectedRequest.request_id, patch, setRequests, requests)} onDelete={deleteCabBooking} />}
           {!selectedDriver && !selectedRequest && <aside className="admin-panel admin-detail-placeholder"><span>↖</span><strong>Select a record</strong><small>{section === "attachments" ? "Owner contact, vehicle, document and driver details appear here." : "Full customer, trip and quotation details appear here."}</small></aside>}
         </div>}
           {packageEditor && <PackageEditor value={packageEditor} busy={packageSaving} onCancel={() => setPackageEditor(null)} onSave={async (row) => { setPackageSaving(true); setError(""); try { const saved = packageEditor.__new ? await createTourPackage(row) : await updateTourPackage(packageEditor.id, row); setPackages((items) => packageEditor.__new ? [...items, saved].sort((a,b) => a.sort_order-b.sort_order) : items.map((item) => item.id === saved.id ? saved : item)); setPackageEditor(null); } catch (cause) { setError(cause.message || "Could not save the tour package."); } finally { setPackageSaving(false); } }} />}

@@ -1,11 +1,5 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-
-const corsHeaders = {
-  "Access-Control-Allow-Origin": Deno.env.get("APP_ORIGIN") ?? "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-  "Access-Control-Allow-Methods": "POST, OPTIONS",
-  "Content-Type": "application/json",
-};
+import { corsHeadersForOrigin, isAllowedOrigin } from "../_shared/cors.js";
 const allowedTypes = new Set(["cab_booking", "tour_quote", "temple_tour", "cab_attachment"]);
 const validMobile = (value: unknown) => typeof value === "string" && /^[6-9]\d{9}$/.test(value);
 const validText = (value: unknown, max: number, required = false) => typeof value === "string" && value.length <= max && (!required || value.trim().length > 0);
@@ -112,8 +106,13 @@ function validateRequest(type: string, data: Record<string, unknown>) {
 }
 
 Deno.serve(async (request) => {
-  if (request.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
-  if (request.method !== "POST") return Response.json({ error: "Method not allowed." }, { status: 405, headers: corsHeaders });
+  const origin = request.headers.get("origin");
+  const responseHeaders = corsHeadersForOrigin(origin, Deno.env.get("APP_ORIGIN"));
+  if (!isAllowedOrigin(origin, Deno.env.get("APP_ORIGIN"))) {
+    return Response.json({ error: "Origin not allowed." }, { status: 403, headers: responseHeaders });
+  }
+  if (request.method === "OPTIONS") return new Response("ok", { headers: responseHeaders });
+  if (request.method !== "POST") return Response.json({ error: "Method not allowed." }, { status: 405, headers: responseHeaders });
   try {
     if (Number(request.headers.get("content-length") || 0) > 32000) throw new Error("Request is too large.");
     const body = await request.json();
@@ -121,7 +120,7 @@ Deno.serve(async (request) => {
       || !validText(body.customer_name, 120, true) || !validMobile(body.mobile) || body.contact_consent !== true
       || !isObject(body.request_data) || JSON.stringify(body.request_data).length > 30000
       || !validateRequest(String(body.request_type), body.request_data)) {
-      return Response.json({ error: "Some request details are invalid. Review the form and try again." }, { status: 400, headers: corsHeaders });
+      return Response.json({ error: "Some request details are invalid. Review the form and try again." }, { status: 400, headers: responseHeaders });
     }
     const supabaseUrl = Deno.env.get("SUPABASE_URL");
     const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
@@ -133,7 +132,7 @@ Deno.serve(async (request) => {
     const ipHash = Array.from(new Uint8Array(digest), (byte) => byte.toString(16).padStart(2, "0")).join("");
     const { data: allowed, error: rateError } = await supabase.rpc("consume_driver_application_rate_limit", { p_ip_hash: ipHash });
     if (rateError) throw rateError;
-    if (!allowed) return Response.json({ error: "Too many requests from this connection. Please try again later." }, { status: 429, headers: corsHeaders });
+    if (!allowed) return Response.json({ error: "Too many requests from this connection. Please try again later." }, { status: 429, headers: responseHeaders });
 
     const row = {
       submission_id: body.submission_id,
@@ -146,7 +145,7 @@ Deno.serve(async (request) => {
     const { data, error } = await supabase.from("customer_requests").insert(row).select("request_id").single();
     if (error?.code === "23505") {
       const { data: existing, error: existingError } = await supabase.from("customer_requests").select("request_id").eq("submission_id", row.submission_id).single();
-      if (!existingError && existing) return Response.json({ request_id: existing.request_id }, { status: 200, headers: corsHeaders });
+      if (!existingError && existing) return Response.json({ request_id: existing.request_id }, { status: 200, headers: responseHeaders });
     }
     if (error) throw error;
     let whatsappAlert = "not_applicable";
@@ -158,9 +157,9 @@ Deno.serve(async (request) => {
         whatsappAlert = "failed";
       }
     }
-    return Response.json({ request_id: data.request_id, whatsapp_alert: whatsappAlert }, { status: 201, headers: corsHeaders });
+    return Response.json({ request_id: data.request_id, whatsapp_alert: whatsappAlert }, { status: 201, headers: responseHeaders });
   } catch (error) {
     console.error("Customer request submission failed", error);
-    return Response.json({ error: "We could not save your request right now. Please try again shortly." }, { status: 500, headers: corsHeaders });
+    return Response.json({ error: "We could not save your request right now. Please try again shortly." }, { status: 500, headers: responseHeaders });
   }
 });

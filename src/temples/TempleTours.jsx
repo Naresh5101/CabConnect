@@ -53,7 +53,6 @@ export default function TempleTours({ AddressAutocomplete, vehicles, whatsappNum
   const [routeLoading, setRouteLoading] = useState(false);
   const [suggestLoading, setSuggestLoading] = useState(false);
   const [notice, setNotice] = useState("");
-  const [contactConsent, setContactConsent] = useState(false);
   const [savingRequest, setSavingRequest] = useState(false);
   const [whatsAppUrl, setWhatsAppUrl] = useState("");
   const [submissionId, setSubmissionId] = useState(createSubmissionId);
@@ -183,7 +182,7 @@ export default function TempleTours({ AddressAutocomplete, vehicles, whatsappNum
     const number = (whatsappNumber || "").replace(/\D/g, "");
     setSavingRequest(true);
     try {
-      const requestId = await submitCustomerRequest({ type: "temple_tour", name: customerName, mobile: phone, consent: contactConsent, submissionId, data: {
+      const requestId = await submitCustomerRequest({ type: "temple_tour", name: customerName, mobile: phone, consent: true, submissionId, data: {
         category, temples: selectedTemples.map(({ id, name, deity, town, district, state }) => ({ id, name, deity, town, district, state })),
         start: start.value, startCoordinates: start.coordinates, travelDate, days: Number(days), travellers: Number(travellers),
         vehicle: { id: vehicle.id, label: vehicle.label, passengers: vehicle.passengers }, notes,
@@ -292,7 +291,6 @@ export default function TempleTours({ AddressAutocomplete, vehicles, whatsappNum
                 <small>{fare.note}</small>
               </div>}
             </div>
-            <label className="temple-contact-consent"><input type="checkbox" required checked={contactConsent} onChange={(event) => setContactConsent(event.target.checked)} />I agree that CabConnect may store these details and share my name, phone number, and enquiry summary with WhatsApp to notify its team and respond to this request.</label>
             <button className="button button-submit temple-submit" type="submit" disabled={savingRequest}>{savingRequest ? "Saving your request…" : "Save temple tour request"} <span>→</span></button>
             <p className="form-legal">Your request is shared with authorised CabConnect staff. Availability and final fare must be confirmed.</p>
             {whatsAppUrl && <a className="temple-whatsapp-followup" href={whatsAppUrl} target="_blank" rel="noreferrer">Continue to WhatsApp ↗</a>}

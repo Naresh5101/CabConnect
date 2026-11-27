@@ -27,6 +27,9 @@ export async function submitCustomerRequest({ type, name, mobile, data, consent 
     },
   });
   if (error) {
+    if (error.name === "FunctionsFetchError") {
+      throw new Error("We couldn't reach the request service. Check your connection and retry; this request has not been confirmed.");
+    }
     const response = error.context;
     if (typeof Response !== "undefined" && response instanceof Response) {
       const body = await response.clone().json().catch(() => ({})) as { error?: string };

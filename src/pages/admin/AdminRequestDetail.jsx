@@ -24,7 +24,7 @@ function dateTime(value) {
   return Number.isNaN(date.getTime()) ? String(value) : new Intl.DateTimeFormat("en-IN", { dateStyle: "medium", timeStyle: "short" }).format(date);
 }
 
-export default function AdminRequestDetail({ request, onClose, onSave }) {
+export default function AdminRequestDetail({ request, onClose, onSave, onDelete }) {
   const rawData = asObject(request.request_data);
   const data = normalizeRequestData(rawData);
   const isAttachment = request.request_type === "cab_attachment";
@@ -35,8 +35,10 @@ export default function AdminRequestDetail({ request, onClose, onSave }) {
   const [quoteNotes, setQuoteNotes] = useState(request.quote_notes || "");
   const [adminNotes, setAdminNotes] = useState(request.admin_notes || "");
   const [saving, setSaving] = useState(false);
+  const [deleting, setDeleting] = useState(false);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
+  const [deleteError, setDeleteError] = useState("");
   const [history, setHistory] = useState([]);
   const [historyError, setHistoryError] = useState("");
 
@@ -142,6 +144,15 @@ export default function AdminRequestDetail({ request, onClose, onSave }) {
     finally { setSaving(false); }
   }
 
+  async function removeCabBooking() {
+    setDeleteError("");
+    if (!window.confirm(`Permanently delete this cab booking?\n\nCustomer: ${request.customer_name}\nBooking reference: ${request.request_id}\n\nThis cannot be undone.`)) return;
+    setDeleting(true);
+    try { await onDelete(request.request_id); }
+    catch (cause) { setDeleteError(cause.message || "Could not delete this cab booking."); }
+    finally { setDeleting(false); }
+  }
+
   return <aside className="admin-panel admin-detail admin-request-detail">
     <div className="admin-detail-head"><span className="admin-record-avatar request large">↗</span><div><span className="admin-eyebrow">{request.request_type.replaceAll("_", " ").toUpperCase()}</span><h2>{request.customer_name}</h2><small>{request.mobile}</small></div><button className="admin-close-modal" type="button" aria-label="Close booking details" onClick={onClose}>×</button></div>
     <section className="admin-detail-section"><h3>{isAttachment ? "Owner & contact" : "Customer details"}</h3><DetailGrid rows={isAttachment ? [...attachmentOwnerRows, ...ownerExtraRows] : customerRows} /></section>
@@ -187,6 +198,10 @@ export default function AdminRequestDetail({ request, onClose, onSave }) {
         <div className="admin-detail-actions"><button className="admin-primary admin-save-quote" type="submit" disabled={saving || !hasChanges || (!isAttachment && quoteInvalid)}>{saving ? "Saving…" : isAttachment ? "Save enquiry changes" : "Save booking changes"}</button></div>
       </section>
     </form>
+    {request.request_type === "cab_booking" && onDelete && <div className="admin-detail-actions">
+      {deleteError && <p className="admin-error" role="alert">{deleteError}</p>}
+      <button className="admin-secondary admin-delete-package" type="button" disabled={deleting || saving} onClick={() => void removeCabBooking()}>{deleting ? "Deleting…" : "Delete booking permanently"}</button>
+    </div>}
     {!isAttachment && <section className="admin-detail-section"><h3>Quotation history</h3>{historyError ? <p className="admin-detail-empty">{historyError}</p> : history.length ? <div className="admin-audit-list">{history.map((entry) => <div className="admin-audit-row" key={entry.audit_id}><div><strong>{entry.previous_amount == null ? "Not quoted" : money(entry.previous_amount)} → {entry.revised_amount == null ? "Quote cleared" : money(entry.revised_amount)}</strong><small>{dateTime(entry.created_at)}</small></div><small>{entry.admin_user_id ? `Admin ${entry.admin_user_id.slice(0, 8)}` : "Admin identity unavailable"}</small></div>)}</div> : <p className="admin-detail-empty">No saved quotation changes yet.</p>}</section>}
     <div className="admin-contact-actions"><a href={`tel:${request.mobile}`}>Call customer</a><a href={`https://wa.me/91${request.mobile}`} target="_blank" rel="noreferrer">WhatsApp ↗</a></div>
   </aside>;

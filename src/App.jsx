@@ -10,7 +10,9 @@ import CabAttachment from "./drivers/CabAttachment.jsx";
 import WhatsAppWidget from "./components/WhatsAppWidget.jsx";
 import { createSubmissionId } from "./lib/supabase";
 import { submitCustomerRequest } from "./services/customerRequestService";
+import { fetchPageSettings, savePageSetting } from "./services/siteSettingsService";
 import { isCabAttachmentPath, isDriverAdminPath, isDriverRegisterPath, isTourPath } from "./app/routes";
+import { getDisabledPageName } from "./app/pageAvailability.js";
 import { environment } from "./config/environment";
 import { temples } from "./temples/templeData.js";
 import { calculateLocalPackage, calculateOutstationFare, OUTSTATION_TARIFF } from "./utils/fareRules.js";
@@ -31,14 +33,6 @@ const services = [
   { id: "airport", title: "Airport transfer", subtitle: "On-time pickup and drop", icon: "✈" },
 ];
 
-const serviceHighlights = [
-  { id: "daily", title: "Local Rides", subtitle: "Within Chennai", icon: "🚘" },
-  { id: "airport", title: "Airport Transfers", subtitle: "Chennai Airport", icon: "✈" },
-  { id: "oneway", title: "Outstation Trips", subtitle: "One Way / Round Trip", icon: "⌖" },
-  { id: "temple", title: "Temple Tours", subtitle: "Tamil Nadu temples", icon: "♙" },
-  { id: "rentals", title: "Hourly Rental", subtitle: "By the hour", icon: "◷" },
-];
-
 const serviceVisuals = {
   daily: { image: "/daily-ride-passenger.png", alt: "Passenger enjoying a daily Chennai cab ride", headline: "Everyday city rides", caption: "A comfortable ride for your Chennai day." },
   oneway: { image: "/outstation-oneway-passenger.png", alt: "Passenger enjoying a one-way road trip", headline: "Ride out of town", caption: "Your one-way journey starts here." },
@@ -48,6 +42,23 @@ const serviceVisuals = {
 };
 
 const DEFAULT_WHATSAPP_NUMBER = "919444564127";
+const DEFAULT_PAGE_SETTINGS = {
+  booking_enabled: true,
+  temple_tours_enabled: true,
+  tour_packages_enabled: true,
+  driver_registration_enabled: true,
+  cab_attachment_enabled: true,
+};
+const PAGE_STORAGE_KEYS = {
+  booking_enabled: "cabconnect-booking-enabled",
+  temple_tours_enabled: "cabconnect-temple-tours-enabled",
+  tour_packages_enabled: "cabconnect-tour-packages-enabled",
+  driver_registration_enabled: "cabconnect-driver-registration-enabled",
+  cab_attachment_enabled: "cabconnect-cab-attachment-enabled",
+};
+const PAGE_SETTING_BY_STORAGE_KEY = Object.fromEntries(
+  Object.entries(PAGE_STORAGE_KEYS).map(([key, storageKey]) => [storageKey, key]),
+);
 const homepageTemples = ["palani", "tiruchendur", "thiruthani", "swamimalai"]
   .map((id) => temples.find((temple) => temple.id === id)).filter(Boolean);
 
@@ -62,15 +73,15 @@ const isValidCoordinates = (coordinates) => Number.isFinite(coordinates?.lat) &&
   && Math.abs(coordinates.lat) <= 90 && Math.abs(coordinates.lon) <= 180;
 const isWithinIndia = (coordinates) => isValidCoordinates(coordinates)
   && isIndianCoordinate(coordinates.lat, coordinates.lon);
-
 const initialForm = {
   pickup: "",
   pickupCoords: null,
   destination: "",
   destinationCoords: null,
-  vehicle: "",
+  vehicle: "dzire",
 
   date: "",
+  returnDate: "",
   time: "09:00",
   passengers: "2",
   hours: "4",
@@ -78,7 +89,6 @@ const initialForm = {
   name: "",
   phone: "",
   notes: "",
-  contactConsent: false,
 };
 
 
@@ -454,10 +464,63 @@ export default function App() {
   const [driverAdminPage, setDriverAdminPage] = useState(() => isDriverAdminPath(window.location.pathname));
   const [attachmentPage, setAttachmentPage] = useState(() => isCabAttachmentPath(window.location.pathname));
   const [menuOpen, setMenuOpen] = useState(false);
+  const [pageSettings, setPageSettings] = useState(() => Object.fromEntries(
+    Object.entries(PAGE_STORAGE_KEYS).map(([key, storageKey]) => {
+      const stored = window.localStorage.getItem(storageKey);
+      return [key, stored === null ? DEFAULT_PAGE_SETTINGS[key] : stored !== "false"];
+    }),
+  ));
+  const [bookingSettingsReady, setBookingSettingsReady] = useState(environment.isDevelopment);
+  const [bookingSettingsMessage, setBookingSettingsMessage] = useState(() => environment.isDevelopment
+    ? "Local preview only. To control pages for all visitors, apply the site settings migration in Supabase and publish the updated site."
+    : "");
   const [pricingRules, setPricingRules] = useState(null);
   const lastPathRef = useRef(window.location.pathname);
   const handleTempleIntroComplete = useCallback(() => setShowTempleIntro(false), []);
   const handleTourIntroComplete = useCallback(() => setShowTourIntro(false), []);
+  useEffect(() => {
+    if (environment.isDevelopment) {
+      const syncLocalSetting = (event) => {
+        if (!event.key) return;
+        const key = PAGE_SETTING_BY_STORAGE_KEY[event.key];
+        if (!key || event.newValue === null) return;
+        setPageSettings((current) => ({ ...current, [key]: event.newValue !== "false" }));
+      };
+      window.addEventListener("storage", syncLocalSetting);
+      return () => window.removeEventListener("storage", syncLocalSetting);
+    }
+
+    let active = true;
+    const loadSetting = () => fetchPageSettings().then((settings) => {
+      if (!active) return;
+      setPageSettings(settings);
+      Object.entries(settings).forEach(([key, enabled]) => {
+        window.localStorage.setItem(PAGE_STORAGE_KEYS[key], String(enabled));
+      });
+      setBookingSettingsMessage("");
+      setBookingSettingsReady(true);
+    }).catch((error) => {
+      if (!active) return;
+      setBookingSettingsMessage(error.message || "Website booking settings could not be loaded.");
+      setBookingSettingsReady(false);
+    });
+    const syncLocalSetting = (event) => {
+      if (!active || !event.key) return;
+      const key = PAGE_SETTING_BY_STORAGE_KEY[event.key];
+      if (!key || event.newValue === null) return;
+      setPageSettings((current) => ({ ...current, [key]: event.newValue !== "false" }));
+    };
+    void loadSetting();
+    const refreshInterval = window.setInterval(() => { if (document.visibilityState === "visible") void loadSetting(); }, 30000);
+    window.addEventListener("focus", loadSetting);
+    window.addEventListener("storage", syncLocalSetting);
+    return () => {
+      active = false;
+      window.clearInterval(refreshInterval);
+      window.removeEventListener("focus", loadSetting);
+      window.removeEventListener("storage", syncLocalSetting);
+    };
+  }, []);
   useEffect(() => {
     let active = true;
     fetchPublicFarePricingRules().then((rules) => { if (active) setPricingRules(rules); }).catch(() => {
@@ -467,6 +530,18 @@ export default function App() {
   }, []);
   const activeVehicles = useMemo(() => applyPricingRules(vehicles, pricingRules), [pricingRules]);
   const activeTariff = pricingRules?.tariff || OUTSTATION_TARIFF;
+  const updatePageSetting = useCallback(async (key, enabled) => {
+    if (environment.isDevelopment) {
+      window.localStorage.setItem(PAGE_STORAGE_KEYS[key], String(enabled));
+      setPageSettings((current) => ({ ...current, [key]: enabled }));
+      return "local";
+    }
+    const saved = await savePageSetting(key, enabled);
+    window.localStorage.setItem(PAGE_STORAGE_KEYS[key], String(saved));
+    setPageSettings((current) => ({ ...current, [key]: saved }));
+    setBookingSettingsMessage("");
+    return "site";
+  }, []);
 
   useEffect(() => {
     const syncPage = () => {
@@ -494,6 +569,8 @@ export default function App() {
     };
   }, []);
   const [service, setService] = useState("daily");
+  const [bookingStep, setBookingStep] = useState(0);
+  const bookingFormRef = useRef(null);
   const activeRideTab = service === "rentals" ? "rentals" : ["oneway", "roundtrip"].includes(service) ? "outstation" : service === "airport" ? "airport" : "daily";
   const [form, setForm] = useState(initialForm);
   const [notice, setNotice] = useState("");
@@ -513,12 +590,16 @@ export default function App() {
     setForm((current) => ({
       ...current,
       [field]: nextValue,
+      ...(field === "date" && current.returnDate && current.returnDate < nextValue ? { returnDate: "" } : {}),
+      ...(field === "returnDate" && current.date && nextValue ? {
+        tripDays: String(Math.max(1, Math.ceil((Date.parse(`${nextValue}T00:00:00Z`) - Date.parse(`${current.date}T00:00:00Z`)) / 86400000))),
+      } : {}),
       ...(field === "pickup" ? { pickupCoords: coordinates } : {}),
       ...(field === "destination" ? { destinationCoords: coordinates } : {}),
     }));
     setNotice("");
     setWhatsappLink("");
-    if (["pickup", "destination", "vehicle", "hours", "tripDays", "passengers"].includes(field)) {
+    if (["pickup", "destination", "vehicle", "hours", "tripDays", "passengers", "date", "returnDate"].includes(field)) {
       setFare(null);
       setFareError("");
     }
@@ -526,9 +607,24 @@ export default function App() {
 
   function chooseService(nextService) {
     setService(nextService);
+    setBookingStep(0);
     setNotice("");
     setFare(null);
     setFareError("");
+  }
+
+  function advanceBookingStep() {
+    if (!bookingFormRef.current?.reportValidity()) return;
+    setBookingStep((current) => Math.min(current + 1, 2));
+  }
+
+  function handleBookingSubmit(event) {
+    if (bookingStep < 2) {
+      event.preventDefault();
+      advanceBookingStep();
+      return;
+    }
+    void submitBooking(event);
   }
 
   async function geocodeAddress(address) {
@@ -658,6 +754,7 @@ export default function App() {
       `Pickup: ${form.pickup}`,
       `Destination: ${form.destination || "Not specified"}`,
       `Date: ${form.date}`,
+      ...(service === "roundtrip" ? [`Return date: ${form.returnDate}`] : []),
       `Pickup time: ${form.time}`,
       `Passengers: ${form.passengers}`,
       `Vehicle preference: ${selectedVehicle.label}`,
@@ -686,11 +783,12 @@ export default function App() {
     ];
     try {
       const requestId = await submitCustomerRequest({
-        type: "cab_booking", name: form.name, mobile: form.phone, consent: form.contactConsent, submissionId,
+        type: "cab_booking", name: form.name, mobile: form.phone, consent: true, submissionId,
         data: {
           service, serviceName, pickup: form.pickup, pickupCoords: form.pickupCoords,
           destination: form.destination, destinationCoords: form.destinationCoords,
-          travelDate: form.date, pickupTime: form.time, passengers: Number(form.passengers),
+          travelDate: form.date, returnDate: service === "roundtrip" ? form.returnDate : null,
+          pickupTime: form.time, passengers: Number(form.passengers),
           hours: service === "rentals" ? Number(form.hours) : null,
           tripDays: ["oneway", "roundtrip"].includes(service) ? Number(form.tripDays) : null,
           vehicleId: form.vehicle, vehicleLabel: selectedVehicle.label, notes: form.notes,
@@ -707,7 +805,27 @@ export default function App() {
     }
   }
 
-  if (driverAdminPage) return <DriverAdmin />;
+  if (driverAdminPage) return <DriverAdmin pageSettings={pageSettings} bookingSettingsReady={bookingSettingsReady} bookingSettingsMessage={bookingSettingsMessage} onPageSettingEnabledChange={updatePageSetting} />;
+
+  const disabledPageName = getDisabledPageName({
+    driverPage,
+    attachmentPage,
+    templePage,
+    tourRoute,
+    pageSettings,
+  });
+
+  if (disabledPageName) return (
+    <main className="page-disabled-state">
+      <section>
+        <span className="page-disabled-icon" aria-hidden="true">—</span>
+        <p className="eyebrow">PAGE UNAVAILABLE</p>
+        <h1>{disabledPageName} is currently unavailable.</h1>
+        <p>This page is temporarily disabled. Please return to the home page or contact CabConnect for assistance.</p>
+        <a className="button button-primary" href="/">Back to home</a>
+      </section>
+    </main>
+  );
 
   return (
     <div className="site-shell">
@@ -727,13 +845,13 @@ export default function App() {
           </a>
           <button className="mobile-menu-toggle" type="button" aria-label={menuOpen ? "Close navigation" : "Open navigation"} aria-expanded={menuOpen} onClick={() => setMenuOpen((open) => !open)}><span /><span /><span /></button>
           <nav className={`main-nav ${menuOpen ? "menu-open" : ""}`} aria-label="Main navigation">
-            <a href={homeHref("book")} onClick={() => setMenuOpen(false)}>Book a Cab</a>
-            <a href={homeHref("temple-tours")} aria-current={templePage ? "page" : undefined} onClick={() => setMenuOpen(false)}>Temple Tours</a>
-            <a href="/tour-packages" aria-current={tourRoute ? "page" : undefined} onClick={() => setMenuOpen(false)}>Tour Packages</a>
-            <a href="/driver-register" aria-current={driverPage ? "page" : undefined} onClick={() => setMenuOpen(false)}>For Drivers</a>
-            <a href="/cab-attachment" aria-current={attachmentPage ? "page" : undefined} onClick={() => setMenuOpen(false)}>Attach Your Cab</a>
+            {pageSettings.booking_enabled && <a href={homeHref("book")} onClick={() => setMenuOpen(false)}>Book a Cab</a>}
+            {pageSettings.temple_tours_enabled && <a href={homeHref("temple-tours")} aria-current={templePage ? "page" : undefined} onClick={() => setMenuOpen(false)}>Temple Tours</a>}
+            {pageSettings.tour_packages_enabled && <a href="/tour-packages" aria-current={tourRoute ? "page" : undefined} onClick={() => setMenuOpen(false)}>Tour Packages</a>}
+            {pageSettings.driver_registration_enabled && <a href="/driver-register" aria-current={driverPage ? "page" : undefined} onClick={() => setMenuOpen(false)}>For Drivers</a>}
+            {pageSettings.cab_attachment_enabled && <a href="/cab-attachment" aria-current={attachmentPage ? "page" : undefined} onClick={() => setMenuOpen(false)}>Attach Your Cab</a>}
           </nav>
-          <a className="nav-cta" href={homeHref("book")}>Book a Cab <span>↗</span></a>
+          {pageSettings.booking_enabled && <a className="nav-cta" href={homeHref("book")}>Book a Cab <span>↗</span></a>}
         </div>
       </header>
 
@@ -749,7 +867,7 @@ export default function App() {
               <h1>Your trusted taxi<br /><em>partner in Chennai.</em></h1>
               <p className="hero-lede">Local rides, airport transfers, outstation trips and temple tours—with a clear estimate and personal confirmation.</p>
               <div className="hero-actions">
-                <a className="button button-primary" href="#book">Plan your ride <span>↗</span></a>
+                {pageSettings.booking_enabled && <a className="button button-primary" href="#book">Plan your ride <span>↗</span></a>}
                 <a className="text-link" href="#services">Explore services <span>→</span></a>
               </div>
               <div className="trust-row">
@@ -777,7 +895,7 @@ export default function App() {
           <div className="container hero-foot"><span>LOCAL · AIRPORT · OUTSTATION</span><span className="foot-rule" /><span>MADE FOR THE WAY CHENNAI MOVES</span></div>
         </section>
 
-        <section className="booking-section" id="book">
+        {pageSettings.booking_enabled && <section className="booking-section" id="book">
           <div className="container booking-layout">
             <div className="section-intro">
               <div className="eyebrow"><span className="eyebrow-line" /> START YOUR JOURNEY</div>
@@ -790,7 +908,7 @@ export default function App() {
               <div className="booking-note"><span className="note-icon">i</span><span><strong>Transparent by design</strong><small>See a rate-based estimate, then confirm the final fare and vehicle availability with our team.</small></span></div>
             </div>
             <div className="booking-card">
-              <div className="booking-card-head"><div><span className="card-step">BOOK YOUR RIDE</span><h3>Plan your ride</h3></div><span className="card-decoration">✳</span></div>
+              <div className="booking-card-head"><div><span className="card-step">STEP {bookingStep + 1} OF 3 · REQUEST A RIDE</span><h3>Plan your Chennai ride</h3></div><span className="booking-step-counter">{bookingStep + 1}<small> / 3</small></span></div>
               <div className="booking-service-tabs" role="tablist" aria-label="Choose ride category">
                 <button type="button" role="tab" aria-selected={activeRideTab === "daily"} className={activeRideTab === "daily" ? "selected" : ""} onClick={() => chooseService("daily")}>Daily rides</button>
                 <button type="button" role="tab" aria-selected={activeRideTab === "outstation"} className={activeRideTab === "outstation" ? "selected" : ""} onClick={() => chooseService(["oneway", "roundtrip"].includes(service) ? service : "oneway")}>Outstation</button>
@@ -798,58 +916,73 @@ export default function App() {
                 <button type="button" role="tab" aria-selected={activeRideTab === "airport"} className={activeRideTab === "airport" ? "selected" : ""} onClick={() => chooseService("airport")}>Airport transfer</button>
               </div>
               {activeRideTab === "outstation" && <div className="outstation-trip-tabs" role="group" aria-label="Outstation journey type"><button type="button" aria-pressed={service === "oneway"} className={service === "oneway" ? "selected" : ""} onClick={() => chooseService("oneway")}>One way</button><button type="button" aria-pressed={service === "roundtrip"} className={service === "roundtrip" ? "selected" : ""} onClick={() => chooseService("roundtrip")}>Round trip</button></div>}
-              <form onSubmit={submitBooking}>
-                <section className="booking-wizard-stage" aria-labelledby="booking-trip-heading">
-                <section className="booking-main-column" aria-label="Trip details and vehicle">
+              <ol className="booking-wizard-progress" aria-label="Booking progress">
+                {["Your trip", "Your details", "Review & send"].map((label, index) => (
+                  <li key={label}>
+                    <button type="button" className={`${bookingStep === index ? "current" : ""} ${bookingStep > index ? "complete" : ""}`} aria-current={bookingStep === index ? "step" : undefined} disabled={index > bookingStep} onClick={() => setBookingStep(index)}>
+                      <span>{bookingStep > index ? "✓" : index + 1}</span>{label}
+                    </button>
+                  </li>
+                ))}
+              </ol>
+              <form ref={bookingFormRef} onSubmit={handleBookingSubmit}>
+                {bookingStep === 0 && <section className="booking-wizard-stage" aria-labelledby="booking-trip-heading">
+                <h4 id="booking-trip-heading">Where and when are you travelling?</h4>
+                <p className="booking-stage-hint">Share your trip details to get started. You can review everything before sending.</p>
+                <section className="booking-main-column" aria-label="Trip details">
                 <div className="form-grid booking-trip-grid">
                   <AddressAutocomplete id="booking-pickup" className="booking-location-field" label="Pickup location" required value={form.pickup} coords={form.pickupCoords} onChange={(value, coordinates) => update("pickup", value, coordinates)} onMapPick={(value, coordinates) => update("pickup", value, coordinates)} placeholder="Pickup area or landmark" searchContext="Chennai, Tamil Nadu" showMap={false} showCurrentLocation />
                   <AddressAutocomplete id="booking-destination" className="booking-location-field" label={<>Destination {service === "rentals" ? <small>(optional)</small> : <b>*</b>}</>} required={service !== "rentals"} value={form.destination} coords={form.destinationCoords} onChange={(value, coordinates) => update("destination", value, coordinates)} onMapPick={(value, coordinates) => update("destination", value, coordinates)} placeholder="Drop-off area or landmark" searchContext={["daily", "airport"].includes(service) ? "Chennai, Tamil Nadu" : ""} showMap={false} />
                   <label className="field"><span>Travel date <b>*</b></span><input id="booking-date" type="date" min={today} required value={form.date} onChange={(e) => update("date", e.target.value)} /></label>
+                  {service === "roundtrip" && <label className="field"><span>Return date <b>*</b></span><input id="booking-return-date" type="date" min={form.date || today} required value={form.returnDate} onChange={(e) => update("returnDate", e.target.value)} />{form.returnDate && <small>{form.tripDays} day{form.tripDays === "1" ? "" : "s"} planned</small>}</label>}
                   <label className="field"><span>Pickup time <b>*</b></span><input id="booking-time" type="time" required value={form.time} onChange={(e) => update("time", e.target.value)} /></label>
                   <label className="field"><span>Passengers</span><select value={form.passengers} onChange={(e) => update("passengers", e.target.value)}>{Array.from({ length: 12 }, (_, index) => String(index + 1)).map((n) => <option key={n} value={n}>{n} passenger{n === "1" ? "" : "s"}</option>)}</select></label>
+                  <label className="field field-full"><span>Vehicle type <b>*</b></span><select required value={form.vehicle} onChange={(e) => update("vehicle", e.target.value)}>
+                    {activeVehicles.map((vehicle) => <option key={vehicle.id} value={vehicle.id}>{vehicle.id === "dzire" ? "Sedan" : "SUV"}</option>)}
+                    <option value="tempo">Tempo Traveller</option>
+                  </select></label>
                   {service === "rentals" && <label className="field"><span>Hours required</span><select value={form.hours} onChange={(e) => update("hours", e.target.value)}>{["2","3","4","6","8","10","12"].map((n) => <option key={n} value={n}>{n} hours</option>)}</select></label>}
-                  {["oneway", "roundtrip"].includes(service) && <label className="field"><span>Trip duration</span><select value={form.tripDays} onChange={(e) => update("tripDays", e.target.value)}>{["1","2","3","4","5","7","10","14"].map((n) => <option key={n} value={n}>{n} day{n === "1" ? "" : "s"}</option>)}</select></label>}
+                  {service === "oneway" && <label className="field"><span>Trip duration</span><select value={form.tripDays} onChange={(e) => update("tripDays", e.target.value)}>{["1","2","3","4","5","7","10","14"].map((n) => <option key={n} value={n}>{n} day{n === "1" ? "" : "s"}</option>)}</select></label>}
                 </div>
-                <fieldset className="vehicle-picker">
-                  <legend>Choose your vehicle <b>*</b></legend>
-                  <div className="vehicle-picker-layout">
-                    <label className="field vehicle-select-field">
-                      <span>Vehicle type</span>
-                      <select required value={form.vehicle} onChange={(event) => update("vehicle", event.target.value)}>
-                        <option value="" disabled>Select a vehicle type</option>
-                        {activeVehicles.map((vehicle) => <option key={vehicle.id} value={vehicle.id}>{vehicle.id === "dzire" ? "Sedan" : "SUV"}</option>)}
-                        <option value="tempo">Tempo Traveller</option>
-                      </select>
-                    </label>
-                    {!form.vehicle && <div className="vehicle-empty-state" aria-live="polite">Choose a category to see its vehicle and capacity.</div>}
-                    {form.vehicle === "tempo" && <article className="vehicle-detail-card vehicle-manual-card" aria-live="polite"><img src="/vehicles/tempo-traveller-generated.png" alt="White Tempo Traveller passenger minibus" /><div className="vehicle-detail-copy"><strong>Tempo Traveller</strong><span>Custom seating · passenger capacity confirmed with the partner</span></div></article>}
-                    {activeVehicles.filter((vehicle) => vehicle.id === form.vehicle).map((vehicle) => <article className="vehicle-detail-card" key={vehicle.id} aria-live="polite">
-                      <img src={vehicle.image} alt={vehicle.label} />
-                      <div className="vehicle-detail-copy"><strong>{vehicle.label}</strong><span>Up to {vehicle.passengers} passengers · {vehicle.luggage} medium bags</span></div>
-                    </article>)}
-                  </div>
-                  <p className="vehicle-rate-note">Indicative Chennai operator rates. Minimum distance packages may apply; tolls, parking, permits, waiting and taxes are not included. Confirm availability and your final quote with our team.</p>
-                </fieldset>
                 </section>
-                </section>
-                <section className="booking-wizard-stage" aria-labelledby="booking-contact-heading">
-                <h4 id="booking-contact-heading">How can we reach you?</h4>
+                <div className="booking-step-actions"><span className="booking-secure-note">No payment required to request a quote</span><button className="booking-next-button" type="button" onClick={advanceBookingStep}>Continue <span>→</span></button></div>
+                </section>}
+                {bookingStep === 1 && <section className="booking-wizard-stage" aria-labelledby="booking-contact-heading">
+                <h4 id="booking-contact-heading">Your contact details</h4>
+                <p className="booking-stage-hint">We’ll use these details to follow up about your request.</p>
                 <div className="form-grid">
                   <label className="field"><span>Your name <b>*</b></span><input id="booking-name" required autoComplete="name" value={form.name} onChange={(e) => update("name", e.target.value)} placeholder="Full name" /></label>
                   <label className="field"><span>Mobile number <b>*</b></span><input id="booking-phone" required type="tel" inputMode="numeric" pattern="[6-9][0-9]{9}" autoComplete="tel-national" value={form.phone} onChange={(e) => update("phone", e.target.value)} placeholder="10-digit mobile number" title="Enter a valid 10-digit Indian mobile number" /></label>
-                  <label className="field field-full"><span>Anything else? <small>(optional)</small></span><textarea rows="2" value={form.notes} onChange={(e) => update("notes", e.target.value)} placeholder="Luggage, flight number, preferred vehicle, return details…" /></label>
-                  <label className="field field-full driver-check"><input type="checkbox" required checked={form.contactConsent} onChange={(e) => update("contactConsent", e.target.checked)} /><span>I agree that CabConnect may store these details and share my name, phone number, and enquiry summary with WhatsApp to notify its team and respond to this request. <b>*</b></span></label>
+                  <label className="field field-full"><span>Anything else? <small>(optional)</small></span><textarea rows="3" value={form.notes} onChange={(e) => update("notes", e.target.value)} placeholder="Luggage, flight number, accessibility needs, or other requests…" /></label>
                 </div>
-                </section>
-                <section className="booking-wizard-stage" aria-labelledby="booking-review-heading">
-                <h4 id="booking-review-heading">Fare estimate &amp; confirmation</h4>
+                <div className="booking-step-actions"><button className="booking-back-button" type="button" onClick={() => setBookingStep(0)}>← Back to trip</button><button className="booking-next-button" type="button" onClick={advanceBookingStep}>Review request <span>→</span></button></div>
+                </section>}
+                {bookingStep === 2 && <section className="booking-wizard-stage booking-review-stage" aria-labelledby="booking-review-heading">
+                <h4 id="booking-review-heading">Review your ride request</h4>
+                <p className="booking-stage-hint">Check the trip details before sending. Your ride is only confirmed after our team contacts you.</p>
+                <dl className="booking-review-summary">
+                  {[
+                    ["Service", services.find((item) => item.id === service)?.title || "Cab ride"],
+                    ["Pickup", form.pickup],
+                    ["Destination", form.destination || "Hourly local hire"],
+                    ["Travel date", form.date],
+                    ...(service === "roundtrip" ? [["Return date", form.returnDate]] : []),
+                    ["Pickup time", form.time],
+                    ["Passengers", form.passengers],
+                    ["Vehicle", activeVehicles.find((item) => item.id === form.vehicle)?.label || (form.vehicle === "tempo" ? "Tempo Traveller" : "Vehicle")],
+                    ...(service === "rentals" ? [["Duration", `${form.hours} hours`]] : []),
+                    ...(["oneway", "roundtrip"].includes(service) ? [["Trip duration", `${form.tripDays} day${form.tripDays === "1" ? "" : "s"}`]] : []),
+                    ["Contact", form.name],
+                    ["Mobile", form.phone],
+                  ].map(([label, value]) => <div key={label}><dt>{label}</dt><dd>{value}</dd></div>)}
+                </dl>
                 <div className="fare-calculator">
-                  <div className="fare-calculator-head"><div><span className="card-step">03 / ESTIMATED FARE</span><h3>See your estimated price</h3></div><span className="fare-calculator-icon">₹</span></div>
-                  <p className="fare-help">Route or trip changes clear the old estimate. Recalculate to get a fresh estimate using the selected vehicle and trip duration. Market-based rates are indicative; the team confirms your final quote.</p>
-                  <button className="button fare-calculate-button" type="button" onClick={calculateFare} disabled={fareLoading}>{fareLoading ? "Calculating route…" : "Calculate estimated fare"} <span>↗</span></button>
+                  <div className="fare-calculator-head"><div><span className="card-step">OPTIONAL · ESTIMATED FARE</span><h3>Want a fare estimate?</h3></div><span className="fare-calculator-icon">₹</span></div>
+                  <p className="fare-help">Get an indicative estimate from the route and selected vehicle. The team confirms availability and final fare before booking.</p>
+                  <button className="button fare-calculate-button" type="button" onClick={calculateFare} disabled={fareLoading}>{fareLoading ? "Calculating route…" : fare ? "Recalculate estimate" : "Calculate estimate"} <span>↗</span></button>
                   {fareError && <div className="fare-error" role="alert">{fareError}</div>}
                   {fare && <div className="fare-result" aria-live="polite">
-                    <div className="fare-result-top"><span>Estimated total</span><strong>{money(fare.total)}</strong></div>
+                    <div className="fare-result-top"><span>Indicative estimate</span><strong>{money(fare.total)}</strong></div>
                     {fare.distanceKm != null && <div className="fare-breakdown-row"><span>Road distance (one way)</span><strong>{fare.distanceKm.toFixed(1)} km</strong></div>}
                     {fare.distanceKm != null && <div className="fare-breakdown-row"><span>Distance charge ({fare.billedDistanceKm.toFixed(1)} billed km)</span><strong>{money(fare.distanceCharge)}</strong></div>}
                     {fare.includedKm != null && <div className="fare-breakdown-row"><span>Included distance in package</span><strong>{fare.includedKm} km</strong></div>}
@@ -861,31 +994,18 @@ export default function App() {
                     <div className="fare-breakdown-row excluded"><span>Waiting charges</span><strong>Excluded; confirm policy</strong></div>
                     <div className="fare-breakdown-row excluded"><span>Taxes and other fees</span><strong>Not configured</strong></div>
                     <p>{fare.notes}</p>
-                    <p className="fare-disclaimer">Indicative estimate only, not a confirmed quotation. Excluded items are not included in the total. Partner availability, model-specific pricing, taxes and actual expenses must be confirmed before booking.</p>
+                    <p className="fare-disclaimer">Estimate only; excluded items are not included. Partner availability, final fare and actual expenses are confirmed before booking.</p>
                   </div>}
                 </div>
-                <button className="button button-submit" type="submit" disabled={bookingSaving}>{bookingSaving ? "Saving your request…" : "Save request and continue"} <span>→</span></button>
-                <p className="form-legal">Your request is saved for authorised CabConnect staff. Any displayed fare is an estimate only; your booking is not confirmed until the team confirms availability and the final quotation.</p>
+                <div className="booking-step-actions booking-submit-actions"><button className="booking-back-button" type="button" onClick={() => setBookingStep(1)}>← Edit contact</button><button className="button button-submit" type="submit" disabled={bookingSaving}>{bookingSaving ? "Sending request…" : "Send ride request"} <span>→</span></button></div>
+                <p className="form-legal">Sending a request does not confirm a booking. CabConnect will contact you to confirm availability and the final quotation.</p>
                 {whatsappLink && <a className="booking-whatsapp-followup" href={whatsappLink} target="_blank" rel="noreferrer">Continue to WhatsApp ↗</a>}
                 {notice && <div className="form-notice" role="status">{notice}</div>}
-                </section>
+                </section>}
               </form>
             </div>
           </div>
-        </section>
-
-        <section className="services-section" id="services">
-          <div className="container">
-            <div className="section-heading-row"><div><div className="eyebrow"><span className="eyebrow-line" /> RIDE YOUR WAY</div><h2>One city. <em>Many ways to go.</em></h2></div><p>Daily city rides, airport runs, hourly plans, and outstation trips in a Dzire or Ertiga. Larger groups can request Tempo Traveller availability.</p></div>
-            <div className="service-cards">
-              {serviceHighlights.map((item, index) => item.id === "temple" ? <a className="service-card" key={item.id} href="#temple-tours">
-                <div className="service-card-top"><span>0{index + 1}</span><span className="service-card-icon">{item.icon}</span></div><h3>{item.title}</h3><p>{item.subtitle} with a route planned around your stops.</p><span className="card-link">Explore temples <b>↗</b></span>
-              </a> : <button type="button" className="service-card" key={item.id} onClick={() => { setService(item.id); document.getElementById("book")?.scrollIntoView({ behavior: "smooth" }); }}>
-                <div className="service-card-top"><span>0{index + 1}</span><span className="service-card-icon">{item.icon}</span></div><h3>{item.title}</h3><p>{item.subtitle} with a quote confirmed by our team.</p><span className="card-link">Request this ride <b>↗</b></span>
-              </button>)}
-            </div>
-          </div>
-        </section>
+        </section>}
 
         <section className="how-section" id="how-it-works">
           <div className="container how-grid">
@@ -898,18 +1018,25 @@ export default function App() {
           </div>
         </section>
 
-        <section className="partner-section" id="partners">
-          <div className="container">
-            <div className="section-heading-row"><div><div className="eyebrow"><span className="eyebrow-line" /> GROW WITH CABCONNECT</div><h2>Built for people<br /><em>behind every ride.</em></h2></div><p>Drive with our local team or attach commercial vehicles to the network. Each application is reviewed separately.</p></div>
-            <div className="partner-card-grid">
-              <article className="partner-card"><span className="partner-card-no">01 / DRIVER PARTNERS</span><h3>Drive with CabConnect</h3><p>Share your operating area, experience and preferred schedule. You can apply even if you need a vehicle partner.</p><a href="/driver-register">Register as a driver <b>↗</b></a></article>
-              <article className="partner-card"><span className="partner-card-no">02 / VEHICLE OWNERS</span><h3>Attach your cab or fleet</h3><p>Submit each vehicle and its assigned driver separately, with commercial and document details for review.</p><a href="/cab-attachment">Attach a cab <b>↗</b></a></article>
-              <article className="partner-card partner-temple-card"><span className="partner-card-no">03 / TEMPLE JOURNEYS</span><h3>Plan a temple tour</h3><p>Build a route from individual temples and request an indicative fare for your journey.</p><a href="#temple-tours">Explore temple tours <b>↗</b></a></article>
+        <section className="home-trust-section" id="why-us" aria-labelledby="home-trust-title">
+          <div className="container home-trust-layout">
+            <div className="home-trust-copy">
+              <span className="eyebrow">YOUR JOURNEY, WITH CARE</span>
+              <h2 id="home-trust-title">Your peace of mind<br /><em>comes first.</em></h2>
+              <p>Clear estimates, reviewed partner information and direct confirmation help you know what to expect before your ride.</p>
+              <div className="home-trust-grid">
+                <article><span aria-hidden="true">✓</span><div><h3>Partner details reviewed</h3><p>Driver and vehicle applications are reviewed by the CabConnect team.</p></div></article>
+                <article><span aria-hidden="true">↗</span><div><h3>Human-confirmed rides</h3><p>Your request is not a booking until availability and the final quote are confirmed.</p></div></article>
+                <article><span aria-hidden="true">₹</span><div><h3>Estimates explained</h3><p>Review indicative fares and see which trip costs may be extra.</p></div></article>
+                <article><span aria-hidden="true">◉</span><div><h3>Direct support</h3><p>Contact the team with questions and follow up on your request.</p></div></article>
+              </div>
             </div>
+            <figure className="home-trust-visual">
+              <img src="/driver-recruitment-hero.jpg" alt="A driver standing beside a cab on a Chennai street" loading="lazy" />
+              <figcaption><span aria-hidden="true">✓</span><span><strong>Clear, personal confirmation</strong><small>We confirm availability and final fare with you.</small></span></figcaption>
+            </figure>
           </div>
         </section>
-
-        <section className="why-section" id="why-us"><div className="container"><div className="why-reference-heading"><div className="eyebrow"><span className="eyebrow-line" /> THE CABCONNECT DIFFERENCE</div><h2>Why choose CabConnect Chennai?</h2></div><div className="benefit-grid"><article><span>✓</span><p><strong>Partner review</strong><small>Driver and vehicle details are reviewed by our team.</small></p></article><article><span>₹</span><p><strong>Clear estimates</strong><small>See indicative rates before confirming your ride.</small></p></article><article><span>⌖</span><p><strong>Local &amp; outstation</strong><small>Ride across Chennai and beyond.</small></p></article><article><span>◉</span><p><strong>Human support</strong><small>Confirm availability directly with our team.</small></p></article></div></div></section>
 
         <section className="homepage-temples" aria-labelledby="homepage-temples-title">
           <div className="container"><div className="home-temples-heading"><div><span className="eyebrow">JOURNEYS WITH MEANING</span><h2 id="homepage-temples-title">Popular temple tours</h2><p>Explore sacred destinations across Tamil Nadu with a route planned around your stops.</p></div><a href="#temple-tours">View all temples <span>↗</span></a></div>
