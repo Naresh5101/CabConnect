@@ -147,7 +147,7 @@ function QuoteForm({ destination, AddressAutocomplete, vehicles, whatsappNumber,
       {fareError && <p className="tour-fare-error" role="alert">{fareError}</p>}
       {fare && <div className="tour-fare-result" role="status"><div><span>Estimated trip total</span><strong>{formatMoney(fare.total)}</strong></div><p>Road route: {fare.roadDistanceKm.toFixed(1)} km · Billed distance: {fare.billedDistanceKm.toFixed(1)} km · {vehicle.label}</p><p>{fare.note}</p></div>}
     </div>
-    <label className="tour-contact-consent"><input type="checkbox" required checked={consent} onChange={(event) => setConsent(event.target.checked)} />I agree that CabConnect may store these trip details and contact me about this request.</label>
+    <label className="tour-contact-consent"><input type="checkbox" required checked={consent} onChange={(event) => setConsent(event.target.checked)} />I agree that CabConnect may store these details and share my name, phone number, and enquiry summary with WhatsApp to notify its team and respond to this request.</label>
     <button className="tour-submit-button" type="submit" disabled={saving}>{saving ? "Saving your request…" : "Save quotation request"} <span>→</span></button>
     <p className="tour-privacy-note">Your request is visible only to authorised CabConnect administrators. Any fare estimate is indicative and this is not a confirmed booking.</p>
     {whatsAppUrl && <a className="tour-whatsapp-followup" href={whatsAppUrl} target="_blank" rel="noreferrer">Continue to WhatsApp ↗</a>}

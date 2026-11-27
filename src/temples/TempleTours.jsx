@@ -292,7 +292,7 @@ export default function TempleTours({ AddressAutocomplete, vehicles, whatsappNum
                 <small>{fare.note}</small>
               </div>}
             </div>
-            <label className="temple-contact-consent"><input type="checkbox" required checked={contactConsent} onChange={(event) => setContactConsent(event.target.checked)} />I agree that CabConnect may store my trip details and contact me about this request.</label>
+            <label className="temple-contact-consent"><input type="checkbox" required checked={contactConsent} onChange={(event) => setContactConsent(event.target.checked)} />I agree that CabConnect may store these details and share my name, phone number, and enquiry summary with WhatsApp to notify its team and respond to this request.</label>
             <button className="button button-submit temple-submit" type="submit" disabled={savingRequest}>{savingRequest ? "Saving your request…" : "Save temple tour request"} <span>→</span></button>
             <p className="form-legal">Your request is shared with authorised CabConnect staff. Availability and final fare must be confirmed.</p>
             {whatsAppUrl && <a className="temple-whatsapp-followup" href={whatsAppUrl} target="_blank" rel="noreferrer">Continue to WhatsApp ↗</a>}

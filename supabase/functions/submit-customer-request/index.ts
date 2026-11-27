@@ -12,6 +12,74 @@ const validText = (value: unknown, max: number, required = false) => typeof valu
 const isObject = (value: unknown): value is Record<string, unknown> => Boolean(value) && typeof value === "object" && !Array.isArray(value);
 const isIntegerBetween = (value: unknown, min: number, max: number) => Number.isInteger(Number(value)) && Number(value) >= min && Number(value) <= max;
 const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+const oneLine = (value: unknown) => String(value ?? "").replace(/[\u0000-\u001f\u007f]/g, " ").replace(/\s+/g, " ").trim();
+
+function whatsappEnquiryDetails(type: string, data: Record<string, unknown>, requestId: string) {
+  const details: string[] = [`Reference: ${requestId}`];
+  if (type === "cab_booking") {
+    details.push(`Service: ${oneLine(data.service)}`, `Pickup: ${oneLine(data.pickup)}`);
+    if (data.destination) details.push(`Destination: ${oneLine(data.destination)}`);
+    details.push(`Date/time: ${oneLine(data.travelDate)} ${oneLine(data.pickupTime)}`, `Passengers: ${oneLine(data.passengers)}`, `Vehicle: ${oneLine(data.vehicleLabel)}`);
+  } else if (type === "tour_quote") {
+    details.push(`Tour: ${oneLine(data.destination)}`, `Pickup: ${oneLine(data.pickup)}`, `Date: ${oneLine(data.travelDate)}`,
+      `Travellers/days: ${oneLine(data.travellers)}/${oneLine(data.days)}`, `Vehicle: ${oneLine(data.vehicle)}`, `Trip: ${oneLine(data.tripType)}`);
+  } else if (type === "temple_tour") {
+    const temples = Array.isArray(data.temples)
+      ? data.temples.map((temple) => isObject(temple) ? oneLine(temple.name) : "").filter(Boolean).slice(0, 8).join(", ")
+      : "";
+    details.push(`Start: ${oneLine(data.start)}`, `Date: ${oneLine(data.travelDate)}`, `Days/travellers: ${oneLine(data.days)}/${oneLine(data.travellers)}`,
+      `Vehicle: ${isObject(data.vehicle) ? oneLine(data.vehicle.label) : ""}`, `Temples: ${temples || "See admin console"}`);
+  }
+  return details.join(" | ").slice(0, 900);
+}
+
+async function sendWhatsAppEnquiryAlert(type: string, name: string, mobile: string, data: Record<string, unknown>, requestId: string) {
+  // Missing credentials intentionally leaves the existing enquiry flow operational.
+  const token = Deno.env.get("WHATSAPP_ACCESS_TOKEN");
+  const phoneNumberId = Deno.env.get("WHATSAPP_PHONE_NUMBER_ID");
+  const recipient = Deno.env.get("WHATSAPP_ALERT_TO");
+  const templateName = Deno.env.get("WHATSAPP_TEMPLATE_NAME");
+  const templateLanguage = Deno.env.get("WHATSAPP_TEMPLATE_LANGUAGE");
+  const apiVersion = Deno.env.get("WHATSAPP_GRAPH_API_VERSION");
+  if (!token || !phoneNumberId || !recipient || !templateName || !templateLanguage || !apiVersion) return "not_configured";
+
+  const normalizedRecipient = recipient.replace(/\D/g, "");
+  if (!/^\d{8,15}$/.test(normalizedRecipient) || !/^v\d+\.\d+$/.test(apiVersion)) return "not_configured";
+
+  const typeLabel = ({ cab_booking: "Cab booking", tour_quote: "Tour quote", temple_tour: "Temple tour" } as Record<string, string>)[type];
+  if (!typeLabel) return "not_applicable";
+  const response = await fetch(`https://graph.facebook.com/${apiVersion}/${phoneNumberId}/messages`, {
+    method: "POST",
+    headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+    body: JSON.stringify({
+      messaging_product: "whatsapp",
+      recipient_type: "individual",
+      to: normalizedRecipient,
+      type: "template",
+      template: {
+        name: templateName,
+        language: { code: templateLanguage },
+        components: [{
+          type: "body",
+          parameters: [
+            { type: "text", text: typeLabel },
+            { type: "text", text: oneLine(name).slice(0, 120) },
+            { type: "text", text: mobile },
+            { type: "text", text: requestId },
+            { type: "text", text: whatsappEnquiryDetails(type, data, requestId) },
+          ],
+        }],
+      },
+    }),
+    signal: AbortSignal.timeout(10000),
+  });
+  if (!response.ok) {
+    // Do not log the provider body: it may echo request data or credentials.
+    console.error("WhatsApp enquiry alert failed", { status: response.status });
+    return "failed";
+  }
+  return "sent";
+}
 
 function validateRequest(type: string, data: Record<string, unknown>) {
   if (type === "cab_booking") {
@@ -81,7 +149,16 @@ Deno.serve(async (request) => {
       if (!existingError && existing) return Response.json({ request_id: existing.request_id }, { status: 200, headers: corsHeaders });
     }
     if (error) throw error;
-    return Response.json({ request_id: data.request_id }, { status: 201, headers: corsHeaders });
+    let whatsappAlert = "not_applicable";
+    if (["cab_booking", "tour_quote", "temple_tour"].includes(String(body.request_type))) {
+      try {
+        whatsappAlert = await sendWhatsAppEnquiryAlert(String(body.request_type), row.customer_name, row.mobile, body.request_data, data.request_id);
+      } catch (error) {
+        console.error("WhatsApp enquiry alert request failed", error instanceof Error ? error.name : "UnknownError");
+        whatsappAlert = "failed";
+      }
+    }
+    return Response.json({ request_id: data.request_id, whatsapp_alert: whatsappAlert }, { status: 201, headers: corsHeaders });
   } catch (error) {
     console.error("Customer request submission failed", error);
     return Response.json({ error: "We could not save your request right now. Please try again shortly." }, { status: 500, headers: corsHeaders });
