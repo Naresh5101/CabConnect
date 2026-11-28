@@ -34,11 +34,11 @@ const services = [
 ];
 
 const serviceVisuals = {
-  daily: { image: "/daily-ride-passenger.png", alt: "Passenger enjoying a daily Chennai cab ride", headline: "Everyday city rides", caption: "A comfortable ride for your Chennai day." },
-  oneway: { image: "/outstation-oneway-passenger.png", alt: "Passenger enjoying a one-way road trip", headline: "Ride out of town", caption: "Your one-way journey starts here." },
-  roundtrip: { image: "/outstation-roundtrip-passenger.png", alt: "Family enjoying an outstation return journey", headline: "Go there and back", caption: "Plan your outstation return with ease." },
-  rentals: { image: "/hourly-rental-passenger.png", alt: "Passenger using a cab for a day around Chennai", headline: "A cab by the hour", caption: "Flexible rides for plans around the city." },
-  airport: { image: "/airport-ride-passenger.png", alt: "Traveler meeting a cab at the airport", headline: "Airport made easy", caption: "A smooth pickup or drop, on your schedule." },
+  daily: { image: "/daily-ride-passenger.webp", alt: "Passenger enjoying a daily Chennai cab ride", headline: "Everyday city rides", caption: "A comfortable ride for your Chennai day." },
+  oneway: { image: "/outstation-oneway-passenger.webp", alt: "Passenger enjoying a one-way road trip", headline: "Ride out of town", caption: "Your one-way journey starts here." },
+  roundtrip: { image: "/outstation-roundtrip-passenger.webp", alt: "Family enjoying an outstation return journey", headline: "Go there and back", caption: "Plan your outstation return with ease." },
+  rentals: { image: "/hourly-rental-passenger.webp", alt: "Passenger using a cab for a day around Chennai", headline: "A cab by the hour", caption: "Flexible rides for plans around the city." },
+  airport: { image: "/airport-ride-passenger.webp", alt: "Traveler meeting a cab at the airport", headline: "Airport made easy", caption: "A smooth pickup or drop, on your schedule." },
 };
 
 const DEFAULT_WHATSAPP_NUMBER = "919444564127";
@@ -64,8 +64,8 @@ const homepageTemples = ["palani", "tiruchendur", "thiruthani", "swamimalai"]
 
 // Indicative Chennai estimates; partners must confirm availability and final quotes.
 const vehicles = [
-  { id: "dzire", label: "Maruti Suzuki Swift Dzire", category: "Comfort sedan", passengers: 4, luggage: 2, perKm: 20, shortTripPerKm: 20, outstationOneWayPerKm: 16, outstationRoundTripPerKm: 14, localPackages: { 4: 1300, 8: 2300, 12: 3300 }, extraHourRate: 250, airportMinimum: 1000, driverAllowancePerDay: 300, image: "/vehicles/dzire-white-new.png" },
-  { id: "ertiga", label: "Maruti Suzuki Ertiga", category: "MPV", passengers: 6, luggage: 3, perKm: 28, shortTripPerKm: 30, outstationOneWayPerKm: 19, outstationRoundTripPerKm: 17, localPackages: { 4: 2000, 8: 3400, 12: 4700 }, extraHourRate: 350, airportMinimum: 1500, driverAllowancePerDay: 400, image: "/vehicles/ertiga-white-new.png" },
+  { id: "dzire", label: "Maruti Suzuki Swift Dzire", category: "Comfort sedan", passengers: 4, luggage: 2, perKm: 20, shortTripPerKm: 20, outstationOneWayPerKm: 16, outstationRoundTripPerKm: 14, localPackages: { 4: 1300, 8: 2300, 12: 3300 }, extraHourRate: 250, airportMinimum: 1000, driverAllowancePerDay: 300, image: "/vehicles/dzire-white-new.webp" },
+  { id: "ertiga", label: "Maruti Suzuki Ertiga", category: "MPV", passengers: 6, luggage: 3, perKm: 28, shortTripPerKm: 30, outstationOneWayPerKm: 19, outstationRoundTripPerKm: 17, localPackages: { 4: 2000, 8: 3400, 12: 4700 }, extraHourRate: 350, airportMinimum: 1500, driverAllowancePerDay: 400, image: "/vehicles/ertiga-white-new.webp" },
 ];
 
 const money = (amount) => new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR", maximumFractionDigits: 0 }).format(Math.round(amount));
@@ -1040,7 +1040,7 @@ export default function App() {
 
         <section className="homepage-temples" aria-labelledby="homepage-temples-title">
           <div className="container"><div className="home-temples-heading"><div><span className="eyebrow">JOURNEYS WITH MEANING</span><h2 id="homepage-temples-title">Popular temple tours</h2><p>Explore sacred destinations across Tamil Nadu with a route planned around your stops.</p></div><a href="#temple-tours">View all temples <span>↗</span></a></div>
-            <div className="home-temple-grid">{homepageTemples.map((temple) => <a className="home-temple-card" href="#temple-tours" key={temple.id}><img src={temple.image || "/temple-tour-background.png"} alt={`${temple.name} temple`} loading="lazy" /><span><strong>{temple.name}</strong><small>{temple.town} · Murugan temple</small></span></a>)}</div>
+            <div className="home-temple-grid">{homepageTemples.map((temple) => <a className="home-temple-card" href="#temple-tours" key={temple.id}><img src={temple.image || "/temple-tour-background.webp"} alt={`${temple.name} temple`} loading="lazy" /><span><strong>{temple.name}</strong><small>{temple.town} · Murugan temple</small></span></a>)}</div>
           </div>
         </section>
         </>}

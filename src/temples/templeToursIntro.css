@@ -22,7 +22,7 @@
 
 .temple-intro-loading { align-content: center; gap: 22px; text-align: center; isolation: isolate; }
 .temple-intro-loading::before, .temple-intro-loading::after { content: ''; position: absolute; inset: 0; pointer-events: none; }
-.temple-intro-loading::before { z-index: 0; background-image: url('/murugan-temple-intro.png'), url('/murugan-temple-intro.png'); background-position: center, center; background-size: auto 100%, cover; background-repeat: no-repeat; background-color: #21160d; opacity: .52; filter: saturate(.86) brightness(.78) blur(1px); transform: scale(1.02); }
+.temple-intro-loading::before { z-index: 0; background-image: url('/murugan-temple-intro.webp'), url('/murugan-temple-intro.webp'); background-position: center, center; background-size: auto 100%, cover; background-repeat: no-repeat; background-color: #21160d; opacity: .52; filter: saturate(.86) brightness(.78) blur(1px); transform: scale(1.02); }
 .temple-intro-loading::after { z-index: 1; background: radial-gradient(circle at center, #23170b9c 0, #1a110db8 45%, #100c08dc 100%); }
 .temple-intro-loading > * { position: relative; z-index: 2; }
 .temple-intro-logo { display: inline-flex; align-items: center; gap: 12px; text-align: left; }
@@ -42,7 +42,7 @@
 .temple-intro-devotional { background: #21160d; }
 .temple-intro-devotional-image, .temple-intro-devotional-shade { position: absolute; inset: 0; }
 .temple-intro-devotional-image { z-index: 0; overflow: hidden; background: #21160d; animation: temple-intro-image-in 1.2s ease both; }
-.temple-intro-devotional-image::before, .temple-intro-devotional-image::after { content: ''; position: absolute; inset: 0; pointer-events: none; background-image: url('/murugan-temple-intro.png'); background-position: center; background-repeat: no-repeat; }
+.temple-intro-devotional-image::before, .temple-intro-devotional-image::after { content: ''; position: absolute; inset: 0; pointer-events: none; background-image: url('/murugan-temple-intro.webp'); background-position: center; background-repeat: no-repeat; }
 .temple-intro-devotional-image::before { background-size: cover; filter: blur(8px) saturate(.9) brightness(.64); transform: scale(1.06); opacity: .95; }
 .temple-intro-devotional-image::after { background-size: auto 100%; }
 .temple-intro-devotional-shade { background: linear-gradient(90deg, #100c08a8, transparent 48%, #160d05b8), linear-gradient(0deg, #100b07dc, transparent 50%, #160e0755); }

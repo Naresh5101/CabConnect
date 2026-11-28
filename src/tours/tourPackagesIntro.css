@@ -15,7 +15,7 @@
 
 .tour-intro.is-exiting { opacity: 0; visibility: hidden; }
 .tour-intro::before, .tour-intro::after { content: ''; position: absolute; inset: 0; pointer-events: none; }
-.tour-intro::before { z-index: -2; background: url('/tours/generated/hd/kodaikanal-hero-enhanced.png') center / cover no-repeat; filter: saturate(.9) brightness(.58); transform: scale(1.05); }
+.tour-intro::before { z-index: -2; background: url('/tours/generated/hd/kodaikanal-hero-enhanced.webp') center / cover no-repeat; filter: saturate(.9) brightness(.58); transform: scale(1.05); }
 .tour-intro::after { z-index: -1; background: linear-gradient(90deg, #10231ad9, #132a20a8 46%, #132a2070), linear-gradient(0deg, #102219d4, transparent 42%, #10221980); }
 
 .tour-intro-skip-wrap { position: absolute; inset: 0; z-index: 4; pointer-events: none; }
@@ -26,7 +26,7 @@
 
 .tour-intro-loading { align-content: center; gap: 22px; text-align: center; isolation: isolate; }
 .tour-intro-loading::before, .tour-intro-loading::after { content: ''; position: absolute; inset: 0; pointer-events: none; }
-.tour-intro-loading::before { z-index: 0; background: url('/tours/generated/hd/kodaikanal-hero-enhanced.png') center / cover no-repeat; opacity: .46; filter: saturate(.9) brightness(.8); transform: scale(1.02); }
+.tour-intro-loading::before { z-index: 0; background: url('/tours/generated/hd/kodaikanal-hero-enhanced.webp') center / cover no-repeat; opacity: .46; filter: saturate(.9) brightness(.8); transform: scale(1.02); }
 .tour-intro-loading::after { z-index: 1; background: radial-gradient(circle at center, #18392abc 0, #11271ed1 58%, #0d1d16eb 100%); }
 .tour-intro-loading > * { position: relative; z-index: 2; }
 .tour-intro-logo { display: inline-flex; align-items: center; gap: 12px; text-align: left; }

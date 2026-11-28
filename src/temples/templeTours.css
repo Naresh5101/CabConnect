@@ -1,4 +1,4 @@
-.temple-tour-section{min-height:calc(100vh - 112px);padding:86px 0 100px;background:linear-gradient(90deg,rgba(248,241,224,.25),rgba(248,241,224,.08)),url('/temple-tour-background-v2.png') center 48%/cover fixed;scroll-margin-top:86px}
+.temple-tour-section{min-height:calc(100vh - 112px);padding:86px 0 100px;background:linear-gradient(90deg,rgba(248,241,224,.25),rgba(248,241,224,.08)),url('/temple-tour-background-v2.webp') center 48%/cover fixed;scroll-margin-top:86px}
 .temple-tour-intro{display:flex;align-items:flex-end;justify-content:space-between;gap:30px;margin-bottom:34px}
 .temple-tour-intro h2{font-family:Manrope,sans-serif;font-size:clamp(42px,5vw,60px);font-weight:600;letter-spacing:-.075em;line-height:1;margin:18px 0 0}
 .temple-tour-intro h2 em{font-style:normal;color:#6c8e70}
@@ -90,7 +90,7 @@
 @media(max-width:390px){.temple-form-grid{grid-template-columns:1fr}.temple-form-grid .field-full{grid-column:auto}.temple-browser-heading{align-items:flex-start}.temple-selection-count{font-size:8px}.temple-card-links{gap:9px}}
 
 /* Temple page refresh */
-.temple-tour-section{position:relative;isolation:isolate;min-height:calc(100vh - 78px);padding:72px 0 92px;background:#f4f5ee url('/temple-tour-background-v2.png') center 36%/cover fixed}
+.temple-tour-section{position:relative;isolation:isolate;min-height:calc(100vh - 78px);padding:72px 0 92px;background:#f4f5ee url('/temple-tour-background-v2.webp') center 36%/cover fixed}
 .temple-tour-section::before{position:absolute;z-index:-1;inset:0;content:"";background:linear-gradient(180deg,#f6f4e955 0%,#f7f6ef36 270px,#f3f5ef55 590px,#f3f5ef70 100%)}
 .temple-tour-section>.container{width:min(1360px,calc(100% - 64px))}
 .temple-tour-intro{align-items:center;max-width:1050px;margin:0 auto 34px;padding:8px 0}

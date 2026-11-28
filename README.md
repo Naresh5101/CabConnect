@@ -72,6 +72,7 @@ The database enforces field lengths, allowed values, consent, phone formats, sta
 - Address search and reverse geocoding use the public Photon service; road routes use the public OSRM demo endpoint; map tiles use OpenStreetMap. These public endpoints have availability, usage-policy and capacity limits and are not a production service-level guarantee. Confirm their terms and replace them with an authorized, monitored provider if production volume or uptime requires it.
 - Geolocation requires customer permission and a secure origin (HTTPS, or localhost during development). OpenStreetMap attribution is displayed in the map picker.
 - Deploy the contents of `dist/` over HTTPS and configure the static host to serve `index.html` for the root route. Set `VITE_WHATSAPP_NUMBER` in the build environment if changing the contact; rebuild after changing Vite environment variables.
+- Previously referenced PNG artwork is now served as lossless WebP at the same pixel dimensions. JPEG photos remain unchanged; the conversions preserve decoded pixels while reducing transfer size.
 - Vehicle image credits and license references are in `public/vehicles/ATTRIBUTION.md`. The Dzire source has a personality-rights warning on its Commons page and must be reviewed or replaced before public launch.
 
 ## Temple Tours
