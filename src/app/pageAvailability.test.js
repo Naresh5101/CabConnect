@@ -1,6 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { getDisabledPageName } from "./pageAvailability.js";
+import { isCabAttachmentPath, isDriverAdminPath, isDriverRegisterPath } from "./routes.ts";
 
 const enabledSettings = {
   booking_enabled: true,
@@ -39,4 +40,12 @@ test("identifies each disabled public route", () => {
       ...route,
     }), name);
   }
+});
+
+test("recognizes public and admin routes with or without a trailing slash", () => {
+  assert.equal(isDriverRegisterPath("/driver-register"), true);
+  assert.equal(isDriverRegisterPath("/driver-register/"), true);
+  assert.equal(isCabAttachmentPath("/cab-attachment"), true);
+  assert.equal(isCabAttachmentPath("/cab-attachment/"), true);
+  assert.equal(isDriverAdminPath("/driver-admin/"), true);
 });

@@ -2,14 +2,13 @@ import { useEffect, useMemo, useState } from "react";
 import { updatePricingRule, validatePricingRules } from "../../admin/pricingRules.js";
 import { fetchAdminFarePricingRecord, saveAdminFarePricingRules } from "../../services/farePricingService";
 
-const VEHICLE_LABELS = { dzire: "Sedan · Swift Dzire", ertiga: "SUV · Ertiga" };
+const VEHICLE_LABELS = { dzire: "Sedan", ertiga: "SUV" };
 const CURRENCY_FIELDS = [
   ["perKm", "Daily rides · ₹ / km"],
   ["shortTripPerKm", "Short city ride · ₹ / km"],
   ["outstationOneWayPerKm", "Outstation one-way · ₹ / km"],
   ["outstationRoundTripPerKm", "Outstation round-trip · ₹ / km"],
   ["extraHourRate", "Extra hour · ₹"],
-  ["airportMinimum", "Airport minimum · ₹"],
   ["driverAllowancePerDay", "Driver allowance · ₹ / day"],
 ];
 

@@ -35,15 +35,13 @@ const KodaikanalTour = lazy(() => import("./pages/tours/KodaikanalTour.jsx"));
 
 const services = [
   { id: "daily", title: "Daily rides", subtitle: "Point-to-point across Chennai", icon: "⌁" },
-  { id: "airport", title: "Airport transfers", subtitle: "Airport pickups and drop-offs", icon: "✈" },
   { id: "oneway", title: "Outstation one-way", subtitle: "Pay for your journey", icon: "↗" },
   { id: "roundtrip", title: "Outstation round trip", subtitle: "Return travel made easy", icon: "↔" },
-  { id: "rentals", title: "Rentals by the hour", subtitle: "Keep a cab for your plans", icon: "◷" },
+  { id: "rentals", title: "Hourly Rental", subtitle: "Book a cab by the hour", icon: "◷" },
 ];
 
 const serviceVisuals = {
   daily: { image: "/daily-ride-passenger.webp", alt: "Passenger enjoying a daily Chennai cab ride", headline: "Everyday city rides", caption: "A comfortable ride for your Chennai day." },
-  airport: { image: "/daily-ride-passenger.webp", alt: "Passenger travelling to Chennai airport by cab", headline: "Airport transfers", caption: "Plan your Chennai airport pickup or drop-off." },
   oneway: { image: "/outstation-oneway-passenger.webp", alt: "Passenger enjoying a one-way road trip", headline: "Ride out of town", caption: "Your one-way journey starts here." },
   roundtrip: { image: "/outstation-roundtrip-passenger.webp", alt: "Family enjoying an outstation return journey", headline: "Go there and back", caption: "Plan your outstation return with ease." },
   rentals: { image: "/hourly-rental-passenger.webp", alt: "Passenger using a cab for a day around Chennai", headline: "A cab by the hour", caption: "Flexible rides for plans around the city." },
@@ -67,26 +65,27 @@ const PAGE_STORAGE_KEYS = {
 const PAGE_SETTING_BY_STORAGE_KEY = Object.fromEntries(
   Object.entries(PAGE_STORAGE_KEYS).map(([key, storageKey]) => [storageKey, key]),
 );
-const BOOKING_CATEGORIES = ["daily", "oneway", "roundtrip", "rentals", "airport"];
+const BOOKING_CATEGORIES = ["daily", "rentals", "oneway", "roundtrip"];
 const BOOKING_CATEGORY_STORAGE_KEYS = Object.fromEntries(BOOKING_CATEGORIES.map((key) => [key, `cabconnect-booking-category-${key}-enabled`]));
 const homepageTemples = ["palani", "tiruchendur", "thiruthani", "swamimalai"]
   .map((id) => temples.find((temple) => temple.id === id)).filter(Boolean);
 
 // Indicative Chennai estimates; partners must confirm availability and final quotes.
 const vehicles = [
-  { id: "dzire", label: "Maruti Suzuki Swift Dzire", category: "Comfort sedan", passengers: 4, luggage: 2, perKm: 20, shortTripPerKm: 20, outstationOneWayPerKm: 16, outstationRoundTripPerKm: 14, localPackages: { 4: 1300, 8: 2300, 12: 3300 }, extraHourRate: 250, driverAllowancePerDay: 300, image: "/vehicles/dzire-white-new.webp" },
-  { id: "ertiga", label: "Maruti Suzuki Ertiga", category: "MPV", passengers: 6, luggage: 3, perKm: 28, shortTripPerKm: 30, outstationOneWayPerKm: 19, outstationRoundTripPerKm: 17, localPackages: { 4: 2000, 8: 3400, 12: 4700 }, extraHourRate: 350, driverAllowancePerDay: 400, image: "/vehicles/ertiga-white-new.webp" },
+  { id: "dzire", label: "Sedan", category: "Comfort sedan", passengers: 4, luggage: 2, perKm: 20, shortTripPerKm: 20, outstationOneWayPerKm: 16, outstationRoundTripPerKm: 14, localPackages: { 4: 1300, 8: 2300, 12: 3300 }, extraHourRate: 250, driverAllowancePerDay: 300 },
+  { id: "ertiga", label: "SUV", category: "MPV", passengers: 6, luggage: 3, perKm: 28, shortTripPerKm: 30, outstationOneWayPerKm: 19, outstationRoundTripPerKm: 17, localPackages: { 4: 2000, 8: 3400, 12: 4700 }, extraHourRate: 350, driverAllowancePerDay: 400 },
 ];
 
 const money = (amount) => new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR", maximumFractionDigits: 0 }).format(Math.round(amount));
 const localDateValue = (date) => `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
-const localTimeValue = (date) => `${String(date.getHours()).padStart(2, "0")}:${String(date.getMinutes()).padStart(2, "0")}`;
-function getNextPickupTime(date = new Date()) {
-  const next = new Date(date);
-  next.setSeconds(0, 0);
-  next.setMinutes(Math.floor(next.getMinutes() / 15) * 15 + 15);
-  return { date: localDateValue(next), time: localTimeValue(next) };
-}
+const inclusiveTripDays = (start, end) => {
+  if (!start || !end) return "1";
+  const [startYear, startMonth, startDay] = start.split("-").map(Number);
+  const [endYear, endMonth, endDay] = end.split("-").map(Number);
+  const startUtc = Date.UTC(startYear, startMonth - 1, startDay);
+  const endUtc = Date.UTC(endYear, endMonth - 1, endDay);
+  return String(Math.max(1, Math.floor((endUtc - startUtc) / 86400000) + 1));
+};
 const isValidCoordinates = (coordinates) => Number.isFinite(coordinates?.lat) && Number.isFinite(coordinates?.lon)
   && Math.abs(coordinates.lat) <= 90 && Math.abs(coordinates.lon) <= 180;
 const isWithinIndia = (coordinates) => isValidCoordinates(coordinates)
@@ -99,6 +98,7 @@ const initialForm = {
   vehicle: "dzire",
 
   date: "",
+  returnDate: "",
   time: "09:00",
   passengers: "2",
   hours: "4",
@@ -742,23 +742,19 @@ export default function App() {
       window.removeEventListener("popstate", syncPage);
     };
   }, []);
-  const [service, setService] = useState("daily");
+  const [serviceState, setService] = useState("daily");
   const [bookingStep, setBookingStep] = useState(0);
   const bookingFormRef = useRef(null);
   const bookingStageRef = useRef(null);
   const hasMovedBookingStage = useRef(false);
-  const isOutstation = ["oneway", "roundtrip"].includes(service);
   const bookingCategoryEnabled = (key) => bookingCategories[key] !== false;
   const firstEnabledBookingCategory = () => BOOKING_CATEGORIES.find(bookingCategoryEnabled);
-  useEffect(() => {
-    if (pageSettings.booking_enabled && !bookingCategoryEnabled(service)) {
-      const fallback = firstEnabledBookingCategory();
-      if (fallback) setService(fallback);
-    }
-  }, [bookingCategories, pageSettings.booking_enabled, service]);
-  const activeRideTab = service === "rentals" ? "rentals" : service === "airport" ? "airport" : isOutstation ? "outstation" : "daily";
-  const [whenMode, setWhenMode] = useState("now");
-  const departureMode = isOutstation ? "schedule" : whenMode;
+  const service = pageSettings.booking_enabled && !bookingCategoryEnabled(serviceState)
+    ? firstEnabledBookingCategory() || serviceState
+    : serviceState;
+  const isOutstation = ["oneway", "roundtrip"].includes(service);
+  const activeRideTab = service === "rentals" ? "rentals" : isOutstation ? "outstation" : "daily";
+  const departureMode = "schedule";
   const [form, setForm] = useState(initialForm);
   const [notice, setNotice] = useState("");
   const [fare, setFare] = useState(null);
@@ -780,32 +776,25 @@ export default function App() {
   }, [bookingStep]);
 
   const today = useMemo(() => localDateValue(new Date()), []);
-  const departureDateOptions = useMemo(() => {
-    const baseDate = new Date(`${today}T12:00:00`);
-    const dateLabel = new Intl.DateTimeFormat("en-IN", { weekday: "short", day: "2-digit", month: "short" });
-    return Array.from({ length: 8 }, (_, offset) => {
-      const date = new Date(baseDate);
-      date.setDate(baseDate.getDate() + offset);
-      return {
-        value: localDateValue(date),
-        label: offset === 0 ? "Today" : offset === 1 ? "Tomorrow" : dateLabel.format(date),
-      };
-    });
-  }, [today]);
   const tourRoute = isTourPath(pathname);
   const homeHref = (section) => `${driverPage || driverAdminPage || attachmentPage || tourRoute ? "/" : ""}#${section}`;
 
   function update(field, value, coordinates = undefined) {
     const nextValue = field === "phone" ? limitPhoneDigits(value) : value;
-    setForm((current) => ({
-      ...current,
-      [field]: nextValue,
-      ...(field === "pickup" ? { pickupCoords: coordinates } : {}),
-      ...(field === "destination" ? { destinationCoords: coordinates } : {}),
-    }));
+    setForm((current) => {
+      const next = {
+        ...current,
+        [field]: nextValue,
+        ...(field === "pickup" ? { pickupCoords: coordinates } : {}),
+        ...(field === "destination" ? { destinationCoords: coordinates } : {}),
+      };
+      if (field === "date" && next.returnDate && next.returnDate < nextValue) next.returnDate = "";
+      if (field === "date" || field === "returnDate") next.tripDays = inclusiveTripDays(next.date, next.returnDate);
+      return next;
+    });
     setNotice("");
     setWhatsappLink("");
-    if (["pickup", "destination", "vehicle", "hours", "tripDays", "passengers", "date"].includes(field)) {
+    if (["pickup", "destination", "vehicle", "hours", "tripDays", "passengers", "date", "returnDate"].includes(field)) {
       setFare(null);
       setFareError("");
     }
@@ -817,14 +806,6 @@ export default function App() {
     setNotice("");
     setFare(null);
     setFareError("");
-  }
-
-  function chooseWhenMode(nextMode) {
-    setWhenMode(nextMode);
-    if (nextMode === "schedule") {
-      const suggestedDeparture = getNextPickupTime();
-      setForm((current) => current.date ? current : { ...current, ...suggestedDeparture });
-    }
   }
 
   function advanceBookingStep() {
@@ -910,9 +891,9 @@ export default function App() {
       let driverAllowance = 0;
       let notes = "";
 
-      if (service === "daily" || service === "airport") {
+      if (service === "daily") {
         distanceCharge = distanceKm * ratePerKm;
-        notes = `${service === "airport" ? "Airport transfer" : "One-way city"} road distance ${distanceKm.toFixed(1)} km at ${money(ratePerKm)}/km. Tolls, parking and waiting are excluded.`;
+        notes = `One-way city road distance ${distanceKm.toFixed(1)} km at ${money(ratePerKm)}/km. Tolls, parking and waiting are excluded.`;
       } else if (service === "oneway") {
         const outstationFare = calculateOutstationFare(distanceKm, vehicle, form.tripDays, false, activeTariff);
         billedDistanceKm = outstationFare.billedDistanceKm;
@@ -943,9 +924,8 @@ export default function App() {
     setWhatsappLink("");
     const number = (environment.whatsappNumber || DEFAULT_WHATSAPP_NUMBER).replace(/\D/g, "");
     const serviceName = services.find((item) => item.id === service)?.title || service;
-    const now = departureMode === "now" ? new Date() : null;
-    const travelDate = now ? localDateValue(now) : form.date;
-    const pickupTime = now ? localTimeValue(now) : form.time;
+    const travelDate = form.date;
+    const pickupTime = form.time;
     const groupVehicles = {
       tempo: { label: "Tempo Traveller", passengers: 12, luggage: null },
     };
@@ -962,10 +942,10 @@ export default function App() {
       `Service: ${serviceName}`,
       `Pickup: ${form.pickup}`,
       `Destination: ${form.destination || "Not specified"}`,
-      `Departure: ${departureMode === "now" ? "Now (as soon as possible)" : `${travelDate} at ${pickupTime}`}`,
+      `Departure: ${travelDate} at ${pickupTime}`,
+      ...(service === "roundtrip" ? [`Return date: ${form.returnDate}`] : []),
       `Passengers: ${form.passengers}`,
       `Vehicle preference: ${selectedVehicle.label}`,
-      `Vehicle capacity: up to ${selectedVehicle.passengers} passengers${selectedVehicle.luggage ? `; ${selectedVehicle.luggage} medium bags (approximate)` : "; luggage capacity to be confirmed with the partner"}.`,
       ...(fare ? [
         `Estimated fare: ${money(fare.total)}`,
         ...(fare.distanceKm != null ? [`Road distance: ${fare.distanceKm.toFixed(1)} km one way`, `Billed distance: ${fare.billedDistanceKm.toFixed(1)} km`] : []),
@@ -997,6 +977,7 @@ export default function App() {
           destination: form.destination,
           ...(environment.googleMapsApiKey ? {} : { destinationCoords: form.destinationCoords }),
           departureMode, travelDate,
+          ...(service === "roundtrip" ? { returnDate: form.returnDate } : {}),
           pickupTime, passengers: Number(form.passengers),
           hours: service === "rentals" ? Number(form.hours) : null,
           tripDays: ["oneway", "roundtrip"].includes(service) ? Number(form.tripDays) : null,
@@ -1111,7 +1092,7 @@ export default function App() {
               </div>
             </div>
           </div>
-          <div className="container hero-foot"><span>LOCAL · AIRPORT · OUTSTATION</span><span className="foot-rule" /><span>MADE FOR THE WAY CHENNAI MOVES</span></div>
+          <div className="container hero-foot"><span>LOCAL · OUTSTATION</span><span className="foot-rule" /><span>MADE FOR THE WAY CHENNAI MOVES</span></div>
         </section>
 
         {pageSettings.booking_enabled && hasBookingCategory && <section className="booking-section" id="book">
@@ -1119,10 +1100,10 @@ export default function App() {
             <div className="section-intro">
               <div className="eyebrow"><span className="eyebrow-line" /> START YOUR JOURNEY</div>
               <h2>Let's get you<br />there.</h2>
-              <p>Pick a ride for the city or a trip beyond Chennai. Choose your Dzire or Ertiga, then get a clear estimate and personal confirmation.</p>
+              <p>Choose a sedan, SUV or Tempo Traveller for your trip, then get a clear estimate and personal confirmation.</p>
               <div className="service-ride-panel" key={service} style={{ "--service-ride-image": `url(${serviceVisuals[service].image})` }}>
                 <img className="service-ride-image" src={serviceVisuals[service].image} alt={serviceVisuals[service].alt} />
-                <div className="service-ride-caption"><span>CHENNAI · {service === "rentals" ? "RENTALS" : service === "airport" ? "AIRPORT TRANSFERS" : service === "daily" ? "DAILY RIDES" : "OUTSTATION"}</span><h3>{serviceVisuals[service].headline}</h3><p>{serviceVisuals[service].caption}</p></div>
+                <div className="service-ride-caption"><span>CHENNAI · {service === "rentals" ? "HOURLY RENTAL" : service === "daily" ? "DAILY RIDES" : "OUTSTATION"}</span><h3>{serviceVisuals[service].headline}</h3><p>{serviceVisuals[service].caption}</p></div>
               </div>
               <div className="booking-note"><span className="note-icon">i</span><span><strong>Transparent by design</strong><small>See a rate-based estimate, then confirm the final fare and vehicle availability with our team.</small></span></div>
             </div>
@@ -1130,9 +1111,8 @@ export default function App() {
               <div className="booking-card-head"><div><span className="card-step">STEP {bookingStep + 1} OF 3 · REQUEST A RIDE</span><h3>Plan your Chennai ride</h3></div><span className="booking-step-counter">{bookingStep + 1}<small> / 3</small></span></div>
               <div className="booking-service-tabs" role="tablist" aria-label="Choose ride category">
                 {bookingCategoryEnabled("daily") && <button type="button" role="tab" aria-selected={activeRideTab === "daily"} className={activeRideTab === "daily" ? "selected" : ""} onClick={() => chooseService("daily")}>Daily rides</button>}
-                {bookingCategoryEnabled("airport") && <button type="button" role="tab" aria-selected={activeRideTab === "airport"} className={activeRideTab === "airport" ? "selected" : ""} onClick={() => chooseService("airport")}>Airport</button>}
+                {bookingCategoryEnabled("rentals") && <button type="button" role="tab" aria-selected={activeRideTab === "rentals"} className={activeRideTab === "rentals" ? "selected" : ""} onClick={() => chooseService("rentals")}>Hourly Rental</button>}
                 {(bookingCategoryEnabled("oneway") || bookingCategoryEnabled("roundtrip")) && <button type="button" role="tab" aria-selected={activeRideTab === "outstation"} className={activeRideTab === "outstation" ? "selected" : ""} onClick={() => chooseService(["oneway", "roundtrip"].includes(service) && bookingCategoryEnabled(service) ? service : bookingCategoryEnabled("oneway") ? "oneway" : "roundtrip")}>Outstation</button>}
-                {bookingCategoryEnabled("rentals") && <button type="button" role="tab" aria-selected={activeRideTab === "rentals"} className={activeRideTab === "rentals" ? "selected" : ""} onClick={() => chooseService("rentals")}>Rentals</button>}
               </div>
               {activeRideTab === "outstation" && <div className="outstation-trip-tabs" role="group" aria-label="Outstation journey type">{bookingCategoryEnabled("oneway") && <button type="button" aria-pressed={service === "oneway"} className={service === "oneway" ? "selected" : ""} onClick={() => chooseService("oneway")}>One way</button>}{bookingCategoryEnabled("roundtrip") && <button type="button" aria-pressed={service === "roundtrip"} className={service === "roundtrip" ? "selected" : ""} onClick={() => chooseService("roundtrip")}>Round trip</button>}</div>}
               <ol className="booking-wizard-progress" aria-label="Booking progress">
@@ -1147,28 +1127,22 @@ export default function App() {
               <form ref={bookingFormRef} onSubmit={handleBookingSubmit}>
                 {bookingStep === 0 && <section className="booking-wizard-stage" aria-labelledby="booking-trip-heading">
                 <h4 id="booking-trip-heading" tabIndex={-1} ref={bookingStageRef}>Where are you headed?</h4>
-                <p className="booking-stage-hint">Add your route and choose to leave now or schedule for later. We confirm availability before a ride is booked.</p>
+                <p className="booking-stage-hint">Add your route, travel date and pickup time. We confirm availability before a ride is booked.</p>
                 <section className="booking-main-column" aria-label="Trip details">
                 <div className="booking-trip-fields">
                   <div className="booking-route-fields">
                     <AddressAutocomplete id="booking-pickup" className="booking-location-field" label="From" required value={form.pickup} coords={form.pickupCoords} onChange={(value, coordinates) => update("pickup", value, coordinates)} onMapPick={(value, coordinates) => update("pickup", value, coordinates)} placeholder="Pickup area or landmark" searchContext="Chennai, Tamil Nadu" showMap={false} showCurrentLocation />
-                    <AddressAutocomplete id="booking-destination" className="booking-location-field" label={<>To {service === "rentals" && <small>(optional)</small>}</>} required={service !== "rentals"} value={form.destination} coords={form.destinationCoords} onChange={(value, coordinates) => update("destination", value, coordinates)} onMapPick={(value, coordinates) => update("destination", value, coordinates)} placeholder={service === "airport" ? "Chennai Airport or destination" : "Drop-off area or landmark"} searchContext={["daily", "airport"].includes(service) ? "Chennai, Tamil Nadu" : ""} showMap={false} />
+                    <AddressAutocomplete id="booking-destination" className="booking-location-field" label={<>To {service === "rentals" && <small>(optional)</small>}</>} required={service !== "rentals"} value={form.destination} coords={form.destinationCoords} onChange={(value, coordinates) => update("destination", value, coordinates)} onMapPick={(value, coordinates) => update("destination", value, coordinates)} placeholder="Drop-off area or landmark" searchContext={service === "daily" ? "Chennai, Tamil Nadu" : ""} showMap={false} />
                   </div>
-                  {isOutstation ? <div className="booking-schedule-row">
+                  <div className={`booking-schedule-row${service === "roundtrip" ? " has-return-date" : ""}`}>
                     <label className="field"><span>Travel date <b>*</b></span><input id="booking-date" type="date" min={today} required value={form.date} onChange={(e) => update("date", e.target.value)} /></label>
+                    {service === "roundtrip" && <label className="field"><span>Return date <b>*</b></span><input id="booking-return-date" type="date" min={form.date || today} required value={form.returnDate} onChange={(e) => update("returnDate", e.target.value)} /></label>}
                     <label className="field"><span>Pickup time <b>*</b></span><input id="booking-time" type="time" required value={form.time} onChange={(e) => update("time", e.target.value)} /></label>
-                  </div> : <>
-                  <label className="field booking-when-field"><span>When <b>*</b></span><select value={whenMode} onChange={(e) => chooseWhenMode(e.target.value)}><option value="now">Now</option><option value="schedule">Schedule for later</option></select></label>
-                  {whenMode === "schedule" && <div className="booking-departure-row" role="group" aria-label="Departure details">
-                    <span className="booking-departure-label" aria-hidden="true">Depart</span>
-                    <label className="field booking-departure-date"><span className="booking-visually-hidden">Departure day <b>*</b></span><select id="booking-date" required value={form.date} onChange={(e) => update("date", e.target.value)}>{departureDateOptions.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}</select></label>
-                    <label className="field booking-departure-time"><span className="booking-visually-hidden">Departure time <b>*</b></span><input id="booking-time" type="time" required value={form.time} onChange={(e) => update("time", e.target.value)} /></label>
-                  </div>}
-                  </>}
+                  </div>
                   <label className="field booking-passenger-field"><span>Passengers</span><select value={form.passengers} onChange={(e) => update("passengers", e.target.value)}>{Array.from({ length: 12 }, (_, index) => String(index + 1)).map((n) => <option key={n} value={n}>{n} passenger{n === "1" ? "" : "s"}</option>)}</select></label>
                   {(service === "rentals" || isOutstation) && <div className="booking-trip-extras">
                     {service === "rentals" && <label className="field"><span>Hours required</span><select value={form.hours} onChange={(e) => update("hours", e.target.value)}>{["2","3","4","6","8","10","12"].map((n) => <option key={n} value={n}>{n} hours</option>)}</select></label>}
-                    {isOutstation && <label className="field"><span>Trip duration</span><select value={form.tripDays} onChange={(e) => update("tripDays", e.target.value)}>{["1","2","3","4","5","7","10","14"].map((n) => <option key={n} value={n}>{n} day{n === "1" ? "" : "s"}</option>)}</select></label>}
+                    {service === "oneway" && <label className="field"><span>Trip duration</span><select value={form.tripDays} onChange={(e) => update("tripDays", e.target.value)}>{["1","2","3","4","5","7","10","14"].map((n) => <option key={n} value={n}>{n} day{n === "1" ? "" : "s"}</option>)}</select></label>}
                   </div>}
                   <fieldset className="ride-vehicle-picker" aria-describedby="ride-vehicle-note">
                     <legend>Choose your ride</legend>
@@ -1177,14 +1151,12 @@ export default function App() {
                       {activeVehicles.map((vehicle) => (
                         <label className={`ride-vehicle-card ${form.vehicle === vehicle.id ? "selected" : ""}`} key={vehicle.id}>
                           <input type="radio" name="bookingVehicle" value={vehicle.id} required checked={form.vehicle === vehicle.id} onChange={(e) => update("vehicle", e.target.value)} />
-                          <img src={vehicle.image} alt="" />
-                          <span className="ride-vehicle-copy"><strong>{vehicle.id === "dzire" ? "Sedan" : "SUV"}</strong><small>{vehicle.label} · Up to {vehicle.passengers} passengers</small></span>
+                          <span className="ride-vehicle-copy"><strong>{vehicle.label}</strong></span>
                           <span className="ride-vehicle-indicator" aria-hidden="true" />
                         </label>
                       ))}
                       <label className={`ride-vehicle-card ${form.vehicle === "tempo" ? "selected" : ""}`}>
                         <input type="radio" name="bookingVehicle" value="tempo" required checked={form.vehicle === "tempo"} onChange={(e) => update("vehicle", e.target.value)} />
-                        <span className="ride-vehicle-placeholder" aria-hidden="true">12</span>
                         <span className="ride-vehicle-copy"><strong>Tempo Traveller</strong><small>Group travel · Up to 12 passengers · Manual quote</small></span>
                         <span className="ride-vehicle-indicator" aria-hidden="true" />
                       </label>
@@ -1212,7 +1184,9 @@ export default function App() {
                     ["Service", services.find((item) => item.id === service)?.title || "Cab ride"],
                     ["Pickup", form.pickup],
                     ["Destination", form.destination || "Hourly local hire"],
-                    ...(departureMode === "now" ? [["Departure", "Now (as soon as possible)"]] : [["Travel date", form.date], ["Pickup time", form.time]]),
+                    ["Travel date", form.date],
+                    ...(service === "roundtrip" ? [["Return date", form.returnDate]] : []),
+                    ["Pickup time", form.time],
                     ["Passengers", form.passengers],
                     ["Vehicle", activeVehicles.find((item) => item.id === form.vehicle)?.label || (form.vehicle === "tempo" ? "Tempo Traveller" : "Vehicle")],
                     ...(service === "rentals" ? [["Duration", `${form.hours} hours`]] : []),
@@ -1287,7 +1261,7 @@ export default function App() {
           <div className="container">
             <div className="service-guidance-heading"><span className="eyebrow">CLEAR BEFORE YOU TRAVEL</span><h2 id="service-guidance-title">Know what to expect.</h2><p>Every request is reviewed by our team. We share availability, final fare, and any applicable trip terms before you confirm.</p></div>
             <div className="service-guidance-grid">
-              <article><span aria-hidden="true">⌖</span><h3>Where we serve</h3><p>Chennai city and airport rides, plus outstation journeys. Other pickup areas and destinations can be checked with our team.</p></article>
+              <article><span aria-hidden="true">⌖</span><h3>Where we serve</h3><p>Chennai city rides and outstation journeys. Other pickup areas and destinations can be checked with our team.</p></article>
               <article><span aria-hidden="true">₹</span><h3>What the estimate covers</h3><p>Fare estimates show their included distance, driver allowance, and exclusions. Tolls, parking, waiting, and other unconfigured charges are confirmed separately.</p></article>
               <article><span aria-hidden="true">↻</span><h3>Changes or cancellations</h3><p>Ask our team about change and cancellation terms before confirming. Any terms that apply are shared with your final quotation.</p></article>
             </div>

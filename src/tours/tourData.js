@@ -47,7 +47,7 @@ const coreDestinations = [
         { name: "Mannavanur Lake", image: "/tours/kodaikanal/stops/mannavanur-lake.jpg", description: "A peaceful countryside lake and grassland area." },
       ] },
     ],
-    suitable: ["Swift Dzire · up to 4 passengers", "Ertiga · up to 6 passengers"],
+    suitable: ["Sedan", "SUV"],
     included: ["Private cab for the agreed itinerary", "Driver and fuel for the confirmed route", "Pickup and drop as agreed"],
     excluded: ["Accommodation and meals", "Entry tickets, activities and parking", "Tolls and charges outside the confirmed quote"],
     faqs: [
@@ -77,7 +77,7 @@ const coreDestinations = [
       { day: "Day 3", title: "Doddabetta and Coonoor", text: "Plan a hill viewpoint and tea-country drive. If taking the Nilgiri Mountain Railway, align the cab plan with confirmed train tickets.", image: "/tours/ooty/nilgiri-mountain-railway-crop.jpg" },
       { day: "Day 4", title: "Return journey", text: "Start back to Chennai with breaks, or request an extended stay and revised itinerary.", image: "/tours/ooty/coonoor-tea-estates-crop.jpg" },
     ],
-    suitable: ["Swift Dzire · up to 4 passengers", "Ertiga · up to 6 passengers"],
+    suitable: ["Sedan", "SUV"],
     included: ["Private cab for the agreed itinerary", "Driver and fuel for the confirmed route", "Pickup and drop as agreed"],
     excluded: ["Accommodation and meals", "Entry tickets, activities and train tickets", "Tolls, parking and charges outside the confirmed quote"],
     faqs: [
@@ -108,7 +108,7 @@ const coreDestinations = [
       { day: "Day 1", title: "Chennai to Yercaud", text: "Travel to Yercaud with rest stops, then enjoy a gentle lake and town-side visit if time allows.", image: "/tours/yercaud/yercaud-lake-crop.jpg" },
       { day: "Day 2", title: "Viewpoints and return", text: "Choose from the viewpoints, garden and waterfall stops based on weather and access, then begin the return drive.", image: "/tours/yercaud/kiliyur-falls-crop.jpg" },
     ],
-    suitable: ["Swift Dzire · up to 4 passengers", "Ertiga · up to 6 passengers"],
+    suitable: ["Sedan", "SUV"],
     included: ["Private cab for the agreed itinerary", "Driver and fuel for the confirmed route", "Pickup and drop as agreed"],
     excluded: ["Accommodation and meals", "Entry tickets, activities and parking", "Tolls and charges outside the confirmed quote"],
     faqs: [
@@ -137,7 +137,7 @@ const coreDestinations = [
       { day: "Day 2", title: "Temple and island sights", text: "Plan temple time and nearby coastal sights. Follow current temple instructions and leave flexibility for queues.", image: "/tours/rameswaram/ramanathaswamy-temple-crop.jpg" },
       { day: "Day 3", title: "Coastal visit and return", text: "If access and conditions permit, include a coastal outing before beginning the return journey.", image: "/tours/rameswaram/dhanushkodi-crop.jpg" },
     ],
-    suitable: ["Swift Dzire · up to 4 passengers", "Ertiga · up to 6 passengers"],
+    suitable: ["Sedan", "SUV"],
     included: ["Private cab for the agreed itinerary", "Driver and fuel for the confirmed route", "Pickup and drop as agreed"],
     excluded: ["Accommodation and meals", "Temple donations, entry and activity charges", "Tolls, parking and charges outside the confirmed quote"],
     faqs: [
@@ -244,7 +244,7 @@ const makeAdditionalDestination = (spec) => {
     overview: spec.overview || `${spec.name} is a popular ${spec.experience.toLowerCase()} destination in ${spec.state}. Use this flexible outline to plan the main local highlights, with timing adjusted to your travel dates, local access and road conditions.`,
     attractions,
     itinerary,
-    suitable: ["Swift Dzire · up to 4 passengers", "Ertiga · up to 6 passengers"],
+    suitable: ["Sedan", "SUV"],
     included: ["Private cab for the agreed itinerary", "Driver and fuel for the confirmed route", "Pickup and drop as agreed"],
     excluded: ["Accommodation and meals", "Entry tickets and activities", "Tolls, parking and charges outside the confirmed quote"],
     faqs: spec.faqs || [

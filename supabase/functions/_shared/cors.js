@@ -5,10 +5,17 @@ const LOCAL_DEVELOPMENT_ORIGINS = [
   "http://127.0.0.1:5174",
 ];
 
+const PRODUCTION_ORIGINS = [
+  "https://cabconnecttours.in",
+  "https://www.cabconnecttours.in",
+  "https://cabconnecttours.pages.dev",
+];
+
 export function isAllowedOrigin(origin, configuredOrigins = "") {
   if (!origin) return true;
   const allowedOrigins = new Set([
     ...LOCAL_DEVELOPMENT_ORIGINS,
+    ...PRODUCTION_ORIGINS,
     ...configuredOrigins.split(",").map((value) => value.trim()).filter(Boolean),
   ]);
   return allowedOrigins.has(origin);

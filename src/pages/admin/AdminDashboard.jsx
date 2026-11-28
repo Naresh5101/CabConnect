@@ -43,10 +43,9 @@ const PAGE_TOGGLE_ITEMS = [
 const SETTINGS_MENU_ITEMS = [["booking", "Cab bookings", "⌁"], ["pages", "Website pages", "▤"], ["temples", "Temple catalogue", "⌖"], ["access", "Access & data", "⚙"]];
 const BOOKING_CATEGORY_ITEMS = [
   ["daily", "Daily rides", "Chennai point-to-point bookings"],
+  ["rentals", "Hourly Rental", "Book a cab by the hour"],
   ["oneway", "Outstation one way", "One-way journeys outside Chennai"],
   ["roundtrip", "Outstation return", "Outstation bookings with return travel"],
-  ["rentals", "Rentals", "Hourly and local package bookings"],
-  ["airport", "Airport transfers", "Chennai airport pickups and drop-offs"],
 ];
 
 export default function DriverAdmin({ pageSettings = {}, bookingCategories = {}, unpublishedTempleIds = [], bookingSettingsReady = false, bookingSettingsMessage = "", onPageSettingEnabledChange = () => {}, onBookingCategoryEnabledChange = () => {}, onTemplePublishedChange = async () => {} }) {
