@@ -30,6 +30,8 @@ import {
 import { limitPhoneDigits } from "./utils/phoneInput.js";
 import TempleToursIntro from "./temples/TempleToursIntro.jsx";
 import TourPackagesIntro from "./tours/TourPackagesIntro.jsx";
+import ServiceLandingPage, { ServiceLandingLinks } from "./seo/ServiceLandingPage.jsx";
+import { getServiceLandingPage } from "./seo/serviceLandingPages.js";
 const TourPackages = lazy(() => import("./tours/TourPackages.jsx"));
 const KodaikanalTour = lazy(() => import("./pages/tours/KodaikanalTour.jsx"));
 
@@ -67,6 +69,10 @@ const PAGE_SETTING_BY_STORAGE_KEY = Object.fromEntries(
 );
 const BOOKING_CATEGORIES = ["daily", "rentals", "oneway", "roundtrip"];
 const BOOKING_CATEGORY_STORAGE_KEYS = Object.fromEntries(BOOKING_CATEGORIES.map((key) => [key, `cabconnect-booking-category-${key}-enabled`]));
+const getInitialBookingService = () => {
+  const requestedService = new URLSearchParams(window.location.search).get("service");
+  return BOOKING_CATEGORIES.includes(requestedService) ? requestedService : "daily";
+};
 const homepageTemples = ["palani", "tiruchendur", "thiruthani", "swamimalai"]
   .map((id) => temples.find((temple) => temple.id === id)).filter(Boolean);
 
@@ -742,7 +748,7 @@ export default function App() {
       window.removeEventListener("popstate", syncPage);
     };
   }, []);
-  const [serviceState, setService] = useState("daily");
+  const [serviceState, setService] = useState(getInitialBookingService);
   const [bookingStep, setBookingStep] = useState(0);
   const bookingFormRef = useRef(null);
   const bookingStageRef = useRef(null);
@@ -777,7 +783,8 @@ export default function App() {
 
   const today = useMemo(() => localDateValue(new Date()), []);
   const tourRoute = isTourPath(pathname);
-  const homeHref = (section) => `${driverPage || driverAdminPage || attachmentPage || tourRoute ? "/" : ""}#${section}`;
+  const serviceLandingPage = getServiceLandingPage(pathname);
+  const homeHref = (section) => `${driverPage || driverAdminPage || attachmentPage || tourRoute || serviceLandingPage ? "/" : ""}#${section}`;
 
   function update(field, value, coordinates = undefined) {
     const nextValue = field === "phone" ? limitPhoneDigits(value) : value;
@@ -1029,7 +1036,7 @@ export default function App() {
   return (
     <div className="site-shell">
       <a className="skip-link" href="#main-content">Skip to main content</a>
-      {!driverPage && !attachmentPage && !templePage && !tourRoute && <div className="page-ride-backdrop" aria-hidden="true"><img src={serviceVisuals[service].image} alt="" /></div>}
+      {!driverPage && !attachmentPage && !templePage && !tourRoute && !serviceLandingPage && <div className="page-ride-backdrop" aria-hidden="true"><img src={serviceVisuals[service].image} alt="" /></div>}
       <div className="top-strip">
         <div className="container top-strip-inner">
           <span>Chennai rides, made refreshingly simple</span>
@@ -1056,7 +1063,7 @@ export default function App() {
       </header>
 
       <main id="main-content" tabIndex={-1}>
-        {driverPage ? <DriverRegistration whatsappNumber={environment.whatsappNumber || DEFAULT_WHATSAPP_NUMBER} /> : attachmentPage ? <CabAttachment whatsappNumber={environment.whatsappNumber || DEFAULT_WHATSAPP_NUMBER} /> : templePage ? <>{showTempleIntro && <TempleToursIntro onComplete={handleTempleIntroComplete} />}<TempleTours unpublishedTempleIds={unpublishedTempleIds} AddressAutocomplete={AddressAutocomplete} vehicles={activeVehicles} tariff={activeTariff} whatsappNumber={environment.whatsappNumber || DEFAULT_WHATSAPP_NUMBER} googleMapsApiKey={environment.googleMapsApiKey} /></> : tourRoute ? <>{showTourIntro && <TourPackagesIntro onComplete={handleTourIntroComplete} />}<Suspense fallback={<div className="tour-loading" role="status">Loading tour details…</div>}>{pathname === "/tour-packages/kodaikanal" ? <KodaikanalTour AddressAutocomplete={AddressAutocomplete} vehicles={activeVehicles} tariff={activeTariff} whatsappNumber={environment.whatsappNumber || DEFAULT_WHATSAPP_NUMBER} googleMapsApiKey={environment.googleMapsApiKey} /> : <TourPackages pathname={pathname} AddressAutocomplete={AddressAutocomplete} vehicles={activeVehicles} tariff={activeTariff} whatsappNumber={environment.whatsappNumber || DEFAULT_WHATSAPP_NUMBER} googleMapsApiKey={environment.googleMapsApiKey} />}</Suspense></> : <>
+        {driverPage ? <DriverRegistration whatsappNumber={environment.whatsappNumber || DEFAULT_WHATSAPP_NUMBER} /> : attachmentPage ? <CabAttachment whatsappNumber={environment.whatsappNumber || DEFAULT_WHATSAPP_NUMBER} /> : templePage ? <>{showTempleIntro && <TempleToursIntro onComplete={handleTempleIntroComplete} />}<TempleTours unpublishedTempleIds={unpublishedTempleIds} AddressAutocomplete={AddressAutocomplete} vehicles={activeVehicles} tariff={activeTariff} whatsappNumber={environment.whatsappNumber || DEFAULT_WHATSAPP_NUMBER} googleMapsApiKey={environment.googleMapsApiKey} /></> : serviceLandingPage ? <ServiceLandingPage page={serviceLandingPage} /> : tourRoute ? <>{showTourIntro && <TourPackagesIntro onComplete={handleTourIntroComplete} />}<Suspense fallback={<div className="tour-loading" role="status">Loading tour details…</div>}>{pathname === "/tour-packages/kodaikanal" ? <KodaikanalTour AddressAutocomplete={AddressAutocomplete} vehicles={activeVehicles} tariff={activeTariff} whatsappNumber={environment.whatsappNumber || DEFAULT_WHATSAPP_NUMBER} googleMapsApiKey={environment.googleMapsApiKey} /> : <TourPackages pathname={pathname} AddressAutocomplete={AddressAutocomplete} vehicles={activeVehicles} tariff={activeTariff} whatsappNumber={environment.whatsappNumber || DEFAULT_WHATSAPP_NUMBER} googleMapsApiKey={environment.googleMapsApiKey} />}</Suspense></> : <>
         <section className="hero" id="home" style={{ "--hero-ride-image": `url(${serviceVisuals[service].image})` }}>
           <div className="hero-glow hero-glow-one" />
           <div className="hero-glow hero-glow-two" />
@@ -1225,6 +1232,8 @@ export default function App() {
             </div>
           </div>
         </section>}
+
+        <ServiceLandingLinks />
 
         <section className="how-section" id="how-it-works">
           <div className="container how-grid">

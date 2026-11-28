@@ -14,6 +14,7 @@
     "test:tours": "node --test src/tours/tourData.test.js",
     "test:pages": "node --test src/app/pageAvailability.test.js",
     "test:maps": "node --test src/utils/googleMaps.test.js",
+    "test:seo": "node --test src/seo/serviceLandingPages.test.js",
     "preview": "vite preview"
   },
   "dependencies": {

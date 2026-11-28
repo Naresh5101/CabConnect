@@ -1,0 +1,60 @@
+.seo-landing-hero{padding:76px 0;background:linear-gradient(115deg,#edf1e9,#f8f8f4)}
+.seo-landing-hero-grid{display:grid;grid-template-columns:1.04fr .96fr;gap:56px;align-items:center}
+.seo-landing-hero-copy h1{max-width:680px;margin:22px 0 18px;font-family:Manrope,sans-serif;font-size:clamp(42px,5.5vw,68px);font-weight:600;letter-spacing:-.07em;line-height:1.04;color:var(--ink)}
+.seo-landing-intro{max-width:610px;color:var(--muted);font-size:16px;line-height:1.8}
+.seo-landing-hero-image{margin:0;overflow:hidden;border-radius:16px;background:#dfe8dc;box-shadow:0 24px 60px #20392e18}
+.seo-landing-hero-image img{width:100%;height:360px;object-fit:cover}
+.seo-landing-hero-image figcaption{padding:12px 16px;color:#526357;font-size:11px}
+.seo-landing-confirmation{margin:20px 0 0;color:#6b786f;font-size:11px;line-height:1.7}
+.seo-landing-breadcrumb{display:flex;gap:10px;padding-top:24px;color:#748078;font-size:12px}
+.seo-landing-breadcrumb a{color:#315d3b;font-weight:700}
+.seo-landing-content{max-width:880px;padding-top:28px;padding-bottom:70px}
+.seo-landing-section,.seo-landing-faq,.seo-landing-related{padding:32px 0;border-bottom:1px solid var(--line)}
+.seo-landing-content h2{margin:0 0 16px;font-family:Manrope,sans-serif;font-size:clamp(25px,3vw,34px);letter-spacing:-.045em;color:var(--ink)}
+.seo-landing-content p,.seo-landing-content li{color:#58675e;font-size:15px;line-height:1.8}
+.seo-landing-content p{margin:0 0 14px}
+.seo-landing-content ul,.seo-landing-content ol{display:grid;gap:8px;margin:16px 0 0;padding-left:22px}
+.seo-landing-content li a{color:#315d3b;text-decoration:underline;text-underline-offset:3px}
+.seo-landing-faq details{border-top:1px solid var(--line);padding:16px 0}
+.seo-landing-faq summary{font-weight:700;color:var(--ink);cursor:pointer}
+.seo-landing-faq details p{margin:12px 0 0}
+.seo-landing-related ul{list-style:none;padding:0}
+.seo-landing-related li{border-bottom:1px solid #e8ece6}
+.seo-landing-related li a{display:flex;justify-content:space-between;gap:16px;padding:13px 0;color:#315d3b;font-weight:700;text-decoration:none}
+.seo-landing-final-cta{padding:48px 0;background:#20392e;color:white}
+.seo-landing-final-cta>.container{display:flex;justify-content:space-between;align-items:center;gap:32px}
+.seo-landing-final-cta .eyebrow{color:#c1d5bc}
+.seo-landing-final-cta h2{margin:12px 0 8px;font-family:Manrope,sans-serif;font-size:clamp(28px,4vw,40px);letter-spacing:-.05em}
+.seo-landing-final-cta p{max-width:620px;margin:0;color:#c7d2ca;font-size:14px;line-height:1.7}
+.seo-landing-final-cta .button-primary{flex-shrink:0;background:#c4ef73;color:#1d3527}
+.seo-landing-final-cta .button-primary span{color:#1d3527}
+.seo-landing-links{padding:82px 0;background:#f0f3ec}
+.seo-landing-links-heading{max-width:640px;margin-bottom:28px}
+.seo-landing-links-heading h2{margin:16px 0 10px;font-family:Manrope,sans-serif;font-size:clamp(30px,4vw,45px);letter-spacing:-.06em;line-height:1.08}
+.seo-landing-links-heading p{color:var(--muted);font-size:14px;line-height:1.7}
+.seo-landing-links-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
+.seo-landing-link-card{min-height:220px;padding:22px;background:#fbfcf8;border:1px solid #e2e9df;border-radius:12px;display:flex;flex-direction:column;transition:transform .2s,border .2s,box-shadow .2s}
+.seo-landing-link-card:hover{transform:translateY(-3px);border-color:#a7c696;box-shadow:0 14px 30px #1e3b2609}
+.seo-landing-link-number{color:#739174;font-size:10px;font-weight:800;letter-spacing:.14em}
+.seo-landing-link-card h3{margin:22px 0 8px;font-family:Manrope,sans-serif;font-size:18px;letter-spacing:-.04em}
+.seo-landing-link-card p{margin:0 0 18px;color:#718075;font-size:12px;line-height:1.7}
+.seo-landing-link-arrow{margin-top:auto;color:#315d3b;font-size:11px;font-weight:700}
+.seo-landing-link-arrow b{margin-left:8px}
+.seo-landing-static{max-width:880px;margin:0 auto;padding:32px 24px;color:#26362b;font:16px/1.7 system-ui,sans-serif}
+.seo-landing-static h1,.seo-landing-static h2{line-height:1.2}
+.seo-landing-static section{margin-top:28px}
+
+@media(max-width:760px){
+  .seo-landing-hero{padding:50px 0}
+  .seo-landing-hero-grid{grid-template-columns:1fr;gap:28px}
+  .seo-landing-hero-copy h1{font-size:clamp(40px,11vw,58px)}
+  .seo-landing-intro{font-size:14px}
+  .seo-landing-hero-image img{height:270px}
+  .seo-landing-content{padding-top:16px;padding-bottom:48px}
+  .seo-landing-section,.seo-landing-faq,.seo-landing-related{padding:25px 0}
+  .seo-landing-content p,.seo-landing-content li{font-size:14px}
+  .seo-landing-final-cta>.container{align-items:flex-start;flex-direction:column}
+  .seo-landing-links{padding:58px 0}
+  .seo-landing-links-grid{grid-template-columns:1fr}
+  .seo-landing-link-card{min-height:185px}
+}

@@ -12,7 +12,7 @@ function setMeta(name, content, property = false) {
   element.content = content;
 }
 
-export default function PageMeta({ title, description, path, noIndex = false }) {
+export default function PageMeta({ title, description, path, noIndex = false, image = "/daily-ride-passenger.webp", imageAlt = "A passenger travelling by CabConnect Chennai cab" }) {
   useEffect(() => {
     document.title = title;
     setMeta("description", description);
@@ -23,8 +23,8 @@ export default function PageMeta({ title, description, path, noIndex = false }) 
     setMeta("twitter:card", "summary_large_image");
     if (siteUrl && path) {
       setMeta("og:url", `${siteUrl}${path}`, true);
-      setMeta("og:image", `${siteUrl}/daily-ride-passenger.webp`, true);
-      setMeta("og:image:alt", "A passenger travelling by CabConnect Chennai cab", true);
+      setMeta("og:image", image.startsWith("http") ? image : `${siteUrl}${image.startsWith("/") ? "" : "/"}${image}`, true);
+      setMeta("og:image:alt", imageAlt, true);
     }
     if (noIndex) setMeta("robots", "noindex, nofollow");
     else document.head.querySelector('meta[name="robots"]')?.remove();
@@ -37,6 +37,6 @@ export default function PageMeta({ title, description, path, noIndex = false }) 
       }
       canonical.href = `${siteUrl}${path}`;
     } else if (canonical) canonical.remove();
-  }, [description, noIndex, path, title]);
+  }, [description, image, imageAlt, noIndex, path, title]);
   return null;
 }

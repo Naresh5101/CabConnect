@@ -92,7 +92,9 @@ The database enforces field lengths, allowed values, consent, phone formats, sta
 - Tour itineraries are suggestions. Attraction access, weather, travel time and local conditions need confirmation for each trip. Tour pages do not show unverified package prices.
 - Tour and temple enquiries are saved through `submit-customer-request` as `tour_quote` and `temple_tour` records in `customer_requests`. WhatsApp follow-up does not replace the database write.
 - Published destinations load from `tour_packages`. Admin package changes require a `driver_admin` session; new database slugs resolve to their detail pages.
-- To generate canonical URLs and a sitemap at build time, set `VITE_SITE_URL` to the public production origin, then rebuild. The Vite build writes static route HTML with destination-specific titles/descriptions and a short crawlable text fallback. The React app remains client-rendered; this is not full server-side rendering.
+- Dedicated SEO landing pages cover `/chennai-local-cab`, `/chennai-outstation-cab`, and `/chennai-arupadai-veedu-tour`. Each page has distinct service information, FAQs, booking links and internal links; they are also emitted in the sitemap with crawlable static HTML content at build time.
+- To generate canonical URLs and a sitemap at build time, set `VITE_SITE_URL` to the public production origin, then rebuild. The Vite build writes static route HTML with destination-specific titles/descriptions and crawlable fallback content. The React app remains client-rendered; this is not full server-side rendering.
+- Run `npm run test:seo` to check the landing-page routes and content.
 - Attraction details are linked to tourism and government references on each destination page. Some generated destination illustrations are reused for attraction context rather than presented as documentary photos; the attraction text notes seasonal and access limits.
 
 The booking flow should be retested against the actual selected geocoding/routing provider and partner-approved rates before deployment.
