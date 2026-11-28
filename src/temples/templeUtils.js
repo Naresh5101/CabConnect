@@ -1,5 +1,6 @@
 import { templeCategories } from "./templeData.js";
 import { calculateOutstationFare, OUTSTATION_TARIFF } from "../utils/fareRules.js";
+import { geocodeGoogleAddress, getDrivingDistanceMatrixKm, getDrivingRouteDistanceKm } from "../utils/googleMaps.js";
 import { photonSearchParams, rankIndianPlaceFeatures } from "../utils/locationSearch.js";
 
 export function filterTempleCatalogue(records, categoryId = "all", query = "") {
@@ -20,43 +21,40 @@ export function toggleTempleSelection(selectedIds, templeId) {
     : [...selectedIds, templeId];
 }
 
-export function suggestNearestOrder(startCoordinate, temples, coordinatesById, fetchImpl = fetch) {
+export async function suggestNearestOrder(startCoordinate, temples, coordinatesById, fetchImpl = fetch, googleMapsApiKey = "") {
   if (!startCoordinate || temples.length < 2) return Promise.resolve(temples.map(({ id }) => id));
   const ordered = temples.map((temple) => coordinatesById[temple.id]);
   if (ordered.some((coordinate) => !coordinate)) return Promise.reject(new Error("A selected temple could not be located. You can continue with a manual quotation request."));
   const points = [startCoordinate, ...ordered];
-  const joined = points.map(({ lon, lat }) => `${lon},${lat}`).join(";");
-  return fetchImpl(`https://router.project-osrm.org/table/v1/driving/${joined}?annotations=distance`)
-    .then(async (response) => {
-      if (!response.ok) throw new Error("Road route suggestions are temporarily unavailable. You can still keep your order and request a manual quotation.");
-      const data = await response.json();
-      const matrix = data.distances;
-      if (data.code !== "Ok" || !Array.isArray(matrix) || matrix.length !== points.length) {
-        throw new Error("A road-based order suggestion could not be calculated. Keep your preferred order or request a manual quotation.");
+  const matrix = await getDrivingDistanceMatrixKm(points, googleMapsApiKey, fetchImpl);
+  if (!Array.isArray(matrix) || matrix.length !== points.length) {
+    throw new Error("A road-based order suggestion could not be calculated. Keep your preferred order or request a manual quotation.");
+  }
+  const remaining = temples.map((temple, index) => ({ id: temple.id, matrixIndex: index + 1 }));
+  const result = [];
+  let currentIndex = 0;
+  while (remaining.length) {
+    let bestAt = -1;
+    let bestDistance = Infinity;
+    remaining.forEach((candidate, index) => {
+      const distance = matrix[currentIndex]?.[candidate.matrixIndex];
+      if (Number.isFinite(distance) && distance < bestDistance) {
+        bestDistance = distance;
+        bestAt = index;
       }
-      const remaining = temples.map((temple, index) => ({ id: temple.id, matrixIndex: index + 1 }));
-      const result = [];
-      let currentIndex = 0;
-      while (remaining.length) {
-        let bestAt = -1;
-        let bestDistance = Infinity;
-        remaining.forEach((candidate, index) => {
-          const distance = matrix[currentIndex]?.[candidate.matrixIndex];
-          if (Number.isFinite(distance) && distance < bestDistance) {
-            bestDistance = distance;
-            bestAt = index;
-          }
-        });
-        if (bestAt < 0) throw new Error("A selected temple could not be connected by road. You can request a manual quotation.");
-        const [next] = remaining.splice(bestAt, 1);
-        result.push(next.id);
-        currentIndex = next.matrixIndex;
-      }
-      return result;
     });
+    if (bestAt < 0) throw new Error("A selected temple could not be connected by road. You can request a manual quotation.");
+    const [next] = remaining.splice(bestAt, 1);
+    result.push(next.id);
+    currentIndex = next.matrixIndex;
+  }
+  return result;
 }
 
-export async function geocodeTravelStop(query, expectedState, fetchImpl = fetch) {
+export async function geocodeTravelStop(query, expectedState, fetchImpl = fetch, googleMapsApiKey = "") {
+  if (googleMapsApiKey) {
+    return (await geocodeGoogleAddress(query, googleMapsApiKey, expectedState)).coordinates;
+  }
   const parts = [...new Set(query.split(",").map((part) => part.trim()).filter(Boolean))];
   const locationOnly = parts.slice(1).join(", ");
   // Temple labels can differ from the map provider's feature name. Retry with
@@ -82,20 +80,12 @@ export async function geocodeTravelStop(query, expectedState, fetchImpl = fetch)
   throw new Error(`Could not verify “${query}” within ${expectedState || "India"}. Check the temple town or request a manual quotation.`);
 }
 
-export async function requestRoadDistance(startCoordinate, orderedTempleCoordinates, fetchImpl = fetch) {
+export async function requestRoadDistance(startCoordinate, orderedTempleCoordinates, fetchImpl = fetch, googleMapsApiKey = "") {
   if (!startCoordinate || orderedTempleCoordinates.length === 0 || orderedTempleCoordinates.some((point) => !point)) {
     throw new Error("Choose at least one temple and verify every stop before calculating a route.");
   }
   const points = [startCoordinate, ...orderedTempleCoordinates, startCoordinate];
-  const joined = points.map(({ lon, lat }) => `${lon},${lat}`).join(";");
-  const response = await fetchImpl(`https://router.project-osrm.org/route/v1/driving/${joined}?overview=false&steps=false`);
-  if (!response.ok) throw new Error("The road-routing service is unavailable. You can still send a manual quotation request.");
-  const data = await response.json();
-  const route = data.routes?.[0];
-  if (data.code !== "Ok" || !Number.isFinite(route?.distance) || route.distance <= 0) {
-    throw new Error("A complete road route could not be found for these stops. You can still send a manual quotation request.");
-  }
-  return route.distance / 1000;
+  return getDrivingRouteDistanceKm(points, googleMapsApiKey, fetchImpl);
 }
 
 export function calculateTempleFare(distanceKm, vehicle, days, tariff = OUTSTATION_TARIFF) {
@@ -114,7 +104,7 @@ export function calculateTempleFare(distanceKm, vehicle, days, tariff = OUTSTATI
   };
 }
 
-export function buildTempleWhatsAppMessage({ category, temples, start, date, days, travellers, vehicle, fare, customerName, phone, notes }) {
+export function buildTempleWhatsAppMessage({ category, temples, start, date, days, travellers, vehicle, fare, customerName, phone, notes, routeProvider }) {
   const lines = [
     "Hello CabConnect Chennai, I’d like to request a temple tour quotation.",
     "",
@@ -128,6 +118,7 @@ export function buildTempleWhatsAppMessage({ category, temples, start, date, day
     `Preferred vehicle: ${vehicle.label}`,
     ...(fare ? [
       `Road distance (return to starting point): ${fare.distanceKm.toFixed(1)} km`,
+      ...(routeProvider ? [`Road route data: ${routeProvider}`] : []),
       ...(fare.billedDistanceKm == null ? [] : [`Billed distance: ${fare.billedDistanceKm.toFixed(1)} km (minimum ${fare.minimumBillableKm} km for ${fare.tripDays} day(s))`]),
       `Distance charge: ₹${Math.round(fare.distanceCharge)}`,
       `Driver allowance (${fare.tripDays} day(s)): ₹${Math.round(fare.driverAllowance)}`,

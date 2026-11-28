@@ -34,7 +34,7 @@ function directionsUrl(temple) {
   return `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(destination)}`;
 }
 
-export default function TempleTours({ AddressAutocomplete, vehicles, whatsappNumber, tariff }) {
+export default function TempleTours({ unpublishedTempleIds = [], AddressAutocomplete, vehicles, whatsappNumber, tariff, googleMapsApiKey = "" }) {
   const [categoryId, setCategoryId] = useState("arupadai");
   const [query, setQuery] = useState("");
   const [selectedIds, setSelectedIds] = useState([]);
@@ -58,7 +58,8 @@ export default function TempleTours({ AddressAutocomplete, vehicles, whatsappNum
   const [submissionId, setSubmissionId] = useState(createSubmissionId);
 
   const selectedTemples = useMemo(() => selectedIds.map((id) => temples.find((temple) => temple.id === id)).filter(Boolean), [selectedIds]);
-  const visibleTemples = useMemo(() => filterTempleCatalogue(temples, categoryId, query), [categoryId, query]);
+  const publishedTemples = useMemo(() => temples.filter((temple) => !unpublishedTempleIds.includes(temple.id)), [unpublishedTempleIds]);
+  const visibleTemples = useMemo(() => filterTempleCatalogue(publishedTemples, categoryId, query), [categoryId, publishedTemples, query]);
   const vehicle = vehicles.find((item) => item.id === vehicleId) || vehicles[0];
   const fare = routeDistance != null && vehicle ? calculateTempleFare(routeDistance, vehicle, days, tariff) : null;
   const today = new Date().toISOString().slice(0, 10);
@@ -104,11 +105,11 @@ export default function TempleTours({ AddressAutocomplete, vehicles, whatsappNum
 
   async function getStops() {
     if (!selectedTemples.length) throw new Error("Select at least one temple first.");
-    const origin = start.coordinates || await geocodeTravelStop(start.value, null);
+    const origin = start.coordinates || await geocodeTravelStop(start.value, null, fetch, googleMapsApiKey);
     const cache = {};
     for (const temple of selectedTemples) {
       cache[temple.id] = coordinatesById[temple.id]
-        || await geocodeTravelStop(`${temple.name}, ${temple.town}, ${temple.district}`, temple.state);
+        || await geocodeTravelStop(`${temple.name}, ${temple.town}, ${temple.district}`, temple.state, fetch, googleMapsApiKey);
     }
     setCoordinatesById((current) => ({ ...current, ...cache }));
     return { origin, cache };
@@ -121,7 +122,7 @@ export default function TempleTours({ AddressAutocomplete, vehicles, whatsappNum
     setSuggestedIds([]);
     try {
       const { origin, cache } = await getStops();
-      const distance = await requestRoadDistance(origin, selectedTemples.map(({ id }) => cache[id]));
+      const distance = await requestRoadDistance(origin, selectedTemples.map(({ id }) => cache[id]), fetch, googleMapsApiKey);
       setRouteDistance(distance);
     } catch (error) {
       setRouteError(error.message || "Could not calculate this route. Continue with a manual quotation request.");
@@ -136,7 +137,7 @@ export default function TempleTours({ AddressAutocomplete, vehicles, whatsappNum
     setSuggestedIds([]);
     try {
       const { origin, cache } = await getStops();
-      const suggestion = await suggestNearestOrder(origin, selectedTemples, cache);
+      const suggestion = await suggestNearestOrder(origin, selectedTemples, cache, fetch, googleMapsApiKey);
       setSuggestedIds(suggestion);
     } catch (error) {
       setRouteError(error.message || "Could not suggest a road-based order. You can keep your preferred order.");
@@ -178,15 +179,23 @@ export default function TempleTours({ AddressAutocomplete, vehicles, whatsappNum
       customerName,
       phone,
       notes,
+      routeProvider: googleMapsApiKey ? "Google Maps" : "",
     });
     const number = (whatsappNumber || "").replace(/\D/g, "");
     setSavingRequest(true);
     try {
       const requestId = await submitCustomerRequest({ type: "temple_tour", name: customerName, mobile: phone, consent: true, submissionId, data: {
         category, temples: selectedTemples.map(({ id, name, deity, town, district, state }) => ({ id, name, deity, town, district, state })),
-        start: start.value, startCoordinates: start.coordinates, travelDate, days: Number(days), travellers: Number(travellers),
+        start: start.value, ...(googleMapsApiKey ? {} : { startCoordinates: start.coordinates }), travelDate, days: Number(days), travellers: Number(travellers),
         vehicle: { id: vehicle.id, label: vehicle.label, passengers: vehicle.passengers }, notes,
-        routeDistanceKm: routeDistance, estimate: fare ? { total: fare.total, billedDistanceKm: fare.billedDistanceKm, distanceCharge: fare.distanceCharge, driverAllowance: fare.driverAllowance, note: fare.note } : null,
+        ...(googleMapsApiKey ? {} : { routeDistanceKm: routeDistance }),
+        estimate: fare ? {
+          total: fare.total,
+          ...(googleMapsApiKey ? {} : { billedDistanceKm: fare.billedDistanceKm }),
+          distanceCharge: fare.distanceCharge,
+          driverAllowance: fare.driverAllowance,
+          note: fare.note,
+        } : null,
       } });
       if (number) setWhatsAppUrl(`https://wa.me/${number}?text=${encodeURIComponent(`${message}\n\nRequest reference: ${requestId}`)}`);
       setNotice(`Your temple tour request has been saved${number ? ". Continue to WhatsApp if you also want to send the details to CabConnect" : "; WhatsApp is unavailable, but CabConnect has received it"}.`);
@@ -219,11 +228,11 @@ export default function TempleTours({ AddressAutocomplete, vehicles, whatsappNum
               {query && <button type="button" className="temple-search-clear" onClick={() => setQuery("")}>Clear search</button>}
               <button type="button" className="temple-clear-button" onClick={clearSelection} disabled={!selectedIds.length}>Clear selection</button>
             </div>
-            <div className="temple-category-list" aria-label="Filter temples by category">
-              <button type="button" className={categoryId === "all" ? "active" : ""} onClick={() => setCategoryId("all")}>All temples <small>{temples.length}</small></button>
+            <div className="temple-category-list" role="group" aria-label="Filter temples by category">
+              <button type="button" aria-pressed={categoryId === "all"} className={categoryId === "all" ? "active" : ""} onClick={() => setCategoryId("all")}>All temples <small>{publishedTemples.length}</small></button>
               {templeCategories.map((category) => {
-                const count = category.id === "custom" ? temples.length : temples.filter((temple) => temple.categories.includes(category.id)).length;
-                return <button type="button" key={category.id} className={categoryId === category.id ? "active" : ""} onClick={() => setCategoryId(category.id)}>{category.label}<small>{count}</small></button>;
+                const count = category.id === "custom" ? publishedTemples.length : publishedTemples.filter((temple) => temple.categories.includes(category.id)).length;
+                return <button type="button" key={category.id} aria-pressed={categoryId === category.id} className={categoryId === category.id ? "active" : ""} onClick={() => setCategoryId(category.id)}>{category.label}<small>{count}</small></button>;
               })}
             </div>
             <div className="temple-package-callout">
@@ -285,6 +294,7 @@ export default function TempleTours({ AddressAutocomplete, vehicles, whatsappNum
               {routeError && <div className="fare-error" role="alert">{routeError}</div>}
               {fare && <div className="temple-fare-result" aria-live="polite">
                 <div><span>Verified road distance</span><strong>{fare.distanceKm.toFixed(1)} km</strong></div>
+                {googleMapsApiKey && <small className="map-provider-attribution">Road route data: Google Maps</small>}
                 <div><span>Distance charge · {fare.billedDistanceKm.toFixed(1)} billed km at {money(fare.perKm)}/km</span><strong>{money(fare.distanceCharge)}</strong></div>
                 <div><span>Driver allowance · {fare.tripDays} day(s)</span><strong>{money(fare.driverAllowance)}</strong></div>
                 <div className="temple-estimate-total"><span>Indicative estimate</span><strong>{money(fare.total)}</strong></div>

@@ -674,7 +674,7 @@ html:has(.driver-page:not(.attachment-page)),body:has(.driver-page:not(.attachme
 .service-select-field .field select,.service-select-field select{min-height:36px;padding:8px;font-size:9px}
 .booking-trip-grid{gap:8px}
 .booking-trip-grid .booking-location-field .address-input-row .address-input-wrap>input{min-height:34px;font-size:9px}
-.booking-service-tabs{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));align-items:center;gap:4px;margin:-3px -5px 10px;padding:0 0 8px;border-bottom:1px solid #e6e9e2}
+.booking-service-tabs{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));align-items:center;gap:4px;margin:-3px -5px 10px;padding:0 0 8px;border-bottom:1px solid #e6e9e2}
 .booking-service-tabs button{justify-self:center;padding:6px 7px;border:0;border-radius:18px;background:transparent;color:#303632;font-size:8px;font-weight:800;text-align:center;text-transform:uppercase;white-space:nowrap;cursor:pointer}
 .booking-service-tabs button.selected{background:#dce54e;color:#20281e}
 .booking-service-tabs button:focus-visible,.outstation-trip-tabs button:focus-visible,.booking-extra-service button:focus-visible{outline:2px solid #406a48;outline-offset:2px}
@@ -770,4 +770,110 @@ html:has(.driver-page:not(.attachment-page)),body:has(.driver-page:not(.attachme
   .booking-secure-note{width:100%}
   .booking-step-actions button{flex:1}
   .booking-submit-actions .button-submit{width:auto}
+}
+
+/* Route-first ride selection inspired by the split booking reference. */
+.booking-trip-fields{display:grid;gap:12px}
+.booking-route-fields{display:grid;gap:9px}
+.booking-route-fields .booking-location-field{min-width:0;gap:4px}
+.booking-route-fields .address-label{margin:0;color:#516257;font-size:9px;font-weight:800;letter-spacing:.08em;text-transform:uppercase}
+.booking-route-fields .address-input-row{display:flex;flex-direction:column;align-items:stretch;gap:3px}
+.booking-route-fields .address-input-row .address-input-wrap{width:100%}
+.booking-route-fields .address-input-wrap>input{min-height:41px;padding:9px 11px;border:1px solid #dfe5df;border-radius:7px;background:#fff;font-size:11px}
+.booking-route-fields .address-input-wrap>input:focus{border-color:#85a977;outline:3px solid #e8f0e2}
+.booking-route-fields .current-location-button{align-self:flex-start;margin:1px 0 0;font-size:8px}
+.booking-when-field>span,.booking-passenger-field>span{font-size:9px;font-weight:750}
+.booking-when-field select,.booking-passenger-field select,.booking-trip-extras select{min-height:39px;padding:8px 9px;font-size:11px}
+.booking-schedule-row{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}
+.booking-schedule-row .field{min-width:0}
+.booking-schedule-row .field>span{font-size:9px;font-weight:750}
+.booking-schedule-row .field input{min-height:39px;padding:8px 9px;font-size:11px}
+.booking-departure-row{display:grid;grid-template-columns:auto minmax(0,1.05fr) minmax(0,1fr);align-items:center;gap:8px}
+.booking-departure-label{color:#516257;font-size:9px;font-weight:800;letter-spacing:.08em;text-transform:uppercase}
+.booking-departure-row .field{min-width:0}
+.booking-departure-row .field select,.booking-departure-row .field input{min-height:39px;padding:8px 9px;font-size:11px}
+.booking-visually-hidden{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+.booking-passenger-field{max-width:190px}
+.booking-trip-extras{display:grid;grid-template-columns:minmax(0,1fr);gap:9px}
+.ride-vehicle-picker{min-width:0;margin:0;padding:0;border:0}
+.ride-vehicle-picker legend{margin:0 0 3px;color:#263c2e;font-size:13px;font-weight:800}
+.ride-vehicle-picker>p{margin:0 0 8px;color:#758176;font-size:9px;line-height:1.45}
+.ride-vehicle-list{display:grid;gap:7px}
+.ride-vehicle-card{position:relative;display:grid;grid-template-columns:72px minmax(0,1fr) 16px;align-items:center;gap:9px;min-width:0;min-height:64px;overflow:hidden;padding:6px 9px;border:1px solid #e0e6df;border-radius:8px;background:#fff;color:#24352b;cursor:pointer;transition:border-color .16s ease,background .16s ease,box-shadow .16s ease}
+.ride-vehicle-card:hover{border-color:#9bb77c;background:#fbfcf8}
+.ride-vehicle-card.selected{border-color:#6f975c;background:#f5f8ef;box-shadow:inset 0 0 0 1px #6f975c}
+.ride-vehicle-card:focus-within{outline:3px solid #dce9d2;outline-offset:2px}
+.ride-vehicle-card>input{position:absolute;inset:0;z-index:1;width:100%;height:100%;margin:0;opacity:0;cursor:pointer}
+.ride-vehicle-card>img{display:block;width:72px;height:48px;object-fit:contain;background:transparent}
+.ride-vehicle-placeholder{display:grid;width:64px;height:44px;place-items:center;border-radius:6px;background:#eff3ea;color:#315b40;font-size:16px;font-weight:850}
+.ride-vehicle-copy{display:grid;gap:3px;min-width:0}
+.ride-vehicle-copy strong{overflow:hidden;color:#263c2e;font-size:11px;text-overflow:ellipsis;white-space:nowrap}
+.ride-vehicle-copy small{color:#758176;font-size:8px;line-height:1.35}
+.ride-vehicle-indicator{width:15px;height:15px;border:1.5px solid #aeb9ad;border-radius:50%;background:#fff}
+.ride-vehicle-card.selected .ride-vehicle-indicator{border:4px solid #315b40}
+@media(max-width:760px){
+  .booking-trip-fields{gap:11px}
+  .booking-route-fields{gap:8px}
+  .booking-departure-row{grid-template-columns:42px minmax(0,1fr) minmax(0,1fr);gap:6px}
+  .ride-vehicle-card{grid-template-columns:76px minmax(0,1fr) 16px;min-height:68px}
+  .ride-vehicle-card>img{width:76px;height:50px}
+  .ride-vehicle-copy strong{font-size:12px}
+  .ride-vehicle-copy small{font-size:9px}
+}
+@media(max-width:360px){
+  .booking-schedule-row{grid-template-columns:1fr}
+  .booking-passenger-field{max-width:none}
+  .booking-departure-row{grid-template-columns:36px minmax(0,1fr) minmax(0,1fr);gap:5px}
+  .ride-vehicle-card{grid-template-columns:62px minmax(0,1fr) 14px;gap:7px;padding:6px}
+  .ride-vehicle-card>img{width:62px;height:44px}
+  .ride-vehicle-placeholder{width:56px;height:40px}
+  .ride-vehicle-copy small{font-size:8px}
+}
+
+/* Helpful details for pickup areas, pricing scope, and trip terms. */
+.service-guidance{padding:76px 0;background:#f0f3ec}
+.service-guidance-heading{max-width:700px;margin-bottom:28px}
+.service-guidance-heading h2{margin:12px 0;font:700 clamp(32px,4vw,46px)/1.08 Manrope,sans-serif;letter-spacing:-.06em;color:#20392e}
+.service-guidance-heading>p{max-width:620px;margin:0;color:#617066;line-height:1.7}
+.service-guidance-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.service-guidance-grid article{min-width:0;padding:20px;border:1px solid #dfe6dc;border-radius:12px;background:#fbfcf8}
+.service-guidance-grid article>span{display:grid;width:34px;height:34px;place-items:center;margin-bottom:14px;border-radius:9px;background:#e6eedf;color:#315b40;font-size:18px}
+.service-guidance-grid h3{margin:0 0 8px;color:#263b2d;font:700 16px/1.3 Manrope,sans-serif}
+.service-guidance-grid p{margin:0;color:#68766c;line-height:1.65}
+.service-guidance-contact{display:inline-flex;align-items:center;gap:10px;margin-top:18px;padding:12px 16px;border-radius:8px;background:#20392e;color:#fff;font-weight:700}
+.service-guidance-contact span{color:#c4ef73}
+.skip-link{position:fixed;z-index:1000;top:8px;left:8px;transform:translateY(-160%);padding:12px 16px;border-radius:8px;background:#20392e;color:#fff;font-weight:700}
+.skip-link:focus{transform:translateY(0)}
+.booking-wizard-stage h4:focus{outline:3px solid #88a96f;outline-offset:5px;border-radius:3px}
+:where(a,button,input,select,textarea,summary,[tabindex]):focus-visible{outline:3px solid #83a766;outline-offset:3px}
+
+@media(max-width:700px){
+  .service-guidance{padding:52px 0}
+  .service-guidance-heading{margin-bottom:18px}
+  .service-guidance-grid{grid-template-columns:1fr;gap:9px}
+  .service-guidance-grid article{display:grid;grid-template-columns:38px minmax(0,1fr);column-gap:12px;padding:15px}
+  .service-guidance-grid article>span{grid-row:span 2;margin:0}
+  .service-guidance-grid h3{align-self:end}
+  .service-guidance-grid p{grid-column:2}
+  .booking-wizard-stage h4{scroll-margin-top:90px}
+}
+
+/* Keep supporting text readable across the public pages and admin console. */
+:where(p, li, dd, dt, time, small) {
+  font-size: max(12px, .875em) !important;
+  line-height: 1.55;
+}
+
+:where(a, button, label, input, select, textarea, summary, legend) {
+  font-size: max(13px, .875em) !important;
+}
+
+:where(.eyebrow, .card-step, .driver-step, .tour-eyebrow, .admin-eyebrow, .admin-side-label, .admin-breadcrumb, .admin-live, .service-card-top, .quick-ride-heading span, .service-ride-caption > span, .top-strip, .top-contact, .main-nav, .footer-bottom, [class*="-note"], [class*="-label"], [class*="-status"], [class*="-caption"], [class*="-eyebrow"]) {
+  font-size: max(12px, .75em) !important;
+}
+
+@media (max-width: 700px) {
+  :where(input, select, textarea) {
+    font-size: 16px !important;
+  }
 }

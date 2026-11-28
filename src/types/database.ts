@@ -92,6 +92,12 @@ export type AdminPricingRuleRow = {
 export type SiteSettingsRow = {
   id: "default";
   booking_enabled: boolean;
+  booking_daily_enabled: boolean;
+  booking_oneway_enabled: boolean;
+  booking_roundtrip_enabled: boolean;
+  booking_rentals_enabled: boolean;
+  booking_airport_enabled: boolean;
+  unpublished_temple_ids: string[];
   temple_tours_enabled: boolean;
   tour_packages_enabled: boolean;
   driver_registration_enabled: boolean;
@@ -116,7 +122,7 @@ export interface Database {
       driver_applications: Table<DriverApplicationRow, Omit<DriverApplicationRow, "application_id" | "status" | "admin_notes" | "created_at" | "updated_at"> & Partial<Pick<DriverApplicationRow, "application_id" | "status" | "admin_notes" | "created_at" | "updated_at">>, Partial<DriverApplicationRow>>;
       tour_packages: Table<TourPackageRow, Omit<TourPackageRow, "created_at" | "updated_at"> & Partial<Pick<TourPackageRow, "created_at" | "updated_at">>, Partial<TourPackageRow>>;
       admin_pricing_rules: Table<AdminPricingRuleRow, Pick<AdminPricingRuleRow, "id" | "rules"> & Partial<Pick<AdminPricingRuleRow, "updated_at" | "updated_by">>, Partial<Pick<AdminPricingRuleRow, "rules" | "updated_at" | "updated_by">>>;
-      site_settings: Table<SiteSettingsRow, Pick<SiteSettingsRow, "id"> & Partial<Pick<SiteSettingsRow, "booking_enabled" | "temple_tours_enabled" | "tour_packages_enabled" | "driver_registration_enabled" | "cab_attachment_enabled" | "updated_at" | "updated_by">>, Partial<Pick<SiteSettingsRow, "booking_enabled" | "temple_tours_enabled" | "tour_packages_enabled" | "driver_registration_enabled" | "cab_attachment_enabled" | "updated_at" | "updated_by">>>;
+      site_settings: Table<SiteSettingsRow, Pick<SiteSettingsRow, "id"> & Partial<Omit<SiteSettingsRow, "id">>, Partial<Omit<SiteSettingsRow, "id">>>;
       customer_request_quote_audit: Table<QuoteAuditRow, Omit<QuoteAuditRow, "audit_id" | "created_at"> & Partial<Pick<QuoteAuditRow, "audit_id" | "created_at">>, never>;
       driver_application_rate_limits: Table<{ ip_hash: string; window_started_at: string; request_count: number }, { ip_hash: string; window_started_at?: string; request_count?: number }, Partial<{ ip_hash: string; window_started_at: string; request_count: number }>>;
     };

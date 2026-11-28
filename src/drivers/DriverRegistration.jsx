@@ -6,6 +6,7 @@ import {
 import { supabaseConfigured } from "../lib/supabase";
 import { submitDriverApplication } from "../services/driverApplicationService";
 import { limitPhoneDigits } from "../utils/phoneInput.js";
+import PageMeta from "../components/PageMeta.jsx";
 import "./driverRegistration.css";
 import "./driverRegistrationPage.css";
 
@@ -55,7 +56,7 @@ function Field({ label, name, error, required, children, className = "" }) {
   return <div className={`driver-field ${className}`}>
     <label htmlFor={id}>{label}{required && <b aria-hidden="true"> *</b>}</label>
     {typeof children === "function" ? children(id) : children}
-    {error && <small className="driver-error" id={`${id}-error`}>{error}</small>}
+    {error && <small className="driver-error" id={`${id}-error`} aria-live="polite">{error}</small>}
   </div>;
 }
 
@@ -157,6 +158,7 @@ export default function DriverRegistration({ whatsappNumber }) {
   ];
 
   return <div id="driver-career-page" className="driver-page driver-registration-redesign" ref={pageRef}>
+    <PageMeta title="Driver Registration | CabConnect Chennai" description="Register your driving experience and preferred work with CabConnect Chennai. Applications are reviewed by the team; submission is not an employment offer." path="/driver-register" />
     <section className="driver-hero driver-cinematic-hero" onPointerMove={(event) => {
       if (event.pointerType === "touch") return;
       const rect = event.currentTarget.getBoundingClientRect();

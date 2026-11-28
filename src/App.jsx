@@ -10,7 +10,7 @@ import CabAttachment from "./drivers/CabAttachment.jsx";
 import WhatsAppWidget from "./components/WhatsAppWidget.jsx";
 import { createSubmissionId } from "./lib/supabase";
 import { submitCustomerRequest } from "./services/customerRequestService";
-import { fetchPageSettings, savePageSetting } from "./services/siteSettingsService";
+import { fetchPageSettings, savePageSetting, fetchBookingCategories, saveBookingCategory, fetchUnpublishedTempleIds, saveUnpublishedTempleIds } from "./services/siteSettingsService";
 import { isCabAttachmentPath, isDriverAdminPath, isDriverRegisterPath, isTourPath } from "./app/routes";
 import { getDisabledPageName } from "./app/pageAvailability.js";
 import { environment } from "./config/environment";
@@ -19,6 +19,14 @@ import { calculateLocalPackage, calculateOutstationFare, OUTSTATION_TARIFF } fro
 import { applyPricingRules } from "./admin/pricingRules.js";
 import { fetchPublicFarePricingRules } from "./services/farePricingService";
 import { isIndianCoordinate, photonSearchParams, rankIndianPlaceFeatures } from "./utils/locationSearch.js";
+import {
+  fetchGooglePlaceSuggestions,
+  geocodeGoogleAddress,
+  getDrivingRouteDistanceKm,
+  loadGoogleMapsLibrary,
+  resolveGooglePlacePrediction,
+  reverseGeocodeGoogleLocation,
+} from "./utils/googleMaps.js";
 import { limitPhoneDigits } from "./utils/phoneInput.js";
 import TempleToursIntro from "./temples/TempleToursIntro.jsx";
 import TourPackagesIntro from "./tours/TourPackagesIntro.jsx";
@@ -27,18 +35,18 @@ const KodaikanalTour = lazy(() => import("./pages/tours/KodaikanalTour.jsx"));
 
 const services = [
   { id: "daily", title: "Daily rides", subtitle: "Point-to-point across Chennai", icon: "⌁" },
+  { id: "airport", title: "Airport transfers", subtitle: "Airport pickups and drop-offs", icon: "✈" },
   { id: "oneway", title: "Outstation one-way", subtitle: "Pay for your journey", icon: "↗" },
   { id: "roundtrip", title: "Outstation round trip", subtitle: "Return travel made easy", icon: "↔" },
   { id: "rentals", title: "Rentals by the hour", subtitle: "Keep a cab for your plans", icon: "◷" },
-  { id: "airport", title: "Airport transfer", subtitle: "On-time pickup and drop", icon: "✈" },
 ];
 
 const serviceVisuals = {
   daily: { image: "/daily-ride-passenger.webp", alt: "Passenger enjoying a daily Chennai cab ride", headline: "Everyday city rides", caption: "A comfortable ride for your Chennai day." },
+  airport: { image: "/daily-ride-passenger.webp", alt: "Passenger travelling to Chennai airport by cab", headline: "Airport transfers", caption: "Plan your Chennai airport pickup or drop-off." },
   oneway: { image: "/outstation-oneway-passenger.webp", alt: "Passenger enjoying a one-way road trip", headline: "Ride out of town", caption: "Your one-way journey starts here." },
   roundtrip: { image: "/outstation-roundtrip-passenger.webp", alt: "Family enjoying an outstation return journey", headline: "Go there and back", caption: "Plan your outstation return with ease." },
   rentals: { image: "/hourly-rental-passenger.webp", alt: "Passenger using a cab for a day around Chennai", headline: "A cab by the hour", caption: "Flexible rides for plans around the city." },
-  airport: { image: "/airport-ride-passenger.webp", alt: "Traveler meeting a cab at the airport", headline: "Airport made easy", caption: "A smooth pickup or drop, on your schedule." },
 };
 
 const DEFAULT_WHATSAPP_NUMBER = "919444564127";
@@ -59,16 +67,26 @@ const PAGE_STORAGE_KEYS = {
 const PAGE_SETTING_BY_STORAGE_KEY = Object.fromEntries(
   Object.entries(PAGE_STORAGE_KEYS).map(([key, storageKey]) => [storageKey, key]),
 );
+const BOOKING_CATEGORIES = ["daily", "oneway", "roundtrip", "rentals", "airport"];
+const BOOKING_CATEGORY_STORAGE_KEYS = Object.fromEntries(BOOKING_CATEGORIES.map((key) => [key, `cabconnect-booking-category-${key}-enabled`]));
 const homepageTemples = ["palani", "tiruchendur", "thiruthani", "swamimalai"]
   .map((id) => temples.find((temple) => temple.id === id)).filter(Boolean);
 
 // Indicative Chennai estimates; partners must confirm availability and final quotes.
 const vehicles = [
-  { id: "dzire", label: "Maruti Suzuki Swift Dzire", category: "Comfort sedan", passengers: 4, luggage: 2, perKm: 20, shortTripPerKm: 20, outstationOneWayPerKm: 16, outstationRoundTripPerKm: 14, localPackages: { 4: 1300, 8: 2300, 12: 3300 }, extraHourRate: 250, airportMinimum: 1000, driverAllowancePerDay: 300, image: "/vehicles/dzire-white-new.webp" },
-  { id: "ertiga", label: "Maruti Suzuki Ertiga", category: "MPV", passengers: 6, luggage: 3, perKm: 28, shortTripPerKm: 30, outstationOneWayPerKm: 19, outstationRoundTripPerKm: 17, localPackages: { 4: 2000, 8: 3400, 12: 4700 }, extraHourRate: 350, airportMinimum: 1500, driverAllowancePerDay: 400, image: "/vehicles/ertiga-white-new.webp" },
+  { id: "dzire", label: "Maruti Suzuki Swift Dzire", category: "Comfort sedan", passengers: 4, luggage: 2, perKm: 20, shortTripPerKm: 20, outstationOneWayPerKm: 16, outstationRoundTripPerKm: 14, localPackages: { 4: 1300, 8: 2300, 12: 3300 }, extraHourRate: 250, driverAllowancePerDay: 300, image: "/vehicles/dzire-white-new.webp" },
+  { id: "ertiga", label: "Maruti Suzuki Ertiga", category: "MPV", passengers: 6, luggage: 3, perKm: 28, shortTripPerKm: 30, outstationOneWayPerKm: 19, outstationRoundTripPerKm: 17, localPackages: { 4: 2000, 8: 3400, 12: 4700 }, extraHourRate: 350, driverAllowancePerDay: 400, image: "/vehicles/ertiga-white-new.webp" },
 ];
 
 const money = (amount) => new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR", maximumFractionDigits: 0 }).format(Math.round(amount));
+const localDateValue = (date) => `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
+const localTimeValue = (date) => `${String(date.getHours()).padStart(2, "0")}:${String(date.getMinutes()).padStart(2, "0")}`;
+function getNextPickupTime(date = new Date()) {
+  const next = new Date(date);
+  next.setSeconds(0, 0);
+  next.setMinutes(Math.floor(next.getMinutes() / 15) * 15 + 15);
+  return { date: localDateValue(next), time: localTimeValue(next) };
+}
 const isValidCoordinates = (coordinates) => Number.isFinite(coordinates?.lat) && Number.isFinite(coordinates?.lon)
   && Math.abs(coordinates.lat) <= 90 && Math.abs(coordinates.lon) <= 180;
 const isWithinIndia = (coordinates) => isValidCoordinates(coordinates)
@@ -81,7 +99,6 @@ const initialForm = {
   vehicle: "dzire",
 
   date: "",
-  returnDate: "",
   time: "09:00",
   passengers: "2",
   hours: "4",
@@ -109,6 +126,71 @@ function MapViewport({ center }) {
   }, [center, map]);
 
   return null;
+}
+
+function GoogleMapPicker({ apiKey, center, onPick }) {
+  const containerRef = useRef(null);
+  const mapRef = useRef(null);
+  const markerRef = useRef(null);
+  const onPickRef = useRef(onPick);
+  const centerRef = useRef(center);
+  const [loadError, setLoadError] = useState("");
+
+  useEffect(() => {
+    onPickRef.current = onPick;
+  }, [onPick]);
+
+  useEffect(() => {
+    centerRef.current = { lat: center.lat, lon: center.lon };
+    if (mapRef.current) mapRef.current.panTo({ lat: center.lat, lng: center.lon });
+    if (markerRef.current) markerRef.current.setPosition({ lat: center.lat, lng: center.lon });
+  }, [center.lat, center.lon]);
+
+  useEffect(() => {
+    let cancelled = false;
+    let clickListener;
+    let marker;
+    loadGoogleMapsLibrary(apiKey, "maps").then(({ Map, Marker }) => {
+      if (cancelled) return;
+      if (!containerRef.current) throw new Error("The map container is unavailable.");
+      const current = centerRef.current;
+      const map = new Map(containerRef.current, {
+        center: { lat: current.lat, lng: current.lon },
+        zoom: 15,
+        clickableIcons: false,
+        fullscreenControl: false,
+        mapTypeControl: false,
+        streetViewControl: false,
+        gestureHandling: "greedy",
+      });
+      marker = new Marker({ map, position: { lat: current.lat, lng: current.lon } });
+      mapRef.current = map;
+      markerRef.current = marker;
+      clickListener = map.addListener("click", (event) => {
+        if (!event.latLng) return;
+        const coordinates = { lat: event.latLng.lat(), lon: event.latLng.lng() };
+        marker.setPosition({ lat: coordinates.lat, lng: coordinates.lon });
+        onPickRef.current(coordinates);
+      });
+    }).catch((error) => {
+      if (!cancelled) setLoadError(error.message || "Check that the Maps JavaScript API is enabled for this key.");
+    });
+
+    return () => {
+      cancelled = true;
+      clickListener?.remove();
+      marker?.setMap(null);
+      mapRef.current = null;
+      markerRef.current = null;
+    };
+  }, [apiKey]);
+
+  return (
+    <>
+      <div className="location-map" ref={containerRef} />
+      {loadError && <p className="map-google-error" role="alert">Google Maps could not load: {loadError}</p>}
+    </>
+  );
 }
 
 function getLocationErrorMessage(error) {
@@ -209,15 +291,23 @@ function LocationPicker({ title, initialCoords, onClose, onConfirm }) {
           <p className={`map-picker-help ${locationStatus === "unavailable" ? "location-error" : ""}`} role="status" aria-live="polite">{locationStatus === "locating" ? "Finding your current location…" : locationStatus === "unavailable" ? locationError : "Pan and zoom to the exact spot, then tap the map to place your pin."}</p>
           <button className="map-current-location" type="button" onClick={useCurrentLocation} disabled={locationStatus === "locating" || saving}>◎ <span>{saving ? "Selecting…" : locationStatus === "locating" ? "Locating…" : "Use my location"}</span></button>
         </div>
-        <MapContainer center={[selected.lat, selected.lon]} zoom={13} scrollWheelZoom className="location-map">
-          <TileLayer
-            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+        {environment.googleMapsApiKey ? (
+          <GoogleMapPicker
+            apiKey={environment.googleMapsApiKey}
+            center={selected}
+            onPick={(coordinates) => { setSelected(coordinates); setMapSearch(""); setLocationStatus("selected"); }}
           />
-          <MapViewport center={selected} />
-          <MapClickHandler onPick={(coordinates) => { setSelected(coordinates); setMapSearch(""); setLocationStatus("selected"); }} />
-          <CircleMarker center={[selected.lat, selected.lon]} radius={10} pathOptions={{ color: "#fff", weight: 3, fillColor: "#d94e3b", fillOpacity: 1 }} />
-        </MapContainer>
+        ) : (
+          <MapContainer center={[selected.lat, selected.lon]} zoom={13} scrollWheelZoom className="location-map">
+            <TileLayer
+              attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+              url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+            />
+            <MapViewport center={selected} />
+            <MapClickHandler onPick={(coordinates) => { setSelected(coordinates); setMapSearch(""); setLocationStatus("selected"); }} />
+            <CircleMarker center={[selected.lat, selected.lon]} radius={10} pathOptions={{ color: "#fff", weight: 3, fillColor: "#d94e3b", fillOpacity: 1 }} />
+          </MapContainer>
+        )}
         <footer className="map-picker-footer">
           <span>{selected.lat.toFixed(5)}, {selected.lon.toFixed(5)}</span>
           <div><button className="map-picker-cancel" type="button" onClick={onClose} disabled={saving}>Cancel</button><button className="map-picker-confirm" type="button" onClick={confirmSelection} disabled={saving}>{saving ? "Saving…" : "Use this location"}</button></div>
@@ -227,8 +317,23 @@ function LocationPicker({ title, initialCoords, onClose, onConfirm }) {
   );
 }
 
+async function reverseGeocodeLocation(coordinates, apiKey) {
+  if (apiKey) return reverseGeocodeGoogleLocation(coordinates, apiKey);
+  const params = new URLSearchParams({ lat: coordinates.lat, lon: coordinates.lon, lang: "en" });
+  const response = await fetch(`https://photon.komoot.io/reverse?${params.toString()}`);
+  if (!response.ok) throw new Error("The address lookup service is unavailable.");
+  const data = await response.json();
+  const properties = data.features?.[0]?.properties;
+  const place = properties?.name || properties?.street || properties?.locality || properties?.city;
+  const area = [properties?.district, properties?.city, properties?.state].filter((part) => part && part !== place);
+  if (!place) throw new Error("No nearby street or area name was found.");
+  return [place, ...area].join(", ");
+}
+
 function AddressAutocomplete({ label, value, onChange, placeholder, required = false, coords, onMapPick, minChars = 3, id, error, showMap = true, showCurrentLocation = false, className = "", searchContext = "", stateOnly = "", deferSuggestionsUntilFocus = true }) {
   const selectedAddressRef = useRef("");
+  const googleSessionTokenRef = useRef(null);
+  const selectionRequestRef = useRef(0);
   const [autocompleteActive, setAutocompleteActive] = useState(!deferSuggestionsUntilFocus);
   const [suggestions, setSuggestions] = useState([]);
   const [open, setOpen] = useState(false);
@@ -250,24 +355,19 @@ function AddressAutocomplete({ label, value, onChange, placeholder, required = f
     navigator.geolocation.getCurrentPosition(async ({ coords: current }) => {
       const coordinates = { lat: current.latitude, lon: current.longitude };
       let address = `${current.latitude.toFixed(5)}, ${current.longitude.toFixed(5)}`;
+      let addressError = "";
       try {
-        const params = new URLSearchParams({ lat: current.latitude, lon: current.longitude, lang: "en" });
-        const response = await fetch(`https://photon.komoot.io/reverse?${params.toString()}`);
-        if (response.ok) {
-          const data = await response.json();
-          const properties = data.features?.[0]?.properties;
-          const place = properties?.name || properties?.street || properties?.locality || properties?.city;
-          const area = [properties?.district, properties?.city, properties?.state].filter((part) => part && part !== place);
-          if (place) address = [place, ...area].join(", ");
-        }
-      } catch {
-        // Keep the precise coordinates when reverse geocoding is unavailable.
+        address = await reverseGeocodeLocation(coordinates, environment.googleMapsApiKey);
+      } catch (error) {
+        addressError = error.message || "The nearby address could not be looked up.";
       }
       selectedAddressRef.current = address;
       onChange(address, coordinates);
       setSuggestions([]);
       setOpen(false);
-      setLocationMessage(`Current location selected (about ±${Math.max(1, Math.round(current.accuracy))} m accuracy).`);
+      setLocationMessage(addressError
+        ? `Current location selected (about ±${Math.max(1, Math.round(current.accuracy))} m accuracy), but the address lookup failed: ${addressError}`
+        : `Current location selected (about ±${Math.max(1, Math.round(current.accuracy))} m accuracy).`);
       setLocationLoading(false);
     }, (error) => {
       const message = error.code === 1
@@ -291,34 +391,50 @@ function AddressAutocomplete({ label, value, onChange, placeholder, required = f
       setLoading(true);
       setSearchMessage("");
       try {
-        const params = photonSearchParams(query, { searchContext, stateOnly, limit: 10 });
-        const response = await fetch(`https://photon.komoot.io/api/?${params.toString()}`, {
-          signal: controller.signal,
-          headers: { Accept: "application/json" },
-        });
-        if (!response.ok) throw new Error("Address search unavailable");
-        const data = await response.json();
+        let results;
+        if (environment.googleMapsApiKey) {
+          const result = await fetchGooglePlaceSuggestions(query, environment.googleMapsApiKey, {
+            sessionToken: googleSessionTokenRef.current,
+            searchContext,
+          });
+          googleSessionTokenRef.current = result.sessionToken;
+          results = result.suggestions.map(({ placePrediction }) => {
+            const label = placePrediction.text?.toString?.() || "";
+            const main = placePrediction.mainText?.toString?.() || label;
+            const detail = placePrediction.secondaryText?.toString?.() || "";
+            return { label, main, detail, placePrediction };
+          }).filter((item) => item.label);
+        } else {
+          const params = photonSearchParams(query, { searchContext, stateOnly, limit: 10 });
+          const response = await fetch(`https://photon.komoot.io/api/?${params.toString()}`, {
+            signal: controller.signal,
+            headers: { Accept: "application/json" },
+          });
+          if (!response.ok) throw new Error("Address search unavailable");
+          const data = await response.json();
+          results = rankIndianPlaceFeatures(data.features, query, stateOnly).map((feature) => {
+            const p = feature.properties || {};
+            const main = p.name || p.street || p.locality || p.city || p.county || "";
+            const parts = [p.street && p.street !== main ? p.street : "", p.district, p.city, p.state, p.country]
+              .filter((part, index, all) => part && all.indexOf(part) === index && part !== main);
+            return {
+              label: [main, ...parts].filter(Boolean).join(", "),
+              main: main || [p.city, p.state, p.country].filter(Boolean).join(", "),
+              detail: parts.join(", "),
+              coordinates: feature.geometry?.coordinates || null,
+            };
+          }).filter((item, index, all) => item.label && all.findIndex((other) => other.label === item.label) === index);
+        }
         if (cancelled) return;
-
-        const results = rankIndianPlaceFeatures(data.features, query, stateOnly).map((feature) => {
-          const p = feature.properties || {};
-          const main = p.name || p.street || p.locality || p.city || p.county || "";
-          const parts = [p.street && p.street !== main ? p.street : "", p.district, p.city, p.state, p.country]
-            .filter((part, index, all) => part && all.indexOf(part) === index && part !== main);
-          return {
-            label: [main, ...parts].filter(Boolean).join(", "),
-            main: main || [p.city, p.state, p.country].filter(Boolean).join(", "),
-            detail: parts.join(", "),
-            coordinates: feature.geometry?.coordinates || null,
-          };
-        }).filter((item, index, all) => item.label && all.findIndex((other) => other.label === item.label) === index);
         setSuggestions(results);
         setSearchMessage(results.length ? "" : "No close match found in India. Add the area or city name, or pin the exact spot on the map.");
         setOpen(true);
       } catch (error) {
         if (!cancelled && error.name !== "AbortError") {
           setSuggestions([]);
-          setSearchMessage("Location search is temporarily unavailable. You can still choose the exact spot on the map.");
+          setSearchMessage(environment.googleMapsApiKey
+            ? "Google Maps search is temporarily unavailable. Check that Places API (New) is enabled and choose the exact spot on the map."
+            : "Location search is temporarily unavailable. You can still choose the exact spot on the map.");
           setOpen(true);
         }
       } finally {
@@ -333,9 +449,30 @@ function AddressAutocomplete({ label, value, onChange, placeholder, required = f
     };
   }, [value, minChars, searchContext, stateOnly, autocompleteActive]);
 
-  function choose(item) {
-    selectedAddressRef.current = item.label;
-    onChange(item.label, item.coordinates ? { lon: item.coordinates[0], lat: item.coordinates[1] } : null);
+  async function choose(item) {
+    const requestId = selectionRequestRef.current + 1;
+    selectionRequestRef.current = requestId;
+    let selectedPlace = item;
+    setLoading(Boolean(item.placePrediction));
+    try {
+      if (item.placePrediction) {
+        selectedPlace = await resolveGooglePlacePrediction(item.placePrediction);
+      } else if (item.coordinates) {
+        selectedPlace = { ...item, coordinates: { lon: item.coordinates[0], lat: item.coordinates[1] } };
+      }
+      if (requestId !== selectionRequestRef.current) return;
+    } catch (error) {
+      if (requestId !== selectionRequestRef.current) return;
+      setSuggestions([]);
+      setSearchMessage(error.message || "The selected place could not be verified.");
+      setOpen(true);
+      return;
+    } finally {
+      if (requestId === selectionRequestRef.current) setLoading(false);
+    }
+    selectedAddressRef.current = selectedPlace.label;
+    googleSessionTokenRef.current = null;
+    onChange(selectedPlace.label, selectedPlace.coordinates || null);
     setLocationMessage("");
     setSearchMessage("");
     setSuggestions([]);
@@ -372,6 +509,9 @@ function AddressAutocomplete({ label, value, onChange, placeholder, required = f
           value={value}
           onChange={(event) => {
             const nextValue = event.target.value;
+            selectionRequestRef.current += 1;
+            setLoading(false);
+            if (selectedAddressRef.current) googleSessionTokenRef.current = null;
             selectedAddressRef.current = "";
             onChange(nextValue, null);
             setLocationMessage("");
@@ -415,7 +555,7 @@ function AddressAutocomplete({ label, value, onChange, placeholder, required = f
               </button>
             ))}
             {searchMessage && <div className="suggestion-empty" role="status">{searchMessage}</div>}
-            {suggestions.length > 0 && <div className="suggestion-attribution">Address data © OpenStreetMap contributors</div>}
+            {suggestions.length > 0 && <div className={`suggestion-attribution ${environment.googleMapsApiKey ? "google-maps-attribution" : ""}`}>{environment.googleMapsApiKey ? "Google Maps" : "Address data © OpenStreetMap contributors"}</div>}
           </div>
         )}
         </div>
@@ -434,17 +574,10 @@ function AddressAutocomplete({ label, value, onChange, placeholder, required = f
         onConfirm={async (coordinates) => {
           let address = `${coordinates.lat.toFixed(5)}, ${coordinates.lon.toFixed(5)}`;
           try {
-            const params = new URLSearchParams({ lat: coordinates.lat, lon: coordinates.lon, lang: "en" });
-            const response = await fetch(`https://photon.komoot.io/reverse?${params.toString()}`);
-            if (response.ok) {
-              const data = await response.json();
-              const properties = data.features?.[0]?.properties;
-              const place = properties?.name || properties?.street || properties?.locality || properties?.city;
-              const area = [properties?.district, properties?.city, properties?.state].filter((part) => part && part !== place);
-              if (place) address = [place, ...area].join(", ");
-            }
-          } catch {
-            // Keep the coordinates as a valid location if reverse geocoding is unavailable.
+            address = await reverseGeocodeLocation(coordinates, environment.googleMapsApiKey);
+            setLocationMessage("");
+          } catch (error) {
+            setLocationMessage(`The map pin was saved, but address lookup failed: ${error.message || "Unknown error."}`);
           }
           selectedAddressRef.current = address;
           onMapPick(address, coordinates);
@@ -470,6 +603,14 @@ export default function App() {
       return [key, stored === null ? DEFAULT_PAGE_SETTINGS[key] : stored !== "false"];
     }),
   ));
+  const [bookingCategories, setBookingCategories] = useState(() => Object.fromEntries(BOOKING_CATEGORIES.map((key) => {
+    const stored = window.localStorage.getItem(BOOKING_CATEGORY_STORAGE_KEYS[key]);
+    return [key, stored === null ? true : stored !== "false"];
+  })));
+  const [unpublishedTempleIds, setUnpublishedTempleIds] = useState(() => {
+    try { return JSON.parse(window.localStorage.getItem("cabconnect-unpublished-temple-ids") || "[]"); }
+    catch { return []; }
+  });
   const [bookingSettingsReady, setBookingSettingsReady] = useState(environment.isDevelopment);
   const [bookingSettingsMessage, setBookingSettingsMessage] = useState(() => environment.isDevelopment
     ? "Local preview only. To control pages for all visitors, apply the site settings migration in Supabase and publish the updated site."
@@ -487,13 +628,20 @@ export default function App() {
         setPageSettings((current) => ({ ...current, [key]: event.newValue !== "false" }));
       };
       window.addEventListener("storage", syncLocalSetting);
-      return () => window.removeEventListener("storage", syncLocalSetting);
+      const syncLocalCategory = (event) => {
+        const key = Object.keys(BOOKING_CATEGORY_STORAGE_KEYS).find((category) => BOOKING_CATEGORY_STORAGE_KEYS[category] === event.key);
+        if (key && event.newValue !== null) setBookingCategories((current) => ({ ...current, [key]: event.newValue !== "false" }));
+      };
+      window.addEventListener("storage", syncLocalCategory);
+      return () => { window.removeEventListener("storage", syncLocalSetting); window.removeEventListener("storage", syncLocalCategory); };
     }
 
     let active = true;
-    const loadSetting = () => fetchPageSettings().then((settings) => {
+    const loadSetting = () => Promise.all([fetchPageSettings(), fetchBookingCategories(), fetchUnpublishedTempleIds()]).then(([settings, categories, hiddenTemples]) => {
       if (!active) return;
       setPageSettings(settings);
+      setBookingCategories(categories);
+      setUnpublishedTempleIds(hiddenTemples);
       Object.entries(settings).forEach(([key, enabled]) => {
         window.localStorage.setItem(PAGE_STORAGE_KEYS[key], String(enabled));
       });
@@ -507,8 +655,9 @@ export default function App() {
     const syncLocalSetting = (event) => {
       if (!active || !event.key) return;
       const key = PAGE_SETTING_BY_STORAGE_KEY[event.key];
-      if (!key || event.newValue === null) return;
-      setPageSettings((current) => ({ ...current, [key]: event.newValue !== "false" }));
+      if (key && event.newValue !== null) setPageSettings((current) => ({ ...current, [key]: event.newValue !== "false" }));
+      const category = Object.keys(BOOKING_CATEGORY_STORAGE_KEYS).find((item) => BOOKING_CATEGORY_STORAGE_KEYS[item] === event.key);
+      if (category && event.newValue !== null) setBookingCategories((current) => ({ ...current, [category]: event.newValue !== "false" }));
     };
     void loadSetting();
     const refreshInterval = window.setInterval(() => { if (document.visibilityState === "visible") void loadSetting(); }, 30000);
@@ -521,6 +670,19 @@ export default function App() {
       window.removeEventListener("storage", syncLocalSetting);
     };
   }, []);
+
+  const updateUnpublishedTemple = useCallback(async (templeId, published) => {
+    const next = published
+      ? unpublishedTempleIds.filter((id) => id !== templeId)
+      : [...new Set([...unpublishedTempleIds, templeId])];
+    if (environment.isDevelopment) {
+      window.localStorage.setItem("cabconnect-unpublished-temple-ids", JSON.stringify(next));
+      setUnpublishedTempleIds(next);
+      return;
+    }
+    const saved = await saveUnpublishedTempleIds(next);
+    setUnpublishedTempleIds(saved);
+  }, [unpublishedTempleIds]);
   useEffect(() => {
     let active = true;
     fetchPublicFarePricingRules().then((rules) => { if (active) setPricingRules(rules); }).catch(() => {
@@ -539,6 +701,18 @@ export default function App() {
     const saved = await savePageSetting(key, enabled);
     window.localStorage.setItem(PAGE_STORAGE_KEYS[key], String(saved));
     setPageSettings((current) => ({ ...current, [key]: saved }));
+    setBookingSettingsMessage("");
+    return "site";
+  }, []);
+  const updateBookingCategory = useCallback(async (key, enabled) => {
+    if (environment.isDevelopment) {
+      window.localStorage.setItem(BOOKING_CATEGORY_STORAGE_KEYS[key], String(enabled));
+      setBookingCategories((current) => ({ ...current, [key]: enabled }));
+      return "local";
+    }
+    const saved = await saveBookingCategory(key, enabled);
+    window.localStorage.setItem(BOOKING_CATEGORY_STORAGE_KEYS[key], String(saved));
+    setBookingCategories((current) => ({ ...current, [key]: saved }));
     setBookingSettingsMessage("");
     return "site";
   }, []);
@@ -571,7 +745,20 @@ export default function App() {
   const [service, setService] = useState("daily");
   const [bookingStep, setBookingStep] = useState(0);
   const bookingFormRef = useRef(null);
-  const activeRideTab = service === "rentals" ? "rentals" : ["oneway", "roundtrip"].includes(service) ? "outstation" : service === "airport" ? "airport" : "daily";
+  const bookingStageRef = useRef(null);
+  const hasMovedBookingStage = useRef(false);
+  const isOutstation = ["oneway", "roundtrip"].includes(service);
+  const bookingCategoryEnabled = (key) => bookingCategories[key] !== false;
+  const firstEnabledBookingCategory = () => BOOKING_CATEGORIES.find(bookingCategoryEnabled);
+  useEffect(() => {
+    if (pageSettings.booking_enabled && !bookingCategoryEnabled(service)) {
+      const fallback = firstEnabledBookingCategory();
+      if (fallback) setService(fallback);
+    }
+  }, [bookingCategories, pageSettings.booking_enabled, service]);
+  const activeRideTab = service === "rentals" ? "rentals" : service === "airport" ? "airport" : isOutstation ? "outstation" : "daily";
+  const [whenMode, setWhenMode] = useState("now");
+  const departureMode = isOutstation ? "schedule" : whenMode;
   const [form, setForm] = useState(initialForm);
   const [notice, setNotice] = useState("");
   const [fare, setFare] = useState(null);
@@ -581,7 +768,30 @@ export default function App() {
   const [whatsappLink, setWhatsappLink] = useState("");
   const [submissionId, setSubmissionId] = useState(createSubmissionId);
 
-  const today = useMemo(() => new Date().toISOString().slice(0, 10), []);
+  useEffect(() => {
+    if (!hasMovedBookingStage.current) {
+      hasMovedBookingStage.current = true;
+      return;
+    }
+    bookingStageRef.current?.focus({ preventScroll: true });
+    if (window.matchMedia("(max-width: 700px)").matches) {
+      bookingStageRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+  }, [bookingStep]);
+
+  const today = useMemo(() => localDateValue(new Date()), []);
+  const departureDateOptions = useMemo(() => {
+    const baseDate = new Date(`${today}T12:00:00`);
+    const dateLabel = new Intl.DateTimeFormat("en-IN", { weekday: "short", day: "2-digit", month: "short" });
+    return Array.from({ length: 8 }, (_, offset) => {
+      const date = new Date(baseDate);
+      date.setDate(baseDate.getDate() + offset);
+      return {
+        value: localDateValue(date),
+        label: offset === 0 ? "Today" : offset === 1 ? "Tomorrow" : dateLabel.format(date),
+      };
+    });
+  }, [today]);
   const tourRoute = isTourPath(pathname);
   const homeHref = (section) => `${driverPage || driverAdminPage || attachmentPage || tourRoute ? "/" : ""}#${section}`;
 
@@ -590,16 +800,12 @@ export default function App() {
     setForm((current) => ({
       ...current,
       [field]: nextValue,
-      ...(field === "date" && current.returnDate && current.returnDate < nextValue ? { returnDate: "" } : {}),
-      ...(field === "returnDate" && current.date && nextValue ? {
-        tripDays: String(Math.max(1, Math.ceil((Date.parse(`${nextValue}T00:00:00Z`) - Date.parse(`${current.date}T00:00:00Z`)) / 86400000))),
-      } : {}),
       ...(field === "pickup" ? { pickupCoords: coordinates } : {}),
       ...(field === "destination" ? { destinationCoords: coordinates } : {}),
     }));
     setNotice("");
     setWhatsappLink("");
-    if (["pickup", "destination", "vehicle", "hours", "tripDays", "passengers", "date", "returnDate"].includes(field)) {
+    if (["pickup", "destination", "vehicle", "hours", "tripDays", "passengers", "date"].includes(field)) {
       setFare(null);
       setFareError("");
     }
@@ -611,6 +817,14 @@ export default function App() {
     setNotice("");
     setFare(null);
     setFareError("");
+  }
+
+  function chooseWhenMode(nextMode) {
+    setWhenMode(nextMode);
+    if (nextMode === "schedule") {
+      const suggestedDeparture = getNextPickupTime();
+      setForm((current) => current.date ? current : { ...current, ...suggestedDeparture });
+    }
   }
 
   function advanceBookingStep() {
@@ -628,6 +842,9 @@ export default function App() {
   }
 
   async function geocodeAddress(address) {
+    if (environment.googleMapsApiKey) {
+      return (await geocodeGoogleAddress(address, environment.googleMapsApiKey)).coordinates;
+    }
     const params = photonSearchParams(address, { limit: 10 });
     const response = await fetch(`https://photon.komoot.io/api/?${params.toString()}`);
     if (!response.ok) throw new Error("Could not look up one of the addresses. Please select an address suggestion and try again.");
@@ -669,7 +886,6 @@ export default function App() {
         distanceCharge: 0,
         hourlyCharge: rental.packageCharge,
         driverAllowance: 0,
-        minimumAdjustment: 0,
         tolls: null,
         parking: null,
         additionalFees: null,
@@ -684,13 +900,7 @@ export default function App() {
       const pickup = isValidCoordinates(form.pickupCoords) ? form.pickupCoords : await geocodeAddress(form.pickup);
       const destination = isValidCoordinates(form.destinationCoords) ? form.destinationCoords : await geocodeAddress(form.destination);
       if (!isWithinIndia(pickup) || !isWithinIndia(destination)) throw new Error("Choose pickup and destination locations within India to calculate this estimate.");
-      const routeUrl = `https://router.project-osrm.org/route/v1/driving/${pickup.lon},${pickup.lat};${destination.lon},${destination.lat}?overview=false`;
-      const response = await fetch(routeUrl);
-      if (!response.ok) throw new Error("The route service is temporarily unavailable. Please try again later.");
-      const routeData = await response.json();
-      const route = routeData.routes?.[0];
-      if (!route || routeData.code !== "Ok" || !Number.isFinite(route.distance) || route.distance <= 0) throw new Error("A valid driving route could not be found for these addresses. Check the locations and try again.");
-      const distanceKm = route.distance / 1000;
+      const distanceKm = await getDrivingRouteDistanceKm([pickup, destination], environment.googleMapsApiKey);
       const ratePerKm = ["oneway", "roundtrip"].includes(service)
         ? service === "oneway" ? vehicle.outstationOneWayPerKm : vehicle.outstationRoundTripPerKm
         : distanceKm < 20 ? vehicle.shortTripPerKm : vehicle.perKm;
@@ -698,15 +908,11 @@ export default function App() {
       let distanceCharge = 0;
       let hourlyCharge = 0;
       let driverAllowance = 0;
-      let minimumAdjustment = 0;
       let notes = "";
 
-      if (service === "airport" || service === "daily") {
+      if (service === "daily" || service === "airport") {
         distanceCharge = distanceKm * ratePerKm;
-        minimumAdjustment = service === "airport" ? Math.max(0, vehicle.airportMinimum - distanceCharge) : 0;
-        notes = service === "airport"
-          ? `One-way road distance ${distanceKm.toFixed(1)} km at ${money(ratePerKm)}/km; airport minimum applies when higher. Tolls, parking and waiting are excluded.`
-          : `One-way city road distance ${distanceKm.toFixed(1)} km at ${money(ratePerKm)}/km. Tolls, parking and waiting are excluded.`;
+        notes = `${service === "airport" ? "Airport transfer" : "One-way city"} road distance ${distanceKm.toFixed(1)} km at ${money(ratePerKm)}/km. Tolls, parking and waiting are excluded.`;
       } else if (service === "oneway") {
         const outstationFare = calculateOutstationFare(distanceKm, vehicle, form.tripDays, false, activeTariff);
         billedDistanceKm = outstationFare.billedDistanceKm;
@@ -721,8 +927,8 @@ export default function App() {
         driverAllowance = outstationFare.driverAllowance;
         notes = `Round-trip estimate uses ${money(ratePerKm)}/km and a ${activeTariff.roundTripMinimumKmPerDay} km/day minimum (${days} day(s)), plus driver allowance. Tolls, parking, permits and overnight accommodation are excluded.`;
       }
-      const total = distanceCharge + hourlyCharge + driverAllowance + minimumAdjustment;
-      setFare({ distanceKm, billedDistanceKm, distanceCharge, hourlyCharge, driverAllowance, minimumAdjustment, tolls: null, parking: null, additionalFees: null, total, notes });
+      const total = distanceCharge + hourlyCharge + driverAllowance;
+      setFare({ distanceKm, billedDistanceKm, distanceCharge, hourlyCharge, driverAllowance, tolls: null, parking: null, additionalFees: null, total, notes });
     } catch (error) {
       setFareError(error.message || "Unable to calculate the fare right now.");
     } finally {
@@ -737,6 +943,9 @@ export default function App() {
     setWhatsappLink("");
     const number = (environment.whatsappNumber || DEFAULT_WHATSAPP_NUMBER).replace(/\D/g, "");
     const serviceName = services.find((item) => item.id === service)?.title || service;
+    const now = departureMode === "now" ? new Date() : null;
+    const travelDate = now ? localDateValue(now) : form.date;
+    const pickupTime = now ? localTimeValue(now) : form.time;
     const groupVehicles = {
       tempo: { label: "Tempo Traveller", passengers: 12, luggage: null },
     };
@@ -753,19 +962,17 @@ export default function App() {
       `Service: ${serviceName}`,
       `Pickup: ${form.pickup}`,
       `Destination: ${form.destination || "Not specified"}`,
-      `Date: ${form.date}`,
-      ...(service === "roundtrip" ? [`Return date: ${form.returnDate}`] : []),
-      `Pickup time: ${form.time}`,
+      `Departure: ${departureMode === "now" ? "Now (as soon as possible)" : `${travelDate} at ${pickupTime}`}`,
       `Passengers: ${form.passengers}`,
       `Vehicle preference: ${selectedVehicle.label}`,
       `Vehicle capacity: up to ${selectedVehicle.passengers} passengers${selectedVehicle.luggage ? `; ${selectedVehicle.luggage} medium bags (approximate)` : "; luggage capacity to be confirmed with the partner"}.`,
       ...(fare ? [
         `Estimated fare: ${money(fare.total)}`,
         ...(fare.distanceKm != null ? [`Road distance: ${fare.distanceKm.toFixed(1)} km one way`, `Billed distance: ${fare.billedDistanceKm.toFixed(1)} km`] : []),
+        ...(fare.distanceKm != null && environment.googleMapsApiKey ? ["Road route data: Google Maps"] : []),
         `Distance charges: ${money(fare.distanceCharge)}`,
         `Hourly charges: ${money(fare.hourlyCharge)}`,
         `Driver allowance: ${money(fare.driverAllowance)}`,
-        `Airport minimum adjustment: ${money(fare.minimumAdjustment)}`,
         "Tolls: excluded; payable at actuals if applicable.",
         "Parking: excluded; payable at actuals if applicable.",
         "Waiting charges: excluded; confirm partner policy.",
@@ -785,14 +992,22 @@ export default function App() {
       const requestId = await submitCustomerRequest({
         type: "cab_booking", name: form.name, mobile: form.phone, consent: true, submissionId,
         data: {
-          service, serviceName, pickup: form.pickup, pickupCoords: form.pickupCoords,
-          destination: form.destination, destinationCoords: form.destinationCoords,
-          travelDate: form.date, returnDate: service === "roundtrip" ? form.returnDate : null,
-          pickupTime: form.time, passengers: Number(form.passengers),
+          service, serviceName, pickup: form.pickup,
+          ...(environment.googleMapsApiKey ? {} : { pickupCoords: form.pickupCoords }),
+          destination: form.destination,
+          ...(environment.googleMapsApiKey ? {} : { destinationCoords: form.destinationCoords }),
+          departureMode, travelDate,
+          pickupTime, passengers: Number(form.passengers),
           hours: service === "rentals" ? Number(form.hours) : null,
           tripDays: ["oneway", "roundtrip"].includes(service) ? Number(form.tripDays) : null,
           vehicleId: form.vehicle, vehicleLabel: selectedVehicle.label, notes: form.notes,
-          estimatedFare: fare ? { total: fare.total, distanceKm: fare.distanceKm, billedDistanceKm: fare.billedDistanceKm, distanceCharge: fare.distanceCharge, hourlyCharge: fare.hourlyCharge, driverAllowance: fare.driverAllowance, minimumAdjustment: fare.minimumAdjustment, notes: fare.notes } : null,
+          estimatedFare: fare ? {
+            total: fare.total,
+            ...(environment.googleMapsApiKey ? {} : { distanceKm: fare.distanceKm, billedDistanceKm: fare.billedDistanceKm, notes: fare.notes }),
+            distanceCharge: fare.distanceCharge,
+            hourlyCharge: fare.hourlyCharge,
+            driverAllowance: fare.driverAllowance,
+          } : null,
         },
       });
       if (number) setWhatsappLink(`https://wa.me/${number}?text=${encodeURIComponent(`${lines.join("\n")}\n\nRequest reference: ${requestId}`)}`);
@@ -805,7 +1020,10 @@ export default function App() {
     }
   }
 
-  if (driverAdminPage) return <DriverAdmin pageSettings={pageSettings} bookingSettingsReady={bookingSettingsReady} bookingSettingsMessage={bookingSettingsMessage} onPageSettingEnabledChange={updatePageSetting} />;
+  const hasBookingCategory = BOOKING_CATEGORIES.some(bookingCategoryEnabled);
+  const publicWhatsAppNumber = String(environment.whatsappNumber || DEFAULT_WHATSAPP_NUMBER).replace(/\D/g, "");
+  const supportWhatsAppUrl = `https://wa.me/${publicWhatsAppNumber}?text=${encodeURIComponent("Hi CabConnect Chennai, I have a question about a cab enquiry.")}`;
+  if (driverAdminPage) return <DriverAdmin pageSettings={pageSettings} bookingCategories={bookingCategories} unpublishedTempleIds={unpublishedTempleIds} bookingSettingsReady={bookingSettingsReady} bookingSettingsMessage={bookingSettingsMessage} onPageSettingEnabledChange={updatePageSetting} onBookingCategoryEnabledChange={updateBookingCategory} onTemplePublishedChange={updateUnpublishedTemple} />;
 
   const disabledPageName = getDisabledPageName({
     driverPage,
@@ -829,6 +1047,7 @@ export default function App() {
 
   return (
     <div className="site-shell">
+      <a className="skip-link" href="#main-content">Skip to main content</a>
       {!driverPage && !attachmentPage && !templePage && !tourRoute && <div className="page-ride-backdrop" aria-hidden="true"><img src={serviceVisuals[service].image} alt="" /></div>}
       <div className="top-strip">
         <div className="container top-strip-inner">
@@ -845,18 +1064,18 @@ export default function App() {
           </a>
           <button className="mobile-menu-toggle" type="button" aria-label={menuOpen ? "Close navigation" : "Open navigation"} aria-expanded={menuOpen} onClick={() => setMenuOpen((open) => !open)}><span /><span /><span /></button>
           <nav className={`main-nav ${menuOpen ? "menu-open" : ""}`} aria-label="Main navigation">
-            {pageSettings.booking_enabled && <a href={homeHref("book")} onClick={() => setMenuOpen(false)}>Book a Cab</a>}
+            {pageSettings.booking_enabled && hasBookingCategory && <a href={homeHref("book")} onClick={() => setMenuOpen(false)}>Book a Cab</a>}
             {pageSettings.temple_tours_enabled && <a href={homeHref("temple-tours")} aria-current={templePage ? "page" : undefined} onClick={() => setMenuOpen(false)}>Temple Tours</a>}
             {pageSettings.tour_packages_enabled && <a href="/tour-packages" aria-current={tourRoute ? "page" : undefined} onClick={() => setMenuOpen(false)}>Tour Packages</a>}
             {pageSettings.driver_registration_enabled && <a href="/driver-register" aria-current={driverPage ? "page" : undefined} onClick={() => setMenuOpen(false)}>For Drivers</a>}
             {pageSettings.cab_attachment_enabled && <a href="/cab-attachment" aria-current={attachmentPage ? "page" : undefined} onClick={() => setMenuOpen(false)}>Attach Your Cab</a>}
           </nav>
-          {pageSettings.booking_enabled && <a className="nav-cta" href={homeHref("book")}>Book a Cab <span>↗</span></a>}
+          {pageSettings.booking_enabled && hasBookingCategory && <a className="nav-cta" href={homeHref("book")}>Book a Cab <span>↗</span></a>}
         </div>
       </header>
 
-      <main>
-        {driverPage ? <DriverRegistration whatsappNumber={environment.whatsappNumber || DEFAULT_WHATSAPP_NUMBER} /> : attachmentPage ? <CabAttachment whatsappNumber={environment.whatsappNumber || DEFAULT_WHATSAPP_NUMBER} /> : templePage ? <>{showTempleIntro && <TempleToursIntro onComplete={handleTempleIntroComplete} />}<TempleTours AddressAutocomplete={AddressAutocomplete} vehicles={activeVehicles} tariff={activeTariff} whatsappNumber={environment.whatsappNumber || DEFAULT_WHATSAPP_NUMBER} /></> : tourRoute ? <>{showTourIntro && <TourPackagesIntro onComplete={handleTourIntroComplete} />}<Suspense fallback={<div className="tour-loading" role="status">Loading tour details…</div>}>{pathname === "/tour-packages/kodaikanal" ? <KodaikanalTour AddressAutocomplete={AddressAutocomplete} vehicles={activeVehicles} tariff={activeTariff} whatsappNumber={environment.whatsappNumber || DEFAULT_WHATSAPP_NUMBER} /> : <TourPackages pathname={pathname} AddressAutocomplete={AddressAutocomplete} vehicles={activeVehicles} tariff={activeTariff} whatsappNumber={environment.whatsappNumber || DEFAULT_WHATSAPP_NUMBER} />}</Suspense></> : <>
+      <main id="main-content" tabIndex={-1}>
+        {driverPage ? <DriverRegistration whatsappNumber={environment.whatsappNumber || DEFAULT_WHATSAPP_NUMBER} /> : attachmentPage ? <CabAttachment whatsappNumber={environment.whatsappNumber || DEFAULT_WHATSAPP_NUMBER} /> : templePage ? <>{showTempleIntro && <TempleToursIntro onComplete={handleTempleIntroComplete} />}<TempleTours unpublishedTempleIds={unpublishedTempleIds} AddressAutocomplete={AddressAutocomplete} vehicles={activeVehicles} tariff={activeTariff} whatsappNumber={environment.whatsappNumber || DEFAULT_WHATSAPP_NUMBER} googleMapsApiKey={environment.googleMapsApiKey} /></> : tourRoute ? <>{showTourIntro && <TourPackagesIntro onComplete={handleTourIntroComplete} />}<Suspense fallback={<div className="tour-loading" role="status">Loading tour details…</div>}>{pathname === "/tour-packages/kodaikanal" ? <KodaikanalTour AddressAutocomplete={AddressAutocomplete} vehicles={activeVehicles} tariff={activeTariff} whatsappNumber={environment.whatsappNumber || DEFAULT_WHATSAPP_NUMBER} googleMapsApiKey={environment.googleMapsApiKey} /> : <TourPackages pathname={pathname} AddressAutocomplete={AddressAutocomplete} vehicles={activeVehicles} tariff={activeTariff} whatsappNumber={environment.whatsappNumber || DEFAULT_WHATSAPP_NUMBER} googleMapsApiKey={environment.googleMapsApiKey} />}</Suspense></> : <>
         <section className="hero" id="home" style={{ "--hero-ride-image": `url(${serviceVisuals[service].image})` }}>
           <div className="hero-glow hero-glow-one" />
           <div className="hero-glow hero-glow-two" />
@@ -865,9 +1084,9 @@ export default function App() {
               <div className="eyebrow"><span className="eyebrow-line" /> YOUR CITY. YOUR RIDE.</div>
               <span className="hero-selected-service">{serviceVisuals[service].headline}</span>
               <h1>Your trusted taxi<br /><em>partner in Chennai.</em></h1>
-              <p className="hero-lede">Local rides, airport transfers, outstation trips and temple tours—with a clear estimate and personal confirmation.</p>
+              <p className="hero-lede">Local rides, outstation trips and temple tours—with a clear estimate and personal confirmation.</p>
               <div className="hero-actions">
-                {pageSettings.booking_enabled && <a className="button button-primary" href="#book">Plan your ride <span>↗</span></a>}
+                {pageSettings.booking_enabled && hasBookingCategory && <a className="button button-primary" href="#book">Plan your ride <span>↗</span></a>}
                 <a className="text-link" href="#services">Explore services <span>→</span></a>
               </div>
               <div className="trust-row">
@@ -895,27 +1114,27 @@ export default function App() {
           <div className="container hero-foot"><span>LOCAL · AIRPORT · OUTSTATION</span><span className="foot-rule" /><span>MADE FOR THE WAY CHENNAI MOVES</span></div>
         </section>
 
-        {pageSettings.booking_enabled && <section className="booking-section" id="book">
+        {pageSettings.booking_enabled && hasBookingCategory && <section className="booking-section" id="book">
           <div className="container booking-layout">
             <div className="section-intro">
               <div className="eyebrow"><span className="eyebrow-line" /> START YOUR JOURNEY</div>
               <h2>Let's get you<br />there.</h2>
-              <p>Pick a ride for the city, airport, or a trip beyond Chennai. Choose your Dzire or Ertiga, then get a clear estimate and personal confirmation.</p>
+              <p>Pick a ride for the city or a trip beyond Chennai. Choose your Dzire or Ertiga, then get a clear estimate and personal confirmation.</p>
               <div className="service-ride-panel" key={service} style={{ "--service-ride-image": `url(${serviceVisuals[service].image})` }}>
                 <img className="service-ride-image" src={serviceVisuals[service].image} alt={serviceVisuals[service].alt} />
-                <div className="service-ride-caption"><span>CHENNAI · {service === "airport" ? "AIRPORT" : service === "rentals" ? "RENTALS" : service === "daily" ? "DAILY RIDES" : "OUTSTATION"}</span><h3>{serviceVisuals[service].headline}</h3><p>{serviceVisuals[service].caption}</p></div>
+                <div className="service-ride-caption"><span>CHENNAI · {service === "rentals" ? "RENTALS" : service === "airport" ? "AIRPORT TRANSFERS" : service === "daily" ? "DAILY RIDES" : "OUTSTATION"}</span><h3>{serviceVisuals[service].headline}</h3><p>{serviceVisuals[service].caption}</p></div>
               </div>
               <div className="booking-note"><span className="note-icon">i</span><span><strong>Transparent by design</strong><small>See a rate-based estimate, then confirm the final fare and vehicle availability with our team.</small></span></div>
             </div>
             <div className="booking-card">
               <div className="booking-card-head"><div><span className="card-step">STEP {bookingStep + 1} OF 3 · REQUEST A RIDE</span><h3>Plan your Chennai ride</h3></div><span className="booking-step-counter">{bookingStep + 1}<small> / 3</small></span></div>
               <div className="booking-service-tabs" role="tablist" aria-label="Choose ride category">
-                <button type="button" role="tab" aria-selected={activeRideTab === "daily"} className={activeRideTab === "daily" ? "selected" : ""} onClick={() => chooseService("daily")}>Daily rides</button>
-                <button type="button" role="tab" aria-selected={activeRideTab === "outstation"} className={activeRideTab === "outstation" ? "selected" : ""} onClick={() => chooseService(["oneway", "roundtrip"].includes(service) ? service : "oneway")}>Outstation</button>
-                <button type="button" role="tab" aria-selected={activeRideTab === "rentals"} className={activeRideTab === "rentals" ? "selected" : ""} onClick={() => chooseService("rentals")}>Rentals</button>
-                <button type="button" role="tab" aria-selected={activeRideTab === "airport"} className={activeRideTab === "airport" ? "selected" : ""} onClick={() => chooseService("airport")}>Airport transfer</button>
+                {bookingCategoryEnabled("daily") && <button type="button" role="tab" aria-selected={activeRideTab === "daily"} className={activeRideTab === "daily" ? "selected" : ""} onClick={() => chooseService("daily")}>Daily rides</button>}
+                {bookingCategoryEnabled("airport") && <button type="button" role="tab" aria-selected={activeRideTab === "airport"} className={activeRideTab === "airport" ? "selected" : ""} onClick={() => chooseService("airport")}>Airport</button>}
+                {(bookingCategoryEnabled("oneway") || bookingCategoryEnabled("roundtrip")) && <button type="button" role="tab" aria-selected={activeRideTab === "outstation"} className={activeRideTab === "outstation" ? "selected" : ""} onClick={() => chooseService(["oneway", "roundtrip"].includes(service) && bookingCategoryEnabled(service) ? service : bookingCategoryEnabled("oneway") ? "oneway" : "roundtrip")}>Outstation</button>}
+                {bookingCategoryEnabled("rentals") && <button type="button" role="tab" aria-selected={activeRideTab === "rentals"} className={activeRideTab === "rentals" ? "selected" : ""} onClick={() => chooseService("rentals")}>Rentals</button>}
               </div>
-              {activeRideTab === "outstation" && <div className="outstation-trip-tabs" role="group" aria-label="Outstation journey type"><button type="button" aria-pressed={service === "oneway"} className={service === "oneway" ? "selected" : ""} onClick={() => chooseService("oneway")}>One way</button><button type="button" aria-pressed={service === "roundtrip"} className={service === "roundtrip" ? "selected" : ""} onClick={() => chooseService("roundtrip")}>Round trip</button></div>}
+              {activeRideTab === "outstation" && <div className="outstation-trip-tabs" role="group" aria-label="Outstation journey type">{bookingCategoryEnabled("oneway") && <button type="button" aria-pressed={service === "oneway"} className={service === "oneway" ? "selected" : ""} onClick={() => chooseService("oneway")}>One way</button>}{bookingCategoryEnabled("roundtrip") && <button type="button" aria-pressed={service === "roundtrip"} className={service === "roundtrip" ? "selected" : ""} onClick={() => chooseService("roundtrip")}>Round trip</button>}</div>}
               <ol className="booking-wizard-progress" aria-label="Booking progress">
                 {["Your trip", "Your details", "Review & send"].map((label, index) => (
                   <li key={label}>
@@ -927,28 +1146,56 @@ export default function App() {
               </ol>
               <form ref={bookingFormRef} onSubmit={handleBookingSubmit}>
                 {bookingStep === 0 && <section className="booking-wizard-stage" aria-labelledby="booking-trip-heading">
-                <h4 id="booking-trip-heading">Where and when are you travelling?</h4>
-                <p className="booking-stage-hint">Share your trip details to get started. You can review everything before sending.</p>
+                <h4 id="booking-trip-heading" tabIndex={-1} ref={bookingStageRef}>Where are you headed?</h4>
+                <p className="booking-stage-hint">Add your route and choose to leave now or schedule for later. We confirm availability before a ride is booked.</p>
                 <section className="booking-main-column" aria-label="Trip details">
-                <div className="form-grid booking-trip-grid">
-                  <AddressAutocomplete id="booking-pickup" className="booking-location-field" label="Pickup location" required value={form.pickup} coords={form.pickupCoords} onChange={(value, coordinates) => update("pickup", value, coordinates)} onMapPick={(value, coordinates) => update("pickup", value, coordinates)} placeholder="Pickup area or landmark" searchContext="Chennai, Tamil Nadu" showMap={false} showCurrentLocation />
-                  <AddressAutocomplete id="booking-destination" className="booking-location-field" label={<>Destination {service === "rentals" ? <small>(optional)</small> : <b>*</b>}</>} required={service !== "rentals"} value={form.destination} coords={form.destinationCoords} onChange={(value, coordinates) => update("destination", value, coordinates)} onMapPick={(value, coordinates) => update("destination", value, coordinates)} placeholder="Drop-off area or landmark" searchContext={["daily", "airport"].includes(service) ? "Chennai, Tamil Nadu" : ""} showMap={false} />
-                  <label className="field"><span>Travel date <b>*</b></span><input id="booking-date" type="date" min={today} required value={form.date} onChange={(e) => update("date", e.target.value)} /></label>
-                  {service === "roundtrip" && <label className="field"><span>Return date <b>*</b></span><input id="booking-return-date" type="date" min={form.date || today} required value={form.returnDate} onChange={(e) => update("returnDate", e.target.value)} />{form.returnDate && <small>{form.tripDays} day{form.tripDays === "1" ? "" : "s"} planned</small>}</label>}
-                  <label className="field"><span>Pickup time <b>*</b></span><input id="booking-time" type="time" required value={form.time} onChange={(e) => update("time", e.target.value)} /></label>
-                  <label className="field"><span>Passengers</span><select value={form.passengers} onChange={(e) => update("passengers", e.target.value)}>{Array.from({ length: 12 }, (_, index) => String(index + 1)).map((n) => <option key={n} value={n}>{n} passenger{n === "1" ? "" : "s"}</option>)}</select></label>
-                  <label className="field field-full"><span>Vehicle type <b>*</b></span><select required value={form.vehicle} onChange={(e) => update("vehicle", e.target.value)}>
-                    {activeVehicles.map((vehicle) => <option key={vehicle.id} value={vehicle.id}>{vehicle.id === "dzire" ? "Sedan" : "SUV"}</option>)}
-                    <option value="tempo">Tempo Traveller</option>
-                  </select></label>
-                  {service === "rentals" && <label className="field"><span>Hours required</span><select value={form.hours} onChange={(e) => update("hours", e.target.value)}>{["2","3","4","6","8","10","12"].map((n) => <option key={n} value={n}>{n} hours</option>)}</select></label>}
-                  {service === "oneway" && <label className="field"><span>Trip duration</span><select value={form.tripDays} onChange={(e) => update("tripDays", e.target.value)}>{["1","2","3","4","5","7","10","14"].map((n) => <option key={n} value={n}>{n} day{n === "1" ? "" : "s"}</option>)}</select></label>}
+                <div className="booking-trip-fields">
+                  <div className="booking-route-fields">
+                    <AddressAutocomplete id="booking-pickup" className="booking-location-field" label="From" required value={form.pickup} coords={form.pickupCoords} onChange={(value, coordinates) => update("pickup", value, coordinates)} onMapPick={(value, coordinates) => update("pickup", value, coordinates)} placeholder="Pickup area or landmark" searchContext="Chennai, Tamil Nadu" showMap={false} showCurrentLocation />
+                    <AddressAutocomplete id="booking-destination" className="booking-location-field" label={<>To {service === "rentals" && <small>(optional)</small>}</>} required={service !== "rentals"} value={form.destination} coords={form.destinationCoords} onChange={(value, coordinates) => update("destination", value, coordinates)} onMapPick={(value, coordinates) => update("destination", value, coordinates)} placeholder={service === "airport" ? "Chennai Airport or destination" : "Drop-off area or landmark"} searchContext={["daily", "airport"].includes(service) ? "Chennai, Tamil Nadu" : ""} showMap={false} />
+                  </div>
+                  {isOutstation ? <div className="booking-schedule-row">
+                    <label className="field"><span>Travel date <b>*</b></span><input id="booking-date" type="date" min={today} required value={form.date} onChange={(e) => update("date", e.target.value)} /></label>
+                    <label className="field"><span>Pickup time <b>*</b></span><input id="booking-time" type="time" required value={form.time} onChange={(e) => update("time", e.target.value)} /></label>
+                  </div> : <>
+                  <label className="field booking-when-field"><span>When <b>*</b></span><select value={whenMode} onChange={(e) => chooseWhenMode(e.target.value)}><option value="now">Now</option><option value="schedule">Schedule for later</option></select></label>
+                  {whenMode === "schedule" && <div className="booking-departure-row" role="group" aria-label="Departure details">
+                    <span className="booking-departure-label" aria-hidden="true">Depart</span>
+                    <label className="field booking-departure-date"><span className="booking-visually-hidden">Departure day <b>*</b></span><select id="booking-date" required value={form.date} onChange={(e) => update("date", e.target.value)}>{departureDateOptions.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}</select></label>
+                    <label className="field booking-departure-time"><span className="booking-visually-hidden">Departure time <b>*</b></span><input id="booking-time" type="time" required value={form.time} onChange={(e) => update("time", e.target.value)} /></label>
+                  </div>}
+                  </>}
+                  <label className="field booking-passenger-field"><span>Passengers</span><select value={form.passengers} onChange={(e) => update("passengers", e.target.value)}>{Array.from({ length: 12 }, (_, index) => String(index + 1)).map((n) => <option key={n} value={n}>{n} passenger{n === "1" ? "" : "s"}</option>)}</select></label>
+                  {(service === "rentals" || isOutstation) && <div className="booking-trip-extras">
+                    {service === "rentals" && <label className="field"><span>Hours required</span><select value={form.hours} onChange={(e) => update("hours", e.target.value)}>{["2","3","4","6","8","10","12"].map((n) => <option key={n} value={n}>{n} hours</option>)}</select></label>}
+                    {isOutstation && <label className="field"><span>Trip duration</span><select value={form.tripDays} onChange={(e) => update("tripDays", e.target.value)}>{["1","2","3","4","5","7","10","14"].map((n) => <option key={n} value={n}>{n} day{n === "1" ? "" : "s"}</option>)}</select></label>}
+                  </div>}
+                  <fieldset className="ride-vehicle-picker" aria-describedby="ride-vehicle-note">
+                    <legend>Choose your ride</legend>
+                    <p id="ride-vehicle-note">Vehicle availability and final fare are confirmed by our team.</p>
+                    <div className="ride-vehicle-list">
+                      {activeVehicles.map((vehicle) => (
+                        <label className={`ride-vehicle-card ${form.vehicle === vehicle.id ? "selected" : ""}`} key={vehicle.id}>
+                          <input type="radio" name="bookingVehicle" value={vehicle.id} required checked={form.vehicle === vehicle.id} onChange={(e) => update("vehicle", e.target.value)} />
+                          <img src={vehicle.image} alt="" />
+                          <span className="ride-vehicle-copy"><strong>{vehicle.id === "dzire" ? "Sedan" : "SUV"}</strong><small>{vehicle.label} · Up to {vehicle.passengers} passengers</small></span>
+                          <span className="ride-vehicle-indicator" aria-hidden="true" />
+                        </label>
+                      ))}
+                      <label className={`ride-vehicle-card ${form.vehicle === "tempo" ? "selected" : ""}`}>
+                        <input type="radio" name="bookingVehicle" value="tempo" required checked={form.vehicle === "tempo"} onChange={(e) => update("vehicle", e.target.value)} />
+                        <span className="ride-vehicle-placeholder" aria-hidden="true">12</span>
+                        <span className="ride-vehicle-copy"><strong>Tempo Traveller</strong><small>Group travel · Up to 12 passengers · Manual quote</small></span>
+                        <span className="ride-vehicle-indicator" aria-hidden="true" />
+                      </label>
+                    </div>
+                  </fieldset>
                 </div>
                 </section>
                 <div className="booking-step-actions"><span className="booking-secure-note">No payment required to request a quote</span><button className="booking-next-button" type="button" onClick={advanceBookingStep}>Continue <span>→</span></button></div>
                 </section>}
                 {bookingStep === 1 && <section className="booking-wizard-stage" aria-labelledby="booking-contact-heading">
-                <h4 id="booking-contact-heading">Your contact details</h4>
+                <h4 id="booking-contact-heading" tabIndex={-1} ref={bookingStageRef}>Your contact details</h4>
                 <p className="booking-stage-hint">We’ll use these details to follow up about your request.</p>
                 <div className="form-grid">
                   <label className="field"><span>Your name <b>*</b></span><input id="booking-name" required autoComplete="name" value={form.name} onChange={(e) => update("name", e.target.value)} placeholder="Full name" /></label>
@@ -958,16 +1205,14 @@ export default function App() {
                 <div className="booking-step-actions"><button className="booking-back-button" type="button" onClick={() => setBookingStep(0)}>← Back to trip</button><button className="booking-next-button" type="button" onClick={advanceBookingStep}>Review request <span>→</span></button></div>
                 </section>}
                 {bookingStep === 2 && <section className="booking-wizard-stage booking-review-stage" aria-labelledby="booking-review-heading">
-                <h4 id="booking-review-heading">Review your ride request</h4>
+                <h4 id="booking-review-heading" tabIndex={-1} ref={bookingStageRef}>Review your ride request</h4>
                 <p className="booking-stage-hint">Check the trip details before sending. Your ride is only confirmed after our team contacts you.</p>
                 <dl className="booking-review-summary">
                   {[
                     ["Service", services.find((item) => item.id === service)?.title || "Cab ride"],
                     ["Pickup", form.pickup],
                     ["Destination", form.destination || "Hourly local hire"],
-                    ["Travel date", form.date],
-                    ...(service === "roundtrip" ? [["Return date", form.returnDate]] : []),
-                    ["Pickup time", form.time],
+                    ...(departureMode === "now" ? [["Departure", "Now (as soon as possible)"]] : [["Travel date", form.date], ["Pickup time", form.time]]),
                     ["Passengers", form.passengers],
                     ["Vehicle", activeVehicles.find((item) => item.id === form.vehicle)?.label || (form.vehicle === "tempo" ? "Tempo Traveller" : "Vehicle")],
                     ...(service === "rentals" ? [["Duration", `${form.hours} hours`]] : []),
@@ -984,11 +1229,11 @@ export default function App() {
                   {fare && <div className="fare-result" aria-live="polite">
                     <div className="fare-result-top"><span>Indicative estimate</span><strong>{money(fare.total)}</strong></div>
                     {fare.distanceKm != null && <div className="fare-breakdown-row"><span>Road distance (one way)</span><strong>{fare.distanceKm.toFixed(1)} km</strong></div>}
+                    {fare.distanceKm != null && environment.googleMapsApiKey && <small className="map-provider-attribution">Road route data: Google Maps</small>}
                     {fare.distanceKm != null && <div className="fare-breakdown-row"><span>Distance charge ({fare.billedDistanceKm.toFixed(1)} billed km)</span><strong>{money(fare.distanceCharge)}</strong></div>}
                     {fare.includedKm != null && <div className="fare-breakdown-row"><span>Included distance in package</span><strong>{fare.includedKm} km</strong></div>}
                     <div className="fare-breakdown-row"><span>{fare.packageHours ? `Local package (${fare.packageHours} hours)` : "Hourly charge"}</span><strong>{money(fare.hourlyCharge)}</strong></div>
                     <div className="fare-breakdown-row"><span>Driver allowance</span><strong>{money(fare.driverAllowance)}</strong></div>
-                    {service === "airport" && <div className="fare-breakdown-row"><span>Airport minimum adjustment</span><strong>{money(fare.minimumAdjustment)}</strong></div>}
                     <div className="fare-breakdown-row excluded"><span>Tolls</span><strong>Excluded; actuals extra</strong></div>
                     <div className="fare-breakdown-row excluded"><span>Parking</span><strong>Excluded; actuals extra</strong></div>
                     <div className="fare-breakdown-row excluded"><span>Waiting charges</span><strong>Excluded; confirm policy</strong></div>
@@ -1038,9 +1283,21 @@ export default function App() {
           </div>
         </section>
 
+        <section className="service-guidance" aria-labelledby="service-guidance-title">
+          <div className="container">
+            <div className="service-guidance-heading"><span className="eyebrow">CLEAR BEFORE YOU TRAVEL</span><h2 id="service-guidance-title">Know what to expect.</h2><p>Every request is reviewed by our team. We share availability, final fare, and any applicable trip terms before you confirm.</p></div>
+            <div className="service-guidance-grid">
+              <article><span aria-hidden="true">⌖</span><h3>Where we serve</h3><p>Chennai city and airport rides, plus outstation journeys. Other pickup areas and destinations can be checked with our team.</p></article>
+              <article><span aria-hidden="true">₹</span><h3>What the estimate covers</h3><p>Fare estimates show their included distance, driver allowance, and exclusions. Tolls, parking, waiting, and other unconfigured charges are confirmed separately.</p></article>
+              <article><span aria-hidden="true">↻</span><h3>Changes or cancellations</h3><p>Ask our team about change and cancellation terms before confirming. Any terms that apply are shared with your final quotation.</p></article>
+            </div>
+            <a className="service-guidance-contact" href={supportWhatsAppUrl} target="_blank" rel="noreferrer">Ask us on WhatsApp <span aria-hidden="true">↗</span></a>
+          </div>
+        </section>
+
         <section className="homepage-temples" aria-labelledby="homepage-temples-title">
           <div className="container"><div className="home-temples-heading"><div><span className="eyebrow">JOURNEYS WITH MEANING</span><h2 id="homepage-temples-title">Popular temple tours</h2><p>Explore sacred destinations across Tamil Nadu with a route planned around your stops.</p></div><a href="#temple-tours">View all temples <span>↗</span></a></div>
-            <div className="home-temple-grid">{homepageTemples.map((temple) => <a className="home-temple-card" href="#temple-tours" key={temple.id}><img src={temple.image || "/temple-tour-background.webp"} alt={`${temple.name} temple`} loading="lazy" /><span><strong>{temple.name}</strong><small>{temple.town} · Murugan temple</small></span></a>)}</div>
+            <div className="home-temple-grid">{homepageTemples.filter((temple) => !unpublishedTempleIds.includes(temple.id)).map((temple) => <a className="home-temple-card" href="#temple-tours" key={temple.id}><img src={temple.image || "/temple-tour-background.webp"} alt={`${temple.name} temple`} loading="lazy" /><span><strong>{temple.name}</strong><small>{temple.town} · Murugan temple</small></span></a>)}</div>
           </div>
         </section>
         </>}

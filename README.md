@@ -69,9 +69,12 @@ The database enforces field lengths, allowed values, consent, phone formats, sta
 
 ## External services and deployment
 
-- Address search and reverse geocoding use the public Photon service; road routes use the public OSRM demo endpoint; map tiles use OpenStreetMap. These public endpoints have availability, usage-policy and capacity limits and are not a production service-level guarantee. Confirm their terms and replace them with an authorized, monitored provider if production volume or uptime requires it.
-- Geolocation requires customer permission and a secure origin (HTTPS, or localhost during development). OpenStreetMap attribution is displayed in the map picker.
-- Deploy the contents of `dist/` over HTTPS and configure the static host to serve `index.html` for the root route. Set `VITE_WHATSAPP_NUMBER` in the build environment if changing the contact; rebuild after changing Vite environment variables.
+- When `VITE_GOOGLE_MAPS_API_KEY` is configured, place autocomplete, address/reverse geocoding, interactive map picking, road distances and temple stop ordering use Google Maps Platform (Maps JavaScript API, Places API (New), Geocoding API, and Routes API). The key is public in the browser bundle: restrict it to the site's HTTP referrers and only these APIs, and enable billing in Google Cloud.
+- Without a Google Maps key, the app keeps its OpenStreetMap tiles, Photon geocoder, and public OSRM routing fallback. Those public endpoints have availability, usage-policy and capacity limits and are not a production service-level guarantee.
+- Add `VITE_GOOGLE_MAPS_API_KEY` to `.env.local` for local development and to the static host's build environment for production; rebuild after changing Vite environment variables. The empty example key in `.env.example` is intentional.
+- When the Google provider is active, Google-derived coordinates and route distances are used for the current estimate but omitted from persisted request payloads.
+- Geolocation requires customer permission and a secure origin (HTTPS, or localhost during development). Google Maps and OpenStreetMap attribution are displayed with their respective map/search results.
+- Deploy the contents of `dist/` over HTTPS and configure the static host to serve `index.html` for the root route. Set `VITE_WHATSAPP_NUMBER` in the build environment if changing the contact.
 - Previously referenced PNG artwork is now served as lossless WebP at the same pixel dimensions. JPEG photos remain unchanged; the conversions preserve decoded pixels while reducing transfer size.
 - Vehicle image credits and license references are in `public/vehicles/ATTRIBUTION.md`. The Dzire source has a personality-rights warning on its Commons page and must be reviewed or replaced before public launch.
 
@@ -79,7 +82,7 @@ The database enforces field lengths, allowed values, consent, phone formats, sta
 
 - Temple records and category memberships live in `src/temples/templeData.js` and use JSDoc `TempleRecord` typing because this repository is JavaScript/JSX. Each record links to a source; the catalogue note calls out provisional curation and missing temple image rights. Tamil names are only supplied where an official HR&CE name was checked.
 - The first catalogue includes all six Arupadai Veedu temples, Navagraha and Pancha Bhoota circuits (with out-of-state temples explicitly marked), Navatirupathi records, and representative Amman, Shiva, Vishnu, Murugan and pilgrimage records. The list is an initial selection, not an exhaustive gazetteer.
-- Temple route geocoding uses Photon and road distance/order suggestions use the public OSRM endpoint. Stop coordinates are resolved at request time and are not stored as invented catalogue coordinates. A failed lookup or route leaves the manual WhatsApp quotation path available.
+- Temple stop geocoding, road distances, and route-order suggestions use Google Maps when configured and the documented public fallbacks otherwise. Stop coordinates are resolved at request time and are not stored as invented catalogue coordinates. A failed lookup or route leaves the manual WhatsApp quotation path available.
 - Temple estimates use the currently configured per-kilometre vehicle rate plus the configured daily driver allowance. Tolls, parking, waiting, taxes and other partner charges are excluded. Partner-approved tour rates and public-service usage limits need review before production use.
 - `npm run test:temples` runs helper-level tests for catalogue search/filtering, selection order, route errors, fare recalculation and WhatsApp message content.
 

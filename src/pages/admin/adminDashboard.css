@@ -62,7 +62,14 @@
 .admin-quote-preview strong{display:block;margin-top:3px;color:#253a2e;font-size:11px}
 .admin-detail-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:12px}
 .admin-feedback{margin:8px 0;color:#567345;font-size:10px}
-.admin-pricing-page,.admin-settings-page{display:grid;gap:16px;margin-top:20px}
+.admin-pricing-page{display:grid;gap:16px;margin-top:20px}
+.admin-settings-page{display:grid;grid-template-columns:minmax(190px,240px) minmax(0,1fr);align-items:start;gap:16px;margin-top:20px}
+.admin-settings-nav{display:grid;gap:7px;padding:10px;border:1px solid var(--line);border-radius:13px;background:var(--paper)}
+.admin-settings-nav button{display:grid;grid-template-columns:28px 1fr 18px;align-items:center;gap:8px;min-height:44px;padding:9px 10px;border:1px solid transparent;border-radius:9px;background:transparent;color:#66746a;text-align:left;font:650 11px Manrope,sans-serif;cursor:pointer}
+.admin-settings-nav button>span{display:grid;place-items:center;width:27px;height:27px;border-radius:8px;background:#f1f4ed;color:#537149}
+.admin-settings-nav button>b{color:#89958a;font-weight:500}
+.admin-settings-nav button:hover,.admin-settings-nav button.selected{border-color:#dfe8d8;background:#f6f8f1;color:#2c4634}
+.admin-settings-content{display:grid;gap:12px;min-width:0}
 .admin-pricing-toolbar,.admin-pricing-card,.admin-settings-card{padding:clamp(16px,2vw,24px);border:1px solid var(--line);border-radius:13px;background:var(--paper)}
 .admin-pricing-toolbar{display:flex;align-items:center;justify-content:space-between;gap:16px}
 .admin-pricing-toolbar h2,.admin-settings-card h2{margin:0;color:#263a2d;font:750 20px Manrope,sans-serif;letter-spacing:-.04em}
@@ -95,6 +102,9 @@
 .admin-booking-scope{margin-top:10px!important;padding:11px 13px;border-radius:8px;background:#f4f7ef;color:#657264!important;font-size:10px!important}
 .admin-booking-settings-list{display:grid;gap:8px;margin-top:18px}
 .admin-booking-settings-list .admin-booking-setting{margin-top:0}
+.admin-booking-master{border-color:#dce7d6;background:#f6f9f2}
+.admin-settings-subheading{margin:14px 0 0;color:#304236;font-size:12px}
+.admin-settings-help{margin:0;color:#778478;font-size:10px;line-height:1.5}
 .admin-detail-empty{padding:12px;border-radius:8px;background:#f6f8f3;color:#7b877c;font-size:10px;line-height:1.5}
 .admin-audit-list{display:grid;gap:7px}
 .admin-audit-row{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px;border:1px solid #edf0ea;border-radius:8px;background:#fafbf8}
@@ -137,6 +147,11 @@
   .admin-pricing-grid{grid-template-columns:1fr}
   .admin-stat-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
   .admin-settings-grid{grid-template-columns:1fr}
+  .admin-settings-page{grid-template-columns:1fr;gap:10px}
+  .admin-settings-nav{grid-template-columns:repeat(3,minmax(0,1fr));gap:5px;padding:6px}
+  .admin-settings-nav button{grid-template-columns:24px minmax(0,1fr);gap:5px;min-height:48px;padding:6px;font-size:9px}
+  .admin-settings-nav button>b{display:none}
+  .admin-settings-nav button>span{width:23px;height:23px}
 }
 @media(max-width:480px){.admin-top-actions .admin-live{display:none}.admin-detail-grid,.admin-pricing-fields{grid-template-columns:1fr}.admin-quote-preview{grid-template-columns:1fr}.admin-pricing-toolbar{align-items:flex-start;flex-direction:column}}
 .admin-nav button{font-size:10px}

@@ -12,7 +12,7 @@ function setMeta(name, content, property = false) {
   element.content = content;
 }
 
-export default function PageMeta({ title, description, path }) {
+export default function PageMeta({ title, description, path, noIndex = false }) {
   useEffect(() => {
     document.title = title;
     setMeta("description", description);
@@ -20,6 +20,14 @@ export default function PageMeta({ title, description, path }) {
     setMeta("og:description", description, true);
     setMeta("og:type", "website", true);
     const siteUrl = environment.siteUrl;
+    setMeta("twitter:card", "summary_large_image");
+    if (siteUrl && path) {
+      setMeta("og:url", `${siteUrl}${path}`, true);
+      setMeta("og:image", `${siteUrl}/daily-ride-passenger.webp`, true);
+      setMeta("og:image:alt", "A passenger travelling by CabConnect Chennai cab", true);
+    }
+    if (noIndex) setMeta("robots", "noindex, nofollow");
+    else document.head.querySelector('meta[name="robots"]')?.remove();
     let canonical = document.head.querySelector('link[rel="canonical"]');
     if (siteUrl) {
       if (!canonical) {
@@ -29,6 +37,6 @@ export default function PageMeta({ title, description, path }) {
       }
       canonical.href = `${siteUrl}${path}`;
     } else if (canonical) canonical.remove();
-  }, [description, path, title]);
+  }, [description, noIndex, path, title]);
   return null;
 }

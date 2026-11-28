@@ -74,7 +74,7 @@ function TourCaution() {
   return <aside className="tour-caution"><div className="tour-container"><span aria-hidden="true">i</span><p>Itineraries are suggestions. Opening hours, road and weather conditions, attraction access and travel duration may change. The team will confirm the route and vehicle availability before a booking is accepted.</p></div></aside>;
 }
 
-function QuoteForm({ destination, AddressAutocomplete, vehicles, whatsappNumber, tariff }) {
+function QuoteForm({ destination, AddressAutocomplete, vehicles, whatsappNumber, tariff, googleMapsApiKey }) {
   const [form, setForm] = useState({ pickup: "Chennai", pickupCoords: null, date: "", travellers: "2", days: destination.durationDays.split("–")[0], vehicle: "dzire", tripType: "Multi-day sightseeing", name: "", phone: "", notes: "" });
   const [notice, setNotice] = useState("");
   const [fare, setFare] = useState(null);
@@ -93,10 +93,10 @@ function QuoteForm({ destination, AddressAutocomplete, vehicles, whatsappNumber,
   async function calculateFare() {
     setFare(null); setFareError(""); setFareLoading(true);
     try {
-      const pickup = form.pickupCoords || await geocodeTravelStop(form.pickup, "");
-      const target = await geocodeTravelStop(destination.name, destination.state);
+      const pickup = form.pickupCoords || await geocodeTravelStop(form.pickup, "", fetch, googleMapsApiKey);
+      const target = await geocodeTravelStop(destination.name, destination.state, fetch, googleMapsApiKey);
       const returnTrip = form.tripType !== "One-way";
-      const distanceKm = await getTourRoadDistance(pickup, target, returnTrip);
+      const distanceKm = await getTourRoadDistance(pickup, target, returnTrip, fetch, googleMapsApiKey);
       setFare(calculateTourEstimate(distanceKm, vehicle, form.days, returnTrip, tariff));
     } catch (error) {
       setFareError(error.message || "A price estimate could not be calculated. You can still request a manual quotation.");
@@ -111,14 +111,18 @@ function QuoteForm({ destination, AddressAutocomplete, vehicles, whatsappNumber,
       `Package / destination: ${destination.name}`, `Pickup: ${form.pickup}`, `Travel date: ${form.date}`,
       `Travellers: ${form.travellers}`, `Requested duration: ${form.days} day(s)`, `Trip requirement: ${form.tripType}`,
       `Vehicle preference: ${vehicle.label} (up to ${vehicle.passengers} passengers)`, `Name: ${form.name}`, `Mobile: ${form.phone}`,
-      ...(fare ? [`Estimated price: ${formatMoney(fare.total)}`, `Estimate basis: ${fare.roadDistanceKm.toFixed(1)} road km; ${fare.billedDistanceKm.toFixed(1)} billed km`, fare.note] : ["Estimated price: Not calculated; please provide a quotation."]),
+      ...(fare ? [`Estimated price: ${formatMoney(fare.total)}`, `Estimate basis: ${fare.roadDistanceKm.toFixed(1)} road km; ${fare.billedDistanceKm.toFixed(1)} billed km`, ...(googleMapsApiKey ? ["Road route data: Google Maps"] : []), fare.note] : ["Estimated price: Not calculated; please provide a quotation."]),
       `Additional requirements: ${form.notes || "None"}`, "", "Please confirm route, availability and quotation. This is an enquiry, not a confirmed booking.",
     ];
     try {
       const requestId = await submitCustomerRequest({ type: "tour_quote", name: form.name, mobile: form.phone, consent, submissionId, data: {
         packageId: destination.id, destination: destination.name, pickup: form.pickup, travelDate: form.date,
         travellers: Number(form.travellers), days: Number(form.days), vehicle: vehicle.label, tripType: form.tripType,
-        notes: form.notes, estimate: fare ? { total: fare.total, roadDistanceKm: fare.roadDistanceKm, billedDistanceKm: fare.billedDistanceKm, note: fare.note } : null,
+        notes: form.notes, estimate: fare ? {
+          total: fare.total,
+          ...(googleMapsApiKey ? {} : { roadDistanceKm: fare.roadDistanceKm, billedDistanceKm: fare.billedDistanceKm }),
+          note: fare.note,
+        } : null,
       } });
       if (number) setWhatsAppUrl(`https://wa.me/${number}?text=${encodeURIComponent(`${lines.join("\n")}\n\nRequest reference: ${requestId}`)}`);
       setNotice(`Your quotation request has been saved${number ? ". Continue to WhatsApp if you also want to send it to CabConnect" : "; WhatsApp is unavailable, but CabConnect has received it"}.`);
@@ -145,7 +149,7 @@ function QuoteForm({ destination, AddressAutocomplete, vehicles, whatsappNumber,
       <div><strong>Want an estimated price?</strong><p>Uses the road route, selected vehicle and trip type. Local sightseeing distance and extra charges are excluded.</p></div>
       <button type="button" onClick={calculateFare} disabled={fareLoading}>{fareLoading ? "Calculating…" : "Calculate estimate"}</button>
       {fareError && <p className="tour-fare-error" role="alert">{fareError}</p>}
-      {fare && <div className="tour-fare-result" role="status"><div><span>Estimated trip total</span><strong>{formatMoney(fare.total)}</strong></div><p>Road route: {fare.roadDistanceKm.toFixed(1)} km · Billed distance: {fare.billedDistanceKm.toFixed(1)} km · {vehicle.label}</p><p>{fare.note}</p></div>}
+      {fare && <div className="tour-fare-result" role="status"><div><span>Estimated trip total</span><strong>{formatMoney(fare.total)}</strong></div><p>Road route: {fare.roadDistanceKm.toFixed(1)} km · Billed distance: {fare.billedDistanceKm.toFixed(1)} km · {vehicle.label}</p>{googleMapsApiKey && <p className="map-provider-attribution">Road route data: Google Maps</p>}<p>{fare.note}</p></div>}
     </div>
     <label className="tour-contact-consent"><input type="checkbox" required checked={consent} onChange={(event) => setConsent(event.target.checked)} />I agree that CabConnect may store these details and share my name, phone number, and enquiry summary with WhatsApp to notify its team and respond to this request.</label>
     <button className="tour-submit-button" type="submit" disabled={saving}>{saving ? "Saving your request…" : "Save quotation request"} <span>→</span></button>
@@ -162,7 +166,7 @@ function getItineraryPlaces(destination, step, dayIndex) {
   return attractions.filter((_, index) => index % dayCount === dayIndex);
 }
 
-function TourDetails({ packageId, packageSlug, routeLanding, AddressAutocomplete, vehicles, whatsappNumber, tariff, pathname }) {
+function TourDetails({ packageId, packageSlug, routeLanding, AddressAutocomplete, vehicles, whatsappNumber, tariff, pathname, googleMapsApiKey }) {
   const [destination, setDestination] = useState(null);
   const [relatedDestinations, setRelatedDestinations] = useState([]);
   const [packageLoading, setPackageLoading] = useState(true);
@@ -209,15 +213,15 @@ function TourDetails({ packageId, packageSlug, routeLanding, AddressAutocomplete
         </div>
         <aside className="tour-side-cta"><div className="tour-side-cta-inner"><span className="tour-eyebrow">MAKE IT YOURS</span><h2>Ready when you are.</h2><p>Send us your travel date, group size and vehicle preference. We’ll check the trip and reply with a clear quote.</p><a href="#tour-enquiry" className="tour-primary-button">Request a quote <span>↘</span></a><small>Final fare and vehicle subject to confirmation.</small></div><div className="tour-related"><span className="tour-eyebrow tour-eyebrow-dark">MORE JOURNEYS</span>{relatedDestinations.filter((item) => item.id !== destination.id).slice(0, 3).map((item) => <a href={item.slug} key={item.id}><span>{item.name}</span><span>↗</span></a>)}</div></aside>
       </div>
-      <section className="tour-enquiry-section" id="tour-enquiry"><QuoteForm destination={destination} AddressAutocomplete={AddressAutocomplete} vehicles={vehicles} whatsappNumber={whatsappNumber} tariff={tariff} /></section>
+      <section className="tour-enquiry-section" id="tour-enquiry"><QuoteForm destination={destination} AddressAutocomplete={AddressAutocomplete} vehicles={vehicles} whatsappNumber={whatsappNumber} tariff={tariff} googleMapsApiKey={googleMapsApiKey} /></section>
     </div>
     <TourCaution />
   </div>;
 }
 
-export default function TourPackages({ pathname, AddressAutocomplete, vehicles, whatsappNumber, tariff }) {
+export default function TourPackages({ pathname, AddressAutocomplete, vehicles, whatsappNumber, tariff, googleMapsApiKey }) {
   const route = findTourByPath(pathname);
   const packagePath = pathname.replace(/\/$/, "");
   if (!route && !/^\/tour-packages\/[^/]+$/.test(packagePath)) return <TourIndex />;
-  return <TourDetails packageId={route?.destination.id || null} packageSlug={route ? null : packagePath} routeLanding={route?.routeLanding || false} AddressAutocomplete={AddressAutocomplete} vehicles={vehicles} whatsappNumber={whatsappNumber} tariff={tariff} pathname={pathname} />;
+  return <TourDetails packageId={route?.destination.id || null} packageSlug={route ? null : packagePath} routeLanding={route?.routeLanding || false} AddressAutocomplete={AddressAutocomplete} vehicles={vehicles} whatsappNumber={whatsappNumber} tariff={tariff} pathname={pathname} googleMapsApiKey={googleMapsApiKey} />;
 }

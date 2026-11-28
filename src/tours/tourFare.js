@@ -1,15 +1,10 @@
 import { calculateOutstationFare, OUTSTATION_TARIFF } from "../utils/fareRules.js";
+import { getDrivingRouteDistanceKm } from "../utils/googleMaps.js";
 
-export async function getTourRoadDistance(start, destination, returnTrip, fetchImpl = fetch) {
+export async function getTourRoadDistance(start, destination, returnTrip, fetchImpl = fetch, googleMapsApiKey = "") {
   if (!start || !destination) throw new Error("Select a pickup and a valid tour destination to estimate the price.");
   const points = returnTrip ? [start, destination, start] : [start, destination];
-  const joined = points.map(({ lon, lat }) => `${lon},${lat}`).join(";");
-  const response = await fetchImpl(`https://router.project-osrm.org/route/v1/driving/${joined}?overview=false&steps=false`);
-  if (!response.ok) throw new Error("The road-routing service is unavailable. You can still request a manual quotation.");
-  const data = await response.json();
-  const distance = data.routes?.[0]?.distance;
-  if (data.code !== "Ok" || !Number.isFinite(distance) || distance <= 0) throw new Error("A driving route could not be found. Check the pickup and try again.");
-  return distance / 1000;
+  return getDrivingRouteDistanceKm(points, googleMapsApiKey, fetchImpl);
 }
 
 export function calculateTourEstimate(distanceKm, vehicle, days, returnTrip, tariff = OUTSTATION_TARIFF) {

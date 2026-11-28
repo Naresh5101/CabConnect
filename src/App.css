@@ -61,6 +61,7 @@
 .suggestion-copy small{font-size:9px;line-height:1.5;color:#879188;margin-top:3px;white-space:normal}
 .suggestion-arrow{color:#82957f;font-size:14px}
 .suggestion-attribution{font-size:8px;color:#8a958c;padding:8px 12px;background:#fbfcfa}
+.suggestion-attribution.google-maps-attribution{font-size:10px;font-weight:600;color:#5f6368}
 .suggestion-empty{padding:12px 14px;color:#748176;font-size:11px;line-height:1.5;background:#fff}
 @media(max-width:700px){.address-suggestions{max-height:235px}.address-suggestion{padding:11px 10px}}
 
@@ -110,6 +111,8 @@
 .map-current-location:hover{background:#f0f6eb;border-color:#b9cfad}
 .map-current-location:disabled{opacity:.65;cursor:wait}
 .location-map{width:100%;height:min(54vh,440px);min-height:280px;flex:1 1 auto;background:#e4e9e1}
+.map-google-error{margin:0;padding:10px 20px;color:#8a493a;background:#fff0ed;font-size:11px;line-height:1.5}
+.map-provider-attribution{display:block;color:#5f6368;font-size:10px;font-weight:600;line-height:1.5}
 .map-picker-footer{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:13px 20px;color:#68766a;font-size:10px}
 .map-picker-footer>div{display:flex;gap:8px}
 .map-picker-cancel,.map-picker-confirm{padding:10px 13px;border-radius:6px;font-size:10px;font-weight:700;cursor:pointer}

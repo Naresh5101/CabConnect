@@ -13,6 +13,7 @@
     "test:temples": "node --test src/temples/templeUtils.test.js",
     "test:tours": "node --test src/tours/tourData.test.js",
     "test:pages": "node --test src/app/pageAvailability.test.js",
+    "test:maps": "node --test src/utils/googleMaps.test.js",
     "preview": "vite preview"
   },
   "dependencies": {

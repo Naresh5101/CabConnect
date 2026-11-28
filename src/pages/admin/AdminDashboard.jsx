@@ -9,6 +9,8 @@ import AdminWorkspace from "../../layouts/AdminWorkspace.jsx";
 import AdminPricingPanel from "./AdminPricingPanel.jsx";
 import AdminRequestDetail from "./AdminRequestDetail.jsx";
 import AdminRequestTable from "./AdminRequestTable.jsx";
+import { temples } from "../../temples/templeData.js";
+import PageMeta from "../../components/PageMeta.jsx";
 import { ADMIN_REQUEST_SECTIONS, countAttachmentVehicles, normalizeRequestData, pickRequestValue } from "./adminRequestPresentation.js";
 import "./adminDashboard.css";
 
@@ -33,14 +35,21 @@ const PAGE_SIZE = 25;
 const prettyDate = (value) => value ? new Intl.DateTimeFormat("en-IN", { dateStyle: "medium", timeStyle: "short" }).format(new Date(value)) : "—";
 const requestTitle = (type) => REQUEST_LABELS[type] || type?.replaceAll("_", " ") || "Customer request";
 const PAGE_TOGGLE_ITEMS = [
-  ["booking_enabled", "Cab booking", "Main ride booking form"],
   ["temple_tours_enabled", "Temple Tours", "Temple tour route and navigation"],
   ["tour_packages_enabled", "Tour Packages", "Tour package routes and catalogue"],
   ["driver_registration_enabled", "Driver Registration", "Driver application page"],
   ["cab_attachment_enabled", "Cab Attachment", "Cab and vehicle attachment page"],
 ];
+const SETTINGS_MENU_ITEMS = [["booking", "Cab bookings", "⌁"], ["pages", "Website pages", "▤"], ["temples", "Temple catalogue", "⌖"], ["access", "Access & data", "⚙"]];
+const BOOKING_CATEGORY_ITEMS = [
+  ["daily", "Daily rides", "Chennai point-to-point bookings"],
+  ["oneway", "Outstation one way", "One-way journeys outside Chennai"],
+  ["roundtrip", "Outstation return", "Outstation bookings with return travel"],
+  ["rentals", "Rentals", "Hourly and local package bookings"],
+  ["airport", "Airport transfers", "Chennai airport pickups and drop-offs"],
+];
 
-export default function DriverAdmin({ pageSettings = {}, bookingSettingsReady = false, bookingSettingsMessage = "", onPageSettingEnabledChange = () => {} }) {
+export default function DriverAdmin({ pageSettings = {}, bookingCategories = {}, unpublishedTempleIds = [], bookingSettingsReady = false, bookingSettingsMessage = "", onPageSettingEnabledChange = () => {}, onBookingCategoryEnabledChange = () => {}, onTemplePublishedChange = async () => {} }) {
   const { user, setUser, authReady, dashboardAccess } = useAdminAccess(localAdminPreview);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -50,6 +59,7 @@ export default function DriverAdmin({ pageSettings = {}, bookingSettingsReady = 
   const [error, setError] = useState("");
   const [dataErrors, setDataErrors] = useState({});
   const [section, setSection] = useState("overview");
+  const [settingsView, setSettingsView] = useState("booking");
   const [applications, setApplications] = useState([]);
   const [requests, setRequests] = useState([]);
   const [packages, setPackages] = useState([]);
@@ -96,6 +106,34 @@ export default function DriverAdmin({ pageSettings = {}, bookingSettingsReady = 
       setBookingSaveSuccess(scope === "local" ? "Saved for this local browser preview." : "Saved to the website. The change applies across the site.");
     } catch (cause) {
       setBookingSaveError(cause.message || "Could not save booking availability.");
+    } finally {
+      setBookingSaving(false);
+    }
+  }
+
+  async function changeRideCategory(key, enabled) {
+    setBookingSaving(true);
+    setBookingSaveError("");
+    setBookingSaveSuccess("");
+    try {
+      const scope = await onBookingCategoryEnabledChange(key, enabled);
+      setBookingSaveSuccess(scope === "local" ? "Saved for this local browser preview." : "Saved to the website. This ride category is updated for visitors across the site.");
+    } catch (cause) {
+      setBookingSaveError(cause.message || "Could not save this ride category.");
+    } finally {
+      setBookingSaving(false);
+    }
+  }
+
+  async function changeTemplePublished(templeId, published) {
+    setBookingSaving(true);
+    setBookingSaveError("");
+    setBookingSaveSuccess("");
+    try {
+      await onTemplePublishedChange(templeId, published);
+      setBookingSaveSuccess(published ? "Temple published on the website." : "Temple unpublished from the website.");
+    } catch (cause) {
+      setBookingSaveError(cause.message || "Could not update temple publishing status.");
     } finally {
       setBookingSaving(false);
     }
@@ -227,6 +265,7 @@ export default function DriverAdmin({ pageSettings = {}, bookingSettingsReady = 
   const pageTitle = section === "overview" ? "Good morning." : SECTION_ITEMS.find(([id]) => id === section)?.[1];
   const pageDescription = section === "overview" ? "Here’s what’s happening across your CabConnect business." : section === "attachments" ? "Review vehicle owner details, fleet information and attachment requests." : isRequestSection ? `Review ${REQUEST_LABELS[REQUEST_SECTION_TYPES[section]].toLowerCase()} with the customer, trip and quote details together.` : section === "drivers" ? "Review, contact and manage driver hiring applications." : section === "reports" ? "Explore summaries calculated from submitted customer and driver records." : section === "pricing" ? "Manage the database-backed rates used by future fare estimates." : section === "settings" ? "Manage local booking availability and review administrator access for this workspace." : "Create, edit and publish the tour catalogue shown on your website.";
   return <AdminWorkspace section={section} items={SECTION_ITEMS} localPreview={localAdminPreview} accountLabel={accountLabel} newRequests={newRequests} loading={loading} onNavigate={(id) => { setSection(id); setSelectedId(""); setSearch(""); setStatus(""); setPage(1); }} onRefresh={() => void loadAll()} onSignOut={() => void signOut()}>
+    <PageMeta title="CabConnect Admin" description="Private CabConnect administration." path="/admin" noIndex />
     <div className="admin-content">
       <div className="admin-page-heading"><div><span className="admin-eyebrow">CABCONNECT CHENNAI · ADMIN</span><h1>{pageTitle}</h1><p>{pageDescription}</p></div><span className="admin-date-chip">{new Intl.DateTimeFormat("en-IN", { dateStyle: "full" }).format(new Date())}</span></div>
       {localAdminPreview && <section className="admin-notice admin-dev-access" aria-label="Local development access"><strong>Local development preview</strong><span>This bypass opens the dashboard shell only. Supabase RLS still protects private records and admin changes. Production builds require administrator authentication.</span>{user ? <><span>Connected as {user.email}. Database access is still checked by the trusted driver_admin role and RLS.</span><button type="button" className="admin-dev-connect" onClick={() => void signOut()}>Sign out of admin account</button></> : <><button type="button" className="admin-dev-connect" onClick={() => { setLocalLoginOpen((open) => !open); setLoginError(""); }}>{localLoginOpen ? "Close admin sign-in" : "Sign in to load private records"}</button>{localLoginOpen && <form className="admin-dev-signin" onSubmit={signIn}><label>Email<input type="email" autoComplete="username" required value={email} onChange={(event) => setEmail(event.target.value)} /></label><label>Password<input type="password" autoComplete="current-password" required value={password} onChange={(event) => setPassword(event.target.value)} /></label>{loginError && <p className="admin-error" role="alert">{loginError}</p>}<button className="admin-primary" disabled={loading}>{loading ? "Signing in…" : "Connect authorised account"}<span>↗</span></button><small>Only an account with trusted app_metadata role driver_admin can access private records.</small></form>}</>}</section>}
@@ -251,26 +290,31 @@ export default function DriverAdmin({ pageSettings = {}, bookingSettingsReady = 
       {section === "reports" && <ReportsPanel requests={requests} applications={applications} packages={packages} errors={dataErrors} from={reportFrom} to={reportTo} setFrom={setReportFrom} setTo={setReportTo} />}
       {section === "pricing" && <AdminPricingPanel />}
       {section === "settings" && <section className="admin-settings-page">
-        <article className="admin-panel admin-settings-card">
-          <span className="admin-eyebrow">WEBSITE CONTROLS</span><h2>Page availability</h2>
-          <p>Control which public pages and booking sections visitors can access. Production changes are saved centrally and apply across the site.</p>
-          <div className="admin-booking-settings-list">
-            {PAGE_TOGGLE_ITEMS.map(([key, label, description]) => (
-              <div className="admin-booking-setting" key={key}>
-                <div><strong>{label}</strong><small>{description}</small></div>
-                <label className="admin-switch">
-                  <span className="sr-only">Enable {label}</span>
-                  <input type="checkbox" checked={pageSettings[key] !== false} disabled={!bookingSettingsReady || bookingSaving} onChange={(event) => void changePageAvailability(key, event.target.checked)} />
-                  <span aria-hidden="true" />
-                </label>
-              </div>
-            ))}
-          </div>
+        <nav className="admin-settings-nav" aria-label="Settings sections">
+          {SETTINGS_MENU_ITEMS.map(([id, label, icon]) => <button type="button" key={id} className={settingsView === id ? "selected" : ""} aria-current={settingsView === id ? "page" : undefined} onClick={() => setSettingsView(id)}><span>{icon}</span>{label}<b>→</b></button>)}
+        </nav>
+        <div className="admin-settings-content">
+          {settingsView === "booking" && <article className="admin-panel admin-settings-card">
+            <span className="admin-eyebrow">WEBSITE CONTROLS</span><h2>Cab booking</h2>
+            <p>Switch the full booking form on or off, or manage each ride category separately.</p>
+            <div className="admin-booking-settings-list">
+              <div className="admin-booking-setting admin-booking-master"><div><strong>Book a Cab section</strong><small>Show or hide the full booking form and its links throughout the website.</small></div><label className="admin-switch"><span className="sr-only">Enable Book a Cab section</span><input type="checkbox" checked={pageSettings.booking_enabled !== false} disabled={!bookingSettingsReady || bookingSaving} onChange={(event) => void changePageAvailability("booking_enabled", event.target.checked)} /><span aria-hidden="true" /></label></div>
+              <h3 className="admin-settings-subheading">Ride categories</h3>
+              {BOOKING_CATEGORY_ITEMS.map(([key, label, description]) => (
+                <div className="admin-booking-setting" key={key}>
+                  <div><strong>{label}</strong><small>{description}</small></div>
+                  <label className="admin-switch"><span className="sr-only">Enable {label}</span><input type="checkbox" checked={bookingCategories[key] !== false} disabled={!bookingSettingsReady || bookingSaving || pageSettings.booking_enabled === false} onChange={(event) => void changeRideCategory(key, event.target.checked)} /><span aria-hidden="true" /></label>
+                </div>
+              ))}
+            </div>
+          </article>}
+          {settingsView === "pages" && <article className="admin-panel admin-settings-card"><span className="admin-eyebrow">WEBSITE CONTROLS</span><h2>Website pages</h2><p>Choose which public pages are available to visitors.</p><div className="admin-booking-settings-list">{PAGE_TOGGLE_ITEMS.map(([key, label, description]) => <div className="admin-booking-setting" key={key}><div><strong>{label}</strong><small>{description}</small></div><label className="admin-switch"><span className="sr-only">Enable {label}</span><input type="checkbox" checked={pageSettings[key] !== false} disabled={!bookingSettingsReady || bookingSaving} onChange={(event) => void changePageAvailability(key, event.target.checked)} /><span aria-hidden="true" /></label></div>)}</div></article>}
+          {settingsView === "temples" && <article className="admin-panel admin-settings-card"><span className="admin-eyebrow">WEBSITE CONTENT</span><h2>Temple catalogue</h2><p>Publish or unpublish individual temples. Unpublished temples are removed from the public Temple Tours catalogue.</p><div className="admin-booking-settings-list">{temples.map((temple) => { const published = !unpublishedTempleIds.includes(temple.id); return <div className="admin-booking-setting" key={temple.id}><div><strong>{temple.name}</strong><small>{temple.town} · {temple.categories.map((category) => category.replaceAll("-", " ")).join(", ")}</small></div><button type="button" className="admin-secondary" disabled={!bookingSettingsReady || bookingSaving} onClick={() => void changeTemplePublished(temple.id, !published)}>{published ? "Unpublish" : "Publish"}</button></div>; })}</div></article>}
+          {settingsView === "access" && <article className="admin-panel admin-settings-card"><span className="admin-eyebrow">ACCESS &amp; DATA</span><h2>Workspace settings</h2><p>Signed in as <strong>{user?.email || "Local development preview"}</strong>. Private tables continue to require the trusted driver_admin role and existing RLS policies.</p><div className="admin-settings-grid"><div><span>Customer requests</span><strong>public.customer_requests</strong></div><div><span>Driver registrations</span><strong>public.driver_applications</strong></div><div><span>Tour catalogue</span><strong>public.tour_packages</strong></div><div><span>Access model</span><strong>Supabase Auth + RLS</strong></div></div>{user && <button type="button" className="admin-secondary" onClick={() => void signOut()}>Sign out</button>}</article>}
           {bookingSettingsMessage && <p className="admin-booking-scope" role="status">{bookingSettingsMessage}</p>}
           {bookingSaveError && <p className="admin-error" role="alert">{bookingSaveError}</p>}
           {bookingSaveSuccess && <p className="admin-feedback" role="status">{bookingSaveSuccess}</p>}
-        </article>
-        <article className="admin-panel admin-settings-card"><span className="admin-eyebrow">ACCESS &amp; DATA</span><h2>Workspace settings</h2><p>Signed in as <strong>{user?.email || "Local development preview"}</strong>. Private tables continue to require the trusted driver_admin role and existing RLS policies.</p><div className="admin-settings-grid"><div><span>Customer requests</span><strong>public.customer_requests</strong></div><div><span>Driver registrations</span><strong>public.driver_applications</strong></div><div><span>Tour catalogue</span><strong>public.tour_packages</strong></div><div><span>Access model</span><strong>Supabase Auth + RLS</strong></div></div>{user && <button type="button" className="admin-secondary" onClick={() => void signOut()}>Sign out</button>}</article>
+        </div>
       </section>}
 
       {section !== "overview" && section !== "reports" && section !== "pricing" && section !== "settings" && <>
